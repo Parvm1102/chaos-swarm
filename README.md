@@ -26,4 +26,9 @@ ruff check . && ruff format .
 swarm check-env                 # python, conda env, SDK version, key present, SWARM_LIVE
 swarm ping --provider anthropic --model claude-haiku-5-5   # needs SWARM_LIVE=1
 swarm cost-report <run_name>    # spend from runs/<run_name>/usage.jsonl
+
+swarm tasks generate --seed 0 --n 100   # the task set in data/tasks/seed0 (DBs are not committed)
+swarm tasks sequences --seed 0          # 20 fixed sequences x 10 episodes x 2 agents
+swarm tasks stats data/tasks/seed0      # per-template counts, answer sizes, duplicate check
+swarm tasks show data/tasks/seed0 task_0007 [--reveal]
 ```

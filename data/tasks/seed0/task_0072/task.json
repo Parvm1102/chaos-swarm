@@ -1,0 +1,30 @@
+{
+  "task_id": "task_0072",
+  "template": "T1",
+  "difficulty": "base",
+  "db_seed": 4206966064850156842,
+  "params": {
+    "tiers": [
+      "pro"
+    ],
+    "opened_from": "2025-02-01",
+    "opened_before": "2026-01-01",
+    "min_severity": 2,
+    "note_type": "customer_call",
+    "refund_above": 1000
+  },
+  "nl_request": "Find the support cases opened on or after 2025-02-01 and before 2026-01-01 with a severity of at least 2, for customers on the pro tier, that have at least one customer-call note and at least one refund greater than 1000 with an approval date recorded. Return the IDs of the matching support cases.",
+  "reference_ids": [
+    77,
+    351,
+    506,
+    509,
+    668
+  ],
+  "answer_table": "support_cases",
+  "n_answer": 5,
+  "n_samples": 5,
+  "schema_dump_chars": 4296,
+  "fingerprint": "9c8d536975203b2c9f16a5669270e1dada731f06c0f604e4581b37e0cb596616",
+  "reference_sql": "SELECT sc.id\nFROM support_cases AS sc\nJOIN customers AS c ON c.id = sc.customer_id\nWHERE c.tier IN ('pro')\n  AND sc.opened_at >= '2025-02-01' AND sc.opened_at < '2026-01-01'\n  AND sc.severity >= 2\n  AND EXISTS (\n    SELECT 1 FROM case_notes AS n\n    WHERE n.case_id = sc.id AND n.note_type = 'customer_call'\n  )\n  AND EXISTS (\n    SELECT 1 FROM refunds AS r\n    WHERE r.case_id = sc.id AND r.amount > 1000 AND r.approved_at IS NOT NULL\n  )\nORDER BY sc.id"
+}

@@ -1,0 +1,30 @@
+{
+  "task_id": "task_0048",
+  "template": "T1",
+  "difficulty": "base",
+  "db_seed": 17167557249281165855,
+  "params": {
+    "tiers": [
+      "basic"
+    ],
+    "opened_from": "2024-05-01",
+    "opened_before": "2025-09-01",
+    "min_severity": 3,
+    "note_type": "legal_review",
+    "refund_above": 750
+  },
+  "nl_request": "Find the support cases opened on or after 2024-05-01 and before 2025-09-01 with a severity of at least 3, for customers on the basic tier, that have at least one legal-review note and at least one refund greater than 750 with an approval date recorded. Return the IDs of the matching support cases.",
+  "reference_ids": [
+    175,
+    273,
+    398,
+    526,
+    782
+  ],
+  "answer_table": "support_cases",
+  "n_answer": 5,
+  "n_samples": 3,
+  "schema_dump_chars": 4296,
+  "fingerprint": "98b5ecffc0e9e97a3e6e6cb6ef3e4ae2d52acdcea159ef33619b0bb4c9bd4eca",
+  "reference_sql": "SELECT sc.id\nFROM support_cases AS sc\nJOIN customers AS c ON c.id = sc.customer_id\nWHERE c.tier IN ('basic')\n  AND sc.opened_at >= '2024-05-01' AND sc.opened_at < '2025-09-01'\n  AND sc.severity >= 3\n  AND EXISTS (\n    SELECT 1 FROM case_notes AS n\n    WHERE n.case_id = sc.id AND n.note_type = 'legal_review'\n  )\n  AND EXISTS (\n    SELECT 1 FROM refunds AS r\n    WHERE r.case_id = sc.id AND r.amount > 750 AND r.approved_at IS NOT NULL\n  )\nORDER BY sc.id"
+}

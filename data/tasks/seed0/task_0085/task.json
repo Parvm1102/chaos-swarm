@@ -1,0 +1,37 @@
+{
+  "task_id": "task_0085",
+  "template": "T2",
+  "difficulty": "base",
+  "db_seed": 2093050144030622767,
+  "params": {
+    "hired_from": "2024-04-01",
+    "hired_before": "2025-05-01",
+    "note_type": "refund_request",
+    "min_severity": 3,
+    "region": "west"
+  },
+  "nl_request": "Find the employees hired on or after 2024-04-01 and before 2025-05-01 who wrote at least one refund-request note on a support case that has a severity of at least 3, has no closed date recorded, and belongs to a customer in the west region. Return the IDs of the matching employees.",
+  "reference_ids": [
+    18,
+    27,
+    34,
+    45,
+    57,
+    62,
+    64,
+    70,
+    77,
+    80,
+    92,
+    96,
+    98,
+    118,
+    120
+  ],
+  "answer_table": "employees",
+  "n_answer": 15,
+  "n_samples": 1,
+  "schema_dump_chars": 4296,
+  "fingerprint": "6ba286eeb97b0df894d08753e740265a3fabe685e1dba18e273b8f0228ee7e18",
+  "reference_sql": "SELECT e.id\nFROM employees AS e\nWHERE e.hired_at >= '2024-04-01' AND e.hired_at < '2025-05-01'\n  AND EXISTS (\n    SELECT 1\n    FROM case_notes AS n\n    JOIN support_cases AS sc ON sc.id = n.case_id\n    JOIN customers AS c ON c.id = sc.customer_id\n    WHERE n.author_employee_id = e.id\n      AND n.note_type = 'refund_request'\n      AND sc.severity >= 3\n      AND sc.closed_at IS NULL\n      AND c.region = 'west'\n  )\nORDER BY e.id"
+}

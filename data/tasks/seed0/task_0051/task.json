@@ -1,0 +1,36 @@
+{
+  "task_id": "task_0051",
+  "template": "T4",
+  "difficulty": "base",
+  "db_seed": 14292074837399618168,
+  "params": {
+    "city": "Ironvale",
+    "opened_from": "2024-01-01",
+    "opened_before": "2024-07-01",
+    "min_priority": 2
+  },
+  "nl_request": "Find the facility tickets for buildings located in Ironvale, opened on or after 2024-01-01 and before 2024-07-01, with a priority of at least 2 and with no resolution date recorded. Return the IDs of the matching facility tickets.",
+  "reference_ids": [
+    10,
+    23,
+    86,
+    113,
+    151,
+    193,
+    219,
+    293,
+    316,
+    327,
+    330,
+    347,
+    414,
+    427,
+    468
+  ],
+  "answer_table": "facility_tickets",
+  "n_answer": 15,
+  "n_samples": 3,
+  "schema_dump_chars": 4296,
+  "fingerprint": "81c8d960f9eff3fbc882b55a2f4021d4d1abaae011396a9a58c7935799de3267",
+  "reference_sql": "SELECT t.id\nFROM facility_tickets AS t\nJOIN buildings AS b ON b.id = t.building_id\nWHERE b.city = 'Ironvale'\n  AND t.opened_at >= '2024-01-01' AND t.opened_at < '2024-07-01'\n  AND t.priority >= 2\n  AND t.resolved_at IS NULL\nORDER BY t.id"
+}

@@ -1,0 +1,33 @@
+{
+  "task_id": "task_0018",
+  "template": "T3",
+  "difficulty": "base",
+  "db_seed": 2546448540627337335,
+  "params": {
+    "requested_from": "2024-10-01",
+    "requested_before": "2025-09-01",
+    "min_amount": 10000,
+    "min_risk": 3,
+    "departments": [
+      "Customer Support",
+      "Legal"
+    ]
+  },
+  "nl_request": "Find the procurement requests with a request date on or after 2024-10-01 and before 2025-09-01, for an amount of at least 10000, from vendors with a risk rating of at least 3, requested by an employee in the Customer Support or Legal department, with no need-by date recorded. Return the IDs of the matching procurement requests.",
+  "reference_ids": [
+    4,
+    5,
+    71,
+    114,
+    159,
+    190,
+    276,
+    320
+  ],
+  "answer_table": "procurement_requests",
+  "n_answer": 8,
+  "n_samples": 1,
+  "schema_dump_chars": 4296,
+  "fingerprint": "b9bdfb9514e7ce4c6fb68c84299d5035d769d919eaaaafd0b39b6e464c03b797",
+  "reference_sql": "SELECT pr.id\nFROM procurement_requests AS pr\nJOIN vendors AS v ON v.id = pr.vendor_id\nJOIN employees AS e ON e.id = pr.requested_by_employee_id\nJOIN departments AS d ON d.id = e.department_id\nWHERE pr.requested_at >= '2024-10-01'\n  AND pr.requested_at < '2025-09-01'\n  AND pr.amount >= 10000\n  AND v.risk_rating >= 3\n  AND d.name IN ('Customer Support', 'Legal')\n  AND pr.needed_by IS NULL\nORDER BY pr.id"
+}

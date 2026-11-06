@@ -1,0 +1,34 @@
+{
+  "task_id": "task_0047",
+  "template": "T4",
+  "difficulty": "base",
+  "db_seed": 14529734786864136640,
+  "params": {
+    "city": "Kestrel Falls",
+    "opened_from": "2025-01-01",
+    "opened_before": "2025-10-01",
+    "min_priority": 2
+  },
+  "nl_request": "Find the facility tickets for buildings located in Kestrel Falls, opened on or after 2025-01-01 and before 2025-10-01, with a priority of at least 2 and with no resolution date recorded. Return the IDs of the matching facility tickets.",
+  "reference_ids": [
+    37,
+    78,
+    90,
+    170,
+    221,
+    227,
+    240,
+    313,
+    358,
+    360,
+    444,
+    451,
+    491
+  ],
+  "answer_table": "facility_tickets",
+  "n_answer": 13,
+  "n_samples": 1,
+  "schema_dump_chars": 4296,
+  "fingerprint": "03b352fa91cbcc3ef19e8db32b5d4e9b51d3bee47f0cde558a7780a67610c85f",
+  "reference_sql": "SELECT t.id\nFROM facility_tickets AS t\nJOIN buildings AS b ON b.id = t.building_id\nWHERE b.city = 'Kestrel Falls'\n  AND t.opened_at >= '2025-01-01' AND t.opened_at < '2025-10-01'\n  AND t.priority >= 2\n  AND t.resolved_at IS NULL\nORDER BY t.id"
+}

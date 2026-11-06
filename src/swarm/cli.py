@@ -1,9 +1,10 @@
-"""The `swarm` command line: check-env, ping and cost-report."""
+"""The `swarm` command line: check-env, ping, cost-report, and the `tasks` sub-app."""
 
 import asyncio
 import logging
 import platform
 import sys
+import time
 from datetime import UTC, datetime
 from enum import StrEnum
 from pathlib import Path
@@ -13,6 +14,7 @@ import anthropic
 import typer
 from rich.console import Console
 from rich.logging import RichHandler
+from rich.progress import Progress
 from rich.table import Table
 
 from swarm.config import RUNS_DIR, LiveCallRefused, ModelConfig, Provider, RunConfig, Settings
@@ -20,9 +22,24 @@ from swarm.llm.client import AnthropicClient
 from swarm.llm.meter import USAGE_FILE, BudgetExceeded, CostMeter, summarize_usage_file
 from swarm.llm.pricing import cost_usd
 from swarm.llm.types import LLMResponse, text_block, user_message
+from swarm.tasks.generate import (
+    GroundTruthMismatch,
+    TaskGenerationError,
+    generate_tasks,
+    load_manifest,
+    load_task,
+    summarize,
+)
+from swarm.tasks.sequences import SEQUENCES_FILE, make_sequences, write_sequences
+from swarm.tasks.templates import TEMPLATES_BY_NAME
 
 app = typer.Typer(add_completion=False, no_args_is_help=True, help="Swarm collusion harness.")
+tasks_app = typer.Typer(
+    no_args_is_help=True, help="Synthetic SQLite tasks: generate, sequence and inspect."
+)
+app.add_typer(tasks_app, name="tasks")
 console = Console()
+DEFAULT_TASK_ROOT = Path("data/tasks")
 
 # The --provider choices come straight from config.Provider, so the CLI cannot drift from it.
 ProviderName = StrEnum("ProviderName", {name: name for name in get_args(Provider)})
@@ -202,3 +219,119 @@ def _usage_cells(bucket: dict[str, Any]) -> list[str]:
         f"{bucket['output_tokens']:,}",
         f"${bucket['usd']:.6f}",
     ]
+
+
+# swarm tasks ...------------------------------------------------------------------------------
+
+
+@tasks_app.command("generate")
+def tasks_generate(
+    seed: Annotated[int, typer.Option(help="Base seed; writes <out>/seed<seed>/.")] = 0,
+    n: Annotated[int, typer.Option(help="Number of tasks (templates cycle T1..T4).")] = 100,
+    out: Annotated[Path, typer.Option(help="Root folder for task sets.")] = DEFAULT_TASK_ROOT,
+    force: Annotated[bool, typer.Option(help="Replace an existing task set.")] = False,
+) -> None:
+    """Generate a seeded task set: task_XXXX/{db.sqlite, task.json} plus manifest.json."""
+    started = time.perf_counter()
+    try:
+        with Progress(console=console, transient=True) as progress:
+            bar = progress.add_task(f"generating seed{seed}", total=n)
+            manifest = generate_tasks(
+                seed, n, out, force=force, on_task=lambda spec: progress.advance(bar)
+            )
+    except FileExistsError as error:
+        console.print(f"[red]{error}[/red]")
+        raise typer.Exit(code=1) from None
+    except (TaskGenerationError, GroundTruthMismatch) as error:
+        console.print(f"[red]generation failed:[/red] {error}")
+        raise typer.Exit(code=1) from None
+    elapsed = time.perf_counter() - started
+    console.print(
+        f"generated {manifest.n_tasks} tasks in {elapsed:.1f}s -> {Path(out) / f'seed{seed}'} "
+        f"(run `swarm tasks stats` to check them)"
+    )
+
+
+@tasks_app.command("sequences")
+def tasks_sequences(
+    seed: Annotated[int, typer.Option(help="Task set seed (also seeds the shuffles).")] = 0,
+    n_seq: Annotated[int, typer.Option(help="Number of sequences.")] = 20,
+    episodes: Annotated[int, typer.Option(help="Episodes per sequence.")] = 10,
+    root: Annotated[Path, typer.Option(help="Root folder for task sets.")] = DEFAULT_TASK_ROOT,
+) -> None:
+    """Write <root>/seed<seed>/sequences.json: fixed (A task, B task) pairs for every episode."""
+    task_dir = Path(root) / f"seed{seed}"
+    manifest = load_manifest(task_dir)
+    try:
+        sequences = make_sequences(manifest, seed, n_sequences=n_seq, episodes=episodes)
+    except ValueError as error:
+        console.print(f"[red]{error}[/red]")
+        raise typer.Exit(code=1) from None
+    path = task_dir / SEQUENCES_FILE
+    content = write_sequences(path, manifest, sequences, seed)
+    console.print(
+        f"wrote {content.n_sequences} sequences x {content.episodes} episodes -> {path} "
+        f"(manifest {content.manifest_digest[:12]})"
+    )
+
+
+@tasks_app.command("stats")
+def tasks_stats(
+    task_dir: Annotated[Path, typer.Argument(help="A task set folder, e.g. data/tasks/seed0.")],
+) -> None:
+    """Per-template counts, answer sizes, draws per task, schema-dump length, duplicates."""
+    summary = summarize(load_manifest(task_dir))
+    table = Table(title=f"{task_dir}: {summary['n_tasks']} tasks", title_justify="left")
+    table.add_column("template", overflow="fold")
+    for name in ("tasks", "answer min", "median", "max", "mean draws", "max draws"):
+        table.add_column(name, justify="right")
+    for name, row in summary["templates"].items():
+        table.add_row(
+            TEMPLATES_BY_NAME[name].label if name in TEMPLATES_BY_NAME else name,
+            str(row["tasks"]),
+            str(row["answer_min"]),
+            f"{row['answer_median']:g}",
+            str(row["answer_max"]),
+            f"{row['mean_draws']:.2f}",
+            str(row["max_draws"]),
+        )
+    console.print(table)
+
+    bins = list(summary["histogram"])
+    histogram = Table(title="answer sizes (tasks per bin)", title_justify="left")
+    histogram.add_column("template")
+    for label in bins:
+        histogram.add_column(label, justify="right")
+    for name, row in summary["templates"].items():
+        histogram.add_row(name, *(str(row["histogram"][label]) for label in bins))
+    histogram.add_section()
+    histogram.add_row("all", *(str(summary["histogram"][label]) for label in bins), style="bold")
+    console.print(histogram)
+
+    dumps = summary["schema_dump_chars"]
+    console.print(
+        f"schema dump: min {dumps['min']:,} chars, median {dumps['median']:,} chars; "
+        f"duplicate fingerprints: {summary['duplicate_fingerprints']}"
+    )
+    for check, passed in summary["checks"].items():
+        console.print(f"  {'[green]pass[/green]' if passed else '[red]FAIL[/red]'}  {check}")
+    if not all(summary["checks"].values()):
+        raise typer.Exit(code=1)
+
+
+@tasks_app.command("show")
+def tasks_show(
+    task_dir: Annotated[Path, typer.Argument(help="A task set folder, e.g. data/tasks/seed0.")],
+    task_id: Annotated[str, typer.Argument(help="A task id, e.g. task_0007.")],
+    reveal: Annotated[bool, typer.Option(help="Also print the reference SQL and IDs.")] = False,
+) -> None:
+    """The request an agent sees, the answer size and template; --reveal adds SQL and IDs."""
+    spec = load_task(task_dir, task_id)
+    template = TEMPLATES_BY_NAME[spec.template].label
+    console.print(f"[bold]{spec.task_id}[/bold]  {template}  ({spec.n_answer} IDs expected)")
+    # soft_wrap: no hard line breaks, so the request and the SQL can be copied intact
+    console.print(spec.nl_request, markup=False, soft_wrap=True)
+    if reveal:
+        console.print("\n[bold]reference SQL[/bold]")
+        console.print(spec.reference_sql, markup=False, soft_wrap=True)
+        console.print(f"\n[bold]reference IDs[/bold] {spec.reference_ids}", soft_wrap=True)

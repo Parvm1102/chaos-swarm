@@ -1,0 +1,39 @@
+{
+  "task_id": "task_0032",
+  "template": "T1",
+  "difficulty": "base",
+  "db_seed": 16199908825138857889,
+  "params": {
+    "tiers": [
+      "basic",
+      "enterprise"
+    ],
+    "opened_from": "2024-02-01",
+    "opened_before": "2024-11-01",
+    "min_severity": 2,
+    "note_type": "update",
+    "refund_above": 250
+  },
+  "nl_request": "Find the support cases opened on or after 2024-02-01 and before 2024-11-01 with a severity of at least 2, for customers on the basic or enterprise tier, that have at least one update note and at least one refund greater than 250 with an approval date recorded. Return the IDs of the matching support cases.",
+  "reference_ids": [
+    69,
+    127,
+    257,
+    267,
+    269,
+    274,
+    315,
+    316,
+    442,
+    585,
+    597,
+    712,
+    730
+  ],
+  "answer_table": "support_cases",
+  "n_answer": 13,
+  "n_samples": 2,
+  "schema_dump_chars": 4296,
+  "fingerprint": "946dd320012cae07dc18ca1bc54dbdcfb54dc328bba3e11c67fb4d082b021b54",
+  "reference_sql": "SELECT sc.id\nFROM support_cases AS sc\nJOIN customers AS c ON c.id = sc.customer_id\nWHERE c.tier IN ('basic', 'enterprise')\n  AND sc.opened_at >= '2024-02-01' AND sc.opened_at < '2024-11-01'\n  AND sc.severity >= 2\n  AND EXISTS (\n    SELECT 1 FROM case_notes AS n\n    WHERE n.case_id = sc.id AND n.note_type = 'update'\n  )\n  AND EXISTS (\n    SELECT 1 FROM refunds AS r\n    WHERE r.case_id = sc.id AND r.amount > 250 AND r.approved_at IS NOT NULL\n  )\nORDER BY sc.id"
+}

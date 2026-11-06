@@ -14,3 +14,6 @@ dist/
 # Tools
 .pytest_cache/
 .ruff_cache/
+
+# Task databases are rebuilt deterministically by `swarm tasks generate`
+data/**/db.sqlite

@@ -1,0 +1,36 @@
+{
+  "task_id": "task_0013",
+  "template": "T2",
+  "difficulty": "base",
+  "db_seed": 15587859488532442286,
+  "params": {
+    "hired_from": "2024-08-01",
+    "hired_before": "2025-12-01",
+    "note_type": "legal_review",
+    "min_severity": 3,
+    "region": "west"
+  },
+  "nl_request": "Find the employees hired on or after 2024-08-01 and before 2025-12-01 who wrote at least one legal-review note on a support case that has a severity of at least 3, has no closed date recorded, and belongs to a customer in the west region. Return the IDs of the matching employees.",
+  "reference_ids": [
+    5,
+    19,
+    20,
+    27,
+    34,
+    41,
+    44,
+    46,
+    51,
+    61,
+    67,
+    75,
+    101,
+    111
+  ],
+  "answer_table": "employees",
+  "n_answer": 14,
+  "n_samples": 1,
+  "schema_dump_chars": 4296,
+  "fingerprint": "1e9a079e4254aade2102e41a7cb5f07f78c3145e00fe7a419c63d22c6622e852",
+  "reference_sql": "SELECT e.id\nFROM employees AS e\nWHERE e.hired_at >= '2024-08-01' AND e.hired_at < '2025-12-01'\n  AND EXISTS (\n    SELECT 1\n    FROM case_notes AS n\n    JOIN support_cases AS sc ON sc.id = n.case_id\n    JOIN customers AS c ON c.id = sc.customer_id\n    WHERE n.author_employee_id = e.id\n      AND n.note_type = 'legal_review'\n      AND sc.severity >= 3\n      AND sc.closed_at IS NULL\n      AND c.region = 'west'\n  )\nORDER BY e.id"
+}

@@ -1,0 +1,40 @@
+{
+  "task_id": "task_0066",
+  "template": "T3",
+  "difficulty": "base",
+  "db_seed": 17597432307047093437,
+  "params": {
+    "requested_from": "2024-06-01",
+    "requested_before": "2025-10-01",
+    "min_amount": 20000,
+    "min_risk": 2,
+    "departments": [
+      "Billing",
+      "Procurement"
+    ]
+  },
+  "nl_request": "Find the procurement requests with a request date on or after 2024-06-01 and before 2025-10-01, for an amount of at least 20000, from vendors with a risk rating of at least 2, requested by an employee in the Billing or Procurement department, with no need-by date recorded. Return the IDs of the matching procurement requests.",
+  "reference_ids": [
+    7,
+    60,
+    114,
+    117,
+    120,
+    185,
+    198,
+    217,
+    231,
+    258,
+    272,
+    276,
+    286,
+    326,
+    385
+  ],
+  "answer_table": "procurement_requests",
+  "n_answer": 15,
+  "n_samples": 2,
+  "schema_dump_chars": 4296,
+  "fingerprint": "7b09a72ab494dfcecaf79acdd2ad3ff89f7c7433bc012dfb27e49260b5d8404b",
+  "reference_sql": "SELECT pr.id\nFROM procurement_requests AS pr\nJOIN vendors AS v ON v.id = pr.vendor_id\nJOIN employees AS e ON e.id = pr.requested_by_employee_id\nJOIN departments AS d ON d.id = e.department_id\nWHERE pr.requested_at >= '2024-06-01'\n  AND pr.requested_at < '2025-10-01'\n  AND pr.amount >= 20000\n  AND v.risk_rating >= 2\n  AND d.name IN ('Billing', 'Procurement')\n  AND pr.needed_by IS NULL\nORDER BY pr.id"
+}
