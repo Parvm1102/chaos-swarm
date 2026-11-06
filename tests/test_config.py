@@ -13,7 +13,7 @@ def test_defaults():
     assert run.dry_run is True
     assert run.provider == "anthropic"
     assert run.concurrency == 8
-    assert run.cache_ttl == "1h"
+    assert run.cache_ttl == "5m"
     assert run.model == ModelConfig(
         name="claude-sonnet-5-5", max_tokens=1024, temperature=1.0, thinking_budget=None
     )
@@ -89,13 +89,13 @@ def test_load_run_config_from_yaml(tmp_path):
         "  name: claude-haiku-5-5\n"
         "  max_tokens: 512\n"
         "budget_usd: 3\n"
-        "cache_ttl: 5m\n"
+        "cache_ttl: 1h\n"
         "seed: 1\n"
     )
     run = load_run_config(path)
     assert run.run_name == "arm-b"
     assert run.model.name == "claude-haiku-5-5" and run.model.max_tokens == 512
-    assert run.budget_usd == 3.0 and run.cache_ttl == "5m" and run.dry_run is True
+    assert run.budget_usd == 3.0 and run.cache_ttl == "1h" and run.dry_run is True
 
 
 def test_missing_budget_comes_from_the_environment(tmp_path, monkeypatch):

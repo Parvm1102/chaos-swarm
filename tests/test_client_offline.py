@@ -117,7 +117,7 @@ def test_refuses_without_an_api_key(live_run, make_meter):
 def test_refuses_a_meter_priced_at_another_ttl(live_run, make_meter):
     with pytest.raises(ValueError, match="does not match"):
         AnthropicClient(
-            live_run, make_meter(cache_ttl="5m"), settings=live_settings(), sdk=FakeSDK()
+            live_run, make_meter(cache_ttl="1h"), settings=live_settings(), sdk=FakeSDK()
         )
 
 
@@ -135,13 +135,13 @@ async def test_a_call_is_built_sent_converted_and_metered(live_run, make_meter):
     assert request["model"] == "claude-haiku-5-5"
     assert request["thinking"] == {"type": "disabled"}
     assert "temperature" not in request
-    assert request["system"][-1]["cache_control"] == {"type": "ephemeral", "ttl": "1h"}
+    assert request["system"][-1]["cache_control"] == {"type": "ephemeral", "ttl": "5m"}
 
     assert response.text == "pong"
     assert response.usage.cache_creation_input_tokens == 1_500
     (line,) = read_usage_lines(meter.path)
-    # Haiku: 10 x 0.10 + 1,500 x 0.20 (1h write) + 2 x 0.50 = 302 per million
-    assert line["usd"] == pytest.approx(0.000302)
+    # Haiku: 10 x 0.10 + 1,500 x 0.125 (5m write) + 2 x 0.50 = 189.5 per million
+    assert line["usd"] == pytest.approx(0.0001895)
     assert (line["phase"], line["agent"], line["episode"]) == ("test", "probe", 0)
 
 

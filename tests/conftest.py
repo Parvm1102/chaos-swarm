@@ -49,7 +49,7 @@ def make_run() -> Callable[..., RunConfig]:
 def make_meter(tmp_path: Path) -> Callable[..., CostMeter]:
     """A CostMeter writing to <tmp>/run/usage.jsonl."""
 
-    def make(budget_usd: float = 1.0, *, cache_ttl: CacheTTL = "1h") -> CostMeter:
+    def make(budget_usd: float = 1.0, *, cache_ttl: CacheTTL = "5m") -> CostMeter:
         return CostMeter(tmp_path / "run", budget_usd, provider="anthropic", cache_ttl=cache_ttl)
 
     return make

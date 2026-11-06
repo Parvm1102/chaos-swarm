@@ -59,7 +59,7 @@ async def test_one_line_per_call_with_every_field(make_meter):
     }
     assert line["provider"] == "anthropic" and line["model"] == "claude-haiku-5-5"
     assert (line["phase"], line["agent"], line["episode"]) == ("task", "A", 3)
-    assert line["cache_ttl"] == "1h" and line["input_tokens"] == 1_000
+    assert line["cache_ttl"] == "5m" and line["input_tokens"] == 1_000
 
 
 async def test_budget_exceeded_at_the_call_that_crosses_it(make_meter):

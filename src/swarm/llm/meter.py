@@ -4,7 +4,7 @@ Every call, live or scripted, goes through `CostMeter.record`, which appends one
 `runs/<run>/usage.jsonl`:
 
     {"ts": "...", "provider": "anthropic", "model": "claude-haiku-5-5", "phase": "task",
-     "agent": "A", "episode": 3, "cache_ttl": "1h", "input_tokens": 812, "output_tokens": 64,
+     "agent": "A", "episode": 3, "cache_ttl": "5m", "input_tokens": 812, "output_tokens": 64,
      "cache_creation_input_tokens": 0, "cache_read_input_tokens": 2048, "usd": ...,
      "total_usd": ...}
 

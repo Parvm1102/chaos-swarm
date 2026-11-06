@@ -1,0 +1,9 @@
+# conda env export --from-history --override-channels -c conda-forge -c nodefaults
+# (prefix line removed). Regenerate at the end of every step.
+name: swarm
+channels:
+  - conda-forge
+  - nodefaults
+dependencies:
+  - python=3.12
+  - pip

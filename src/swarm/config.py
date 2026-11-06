@@ -85,7 +85,9 @@ class RunConfig(BaseModel):
     budget_usd: float = Field(gt=0)  # this run's USD cap, for its one provider
     dry_run: bool = True
     concurrency: int = Field(default=8, ge=1)  # max API calls in flight at once
-    cache_ttl: CacheTTL = "1h"
+    # "5m" by default: every cache hit refreshes the TTL, and turns inside an episode are
+    # seconds apart. Use "1h" only for runs that may pause between calls (writes cost 2x input).
+    cache_ttl: CacheTTL = "5m"
     seed: int
 
     @model_validator(mode="after")
