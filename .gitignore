@@ -1,0 +1,16 @@
+# Local only: secrets, run outputs, the read-only reference clone
+.env
+runs/
+reference/
+
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+build/
+dist/
+.venv/
+
+# Tools
+.pytest_cache/
+.ruff_cache/

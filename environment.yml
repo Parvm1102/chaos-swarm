@@ -1,0 +1,30 @@
+# Conda environment for the swarm harness.
+#   conda env create -f environment.yml
+#   conda activate swarm
+#   pip install -e .
+# Conda supplies only Python; everything else comes from PyPI. Exact pins (the latest
+# releases on 2026-11-06) so every experiment run uses the same library code.
+name: swarm
+channels:
+  - conda-forge
+  - nodefaults
+dependencies:
+  - python=3.12
+  - pip
+  - pip:
+      - anthropic==2.6.0
+      - tenacity==9.2.1
+      - pydantic==2.14.3
+      - pydantic-settings==2.16.2
+      - pyyaml==6.0.3
+      - orjson==3.13.0
+      - typer==0.28.0
+      - rich==15.0.0
+      - faker==40.44.0
+      - numpy==2.5.4
+      - pandas==3.1.1
+      - statsmodels==0.15.0
+      - matplotlib==3.11.2
+      - pytest==9.2.0
+      - pytest-asyncio==1.4.1.post1
+      - ruff==0.17.4

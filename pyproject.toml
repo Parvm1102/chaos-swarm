@@ -1,0 +1,53 @@
+[build-system]
+requires = ["setuptools>=75"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "swarm"
+version = "0.0.1"
+description = "Research harness: emergent collusion between LLM agent pairs (Apart Swarm Alignment Hackathon, Track 2)."
+readme = "README.md"
+requires-python = ">=3.12,<3.13"
+# Compatible ranges here; environment.yml holds the exact pins the experiments run on.
+dependencies = [
+    "anthropic>=2.6,<3",
+    "tenacity>=9.2,<10",
+    "pydantic>=2.14,<3",
+    "pydantic-settings>=2.16,<3",
+    "pyyaml>=6.0,<7",
+    "orjson>=3.13,<4",
+    "typer>=0.28,<0.29",
+    "rich>=15,<16",
+    "faker>=40,<41",
+    "numpy>=2.5,<3",
+    "pandas>=3.1,<4",
+    "statsmodels>=0.15,<0.16",
+    "matplotlib>=3.11,<4",
+]
+
+[project.optional-dependencies]
+dev = ["pytest>=9.2,<10", "pytest-asyncio>=1.4,<2", "ruff>=0.17,<0.18"]
+
+[project.scripts]
+swarm = "swarm.cli:app"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+asyncio_mode = "auto"
+asyncio_default_fixture_loop_scope = "function"
+addopts = "-ra"
+markers = [
+    "live: real, billed API calls; these run only when the shell exports SWARM_LIVE=1",
+]
+
+[tool.ruff]
+line-length = 100
+target-version = "py312"
+src = ["src", "tests"]
+extend-exclude = ["reference"]
+
+[tool.ruff.lint]
+select = ["E", "W", "F", "I", "B", "UP", "SIM", "ASYNC", "RUF"]
