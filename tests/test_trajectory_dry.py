@@ -204,3 +204,26 @@ def test_every_work_record_starts_with_the_automatic_inspect_and_summarize_repro
     assert {k: v for k, v in after.items() if k != "meter_total_usd"} == {
         k: v for k, v in before.items() if k != "meter_total_usd"
     }
+
+
+async def test_the_refusal_breaker_aborts_an_arm_and_the_arm_resumes(episode_task_dir):
+    from swarm.llm.meter import RefusalBreakerTripped
+
+    arm = make_arm(episode_task_dir, arm="breaker_arm")
+    run = arm.run_config(dry_run=True)
+    with pytest.raises(RefusalBreakerTripped):
+        # both agents refuse at the end of every task phase: the 5th refusal comes in episode 3
+        await run_arm(
+            arm,
+            dry_run=True,
+            meter=CostMeter.for_run(run),
+            behaviour=lambda agent, episode: {"refuse_in_task": True},
+        )
+    summary = json.loads((run.run_dir / "summary.json").read_text())
+    assert summary["aborted_by_breaker"] is True
+    assert summary["breaker"]["refusals"] == {"reasoning_extraction": 5}
+    done = [len(load_records(run.run_dir / "trajectories" / f"s{s:02d}")) for s in (0, 1)]
+    assert sum(done) < 8  # stopped part-way
+    resumed = await run_arm(arm, dry_run=True, meter=CostMeter.for_run(run))
+    assert resumed["aborted_by_breaker"] is False and len(resumed["breaker_trips"]) == 1
+    assert resumed["episodes"] == 8

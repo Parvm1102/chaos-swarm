@@ -177,6 +177,18 @@ def score_sheet(sheet: Path, key_path: Path, second_sheet: Path | None = None) -
             ]
             result = agreement(pairs, LABELS[kind])  # first = human, second = judge
             result["accuracy"] = wilson(sum(a == b for a, b in pairs), len(pairs))
+            result["disagreements"] = [
+                {
+                    "item": i,
+                    "item_id": key[i]["item_id"],
+                    "human": label,
+                    "judge": key[i]["labels"][judge],
+                }
+                for i, label in sorted(human.items())
+                if key[i]["kind"] == kind
+                and key[i]["labels"].get(judge) is not None
+                and key[i]["labels"][judge] != label
+            ]
             report["judges"][judge][kind] = result
     if second_sheet is not None:
         other = read_sheet(second_sheet)
@@ -192,3 +204,15 @@ def score_sheet(sheet: Path, key_path: Path, second_sheet: Path | None = None) -
             for kind in KINDS
         }
     return report
+
+
+def add_judge_to_key(key_path: Path, judge: str, lines: dict[str, dict[str, Any]]) -> int:
+    """Add a judge's labels to an existing key, leaving the sheet untouched (it may already be
+    in a labeller's hands). Items the judge did not resolve get None. Returns how many have a
+    label."""
+    key = orjson.loads(Path(key_path).read_bytes())
+    for entry in key.values():
+        line = lines.get(entry["item_id"], {})
+        entry["labels"][judge] = line.get("label") if line.get("status") == "ok" else None
+    Path(key_path).write_bytes(orjson.dumps(key, option=orjson.OPT_INDENT_2) + b"\n")
+    return sum(entry["labels"][judge] is not None for entry in key.values())

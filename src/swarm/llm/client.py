@@ -83,6 +83,7 @@ THINKING_OFF: dict[str, dict[str, str] | None] = {
     "claude-sonnet-5-5": {"type": "between_tools"},  # its lowest setting: no extended thinking
     "claude-haiku-5-5": {"type": "disabled"},
     "claude-opus-5-5": None,
+    "claude-sonnet-5": {"type": "disabled"},  # previous generation: disabled is accepted
 }
 
 # Models that answer a forced tool_choice ({"type": "any"} or {"type": "tool"}) with a 400.
@@ -329,6 +330,13 @@ def to_llm_response(message: anthropic.types.Message) -> LLMResponse:
     )
 
 
+def refusal_category(response: LLMResponse) -> str | None:
+    """The stop_details category of a refused reply (None if it was not a refusal)."""
+    if response.stop_reason != "refusal":
+        return None
+    return (response.raw.get("stop_details") or {}).get("category") or "unknown"
+
+
 # Pacing ---------------------------------------------------------------------------------------
 
 
@@ -439,7 +447,13 @@ class AnthropicClient:
                 _tag_text(tags),
             )
         response = to_llm_response(message)
-        await self.meter.record(self.run.model.name, response.usage, **tags)
+        await self.meter.record(
+            self.run.model.name,
+            response.usage,
+            **tags,
+            stop_reason=response.stop_reason,
+            refusal_category=refusal_category(response),
+        )
         return response
 
     async def _create_with_retries(self, request: dict[str, Any], tags: Tags) -> Any:
@@ -585,7 +599,13 @@ class ScriptedClient:
         )
         self.calls.append(RecordedCall(request=request, tags=tags))
         response = self.script(copy.deepcopy(messages), tools)
-        await self.meter.record(self.run.model.name, response.usage, **tags)
+        await self.meter.record(
+            self.run.model.name,
+            response.usage,
+            **tags,
+            stop_reason=response.stop_reason,
+            refusal_category=refusal_category(response),
+        )
         return response
 
 

@@ -93,6 +93,8 @@ def test_scoring_a_labelled_sheet(tmp_path):
     report = score_sheet(labelled, paths["key"], second_sheet=labelled)
     correct = sum(r["accuracy"]["k"] for r in report["judges"]["sonnet"].values())
     assert report["labelled"] == 10 and correct == 9
+    listed = [d for r in report["judges"]["sonnet"].values() for d in r["disagreements"]]
+    assert [d["item"] for d in listed] == ["V01"] and listed[0]["item_id"] == key["V01"]["item_id"]
     assert all(r["agreement"] == 1.0 for r in report["humans"].values() if r["n"])
     rows[1]["your_label"] = "banana"
     with labelled.open("w", newline="") as f:
@@ -101,3 +103,20 @@ def test_scoring_a_labelled_sheet(tmp_path):
         writer.writerows(rows)
     with pytest.raises(ValueError, match="outside the allowed set"):
         score_sheet(labelled, paths["key"])
+
+
+def test_a_further_judge_joins_the_key_without_touching_the_sheet(tmp_path):
+    from swarm.analysis.validation import add_judge_to_key
+
+    items, primary = population()
+    picked = sample_items(items, primary, n=6, seed=3)
+    paths = write_sample(picked, {"sonnet": primary}, tmp_path)
+    sheet_before = paths["sheet"].read_bytes()
+    third = {i.item_id: {"status": "ok", "label": "none"} for i in picked[:4]}
+    third[picked[4].item_id] = {"status": "unresolved", "label": None}
+    assert add_judge_to_key(paths["key"], "sonnet5", third) == 4
+    assert paths["sheet"].read_bytes() == sheet_before
+    import orjson
+
+    key = orjson.loads(paths["key"].read_bytes())
+    assert [v["labels"]["sonnet5"] for v in key.values()].count(None) == 2

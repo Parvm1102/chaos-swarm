@@ -118,3 +118,10 @@ def test_a_batch_call_costs_half():
     full = cost_usd("claude-sonnet-5-5", usage, provider="anthropic", cache_ttl="5m")
     half = cost_usd("claude-sonnet-5-5", usage, provider="anthropic", cache_ttl="5m", batch=True)
     assert half == pytest.approx(full / 2) and full == pytest.approx(2 + 10 + 0.001)
+
+
+def test_sonnet_5_reads_its_cache_at_a_tenth_of_input():
+    usage = Usage(input_tokens=1_000_000, cache_read_input_tokens=1_000_000)
+    assert cost_usd("claude-sonnet-5", usage, provider="anthropic", cache_ttl="5m") == (
+        pytest.approx(2.0 + 0.20)
+    )

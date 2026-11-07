@@ -38,7 +38,13 @@ from swarm.arms import ArmConfig
 from swarm.calibrate import first_error
 from swarm.episodes import scripted_episode_agent, scripted_proposer
 from swarm.llm.client import AnthropicClient, LLMClient, ScriptedClient, thinking_config
-from swarm.llm.meter import USAGE_FILE, CostMeter, summarize_usage_file
+from swarm.llm.meter import (
+    USAGE_FILE,
+    CostMeter,
+    RefusalBreakerTripped,
+    breaker_history,
+    summarize_usage_file,
+)
 from swarm.tasks.generate import load_manifest
 from swarm.tasks.sequences import SEQUENCES_FILE, SequencesFile
 
@@ -100,16 +106,24 @@ async def run_arm(
 
         return choose
 
-    if dry_run:
+    try:
+        if dry_run:
 
-        def scripted(agent: EpisodeAgent) -> LLMClient:
-            options = behaviour(agent.name, agent.spec.episode)
-            return ScriptedClient(scripted_episode_agent(agent, **options), run=run, meter=meter)
+            def scripted(agent: EpisodeAgent) -> LLMClient:
+                options = behaviour(agent.name, agent.spec.episode)
+                return ScriptedClient(
+                    scripted_episode_agent(agent, **options), run=run, meter=meter
+                )
 
-        trajectories = await _run_all(specs, with_peer(scripted), arm.concurrency)
-    else:
-        async with AnthropicClient(run, meter) as client:
-            trajectories = await _run_all(specs, with_peer(lambda agent: client), arm.concurrency)
+            trajectories = await _run_all(specs, with_peer(scripted), arm.concurrency)
+        else:
+            async with AnthropicClient(run, meter) as client:
+                trajectories = await _run_all(
+                    specs, with_peer(lambda agent: client), arm.concurrency
+                )
+    except RefusalBreakerTripped as trip:
+        mark_aborted(run.run_dir, trip.details, arm=arm.arm, dry_run=dry_run)
+        raise
 
     del trajectories  # the summary is recomputed from the records, the single source
     return write_summary(arm, run.run_dir, dry_run=dry_run, meter_total_usd=meter.total_usd)
@@ -146,12 +160,25 @@ def write_summary(
         "provenance": provenance(arm, run_dir),
         **arm_summary(trajectories, records_by_trajectory=records_by_trajectory),
         "meter_total_usd": meter_total_usd,
+        "aborted_by_breaker": False,  # this summary comes from a run that finished
+        "breaker_trips": breaker_history(run_dir),  # earlier invocations that tripped
     }
     _write(run_dir / SUMMARY_FILE, summary)
     from swarm.judging import attach_pathways  # judging imports this module
 
     attach_pathways(run_dir)  # keep the step-5 pathway counts, if the judges have run
     return orjson.loads((run_dir / SUMMARY_FILE).read_bytes())
+
+
+def mark_aborted(run_dir: Path, details: dict[str, Any], **identity: Any) -> None:
+    """Record a refusal-breaker abort in summary.json: the existing summary gains the flag, or
+    a stub is written. A later run that finishes rewrites the summary (flag false, history kept)."""
+    path = run_dir / SUMMARY_FILE
+    summary = orjson.loads(path.read_bytes()) if path.exists() else {**identity, "complete": False}
+    summary["aborted_by_breaker"] = True
+    summary["breaker"] = details
+    summary["breaker_trips"] = breaker_history(run_dir)
+    _write(path, summary)
 
 
 def summarize_arm(arm: ArmConfig, *, dry_run: bool = False) -> dict[str, Any]:

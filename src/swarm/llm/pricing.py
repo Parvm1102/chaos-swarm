@@ -42,6 +42,11 @@ PRICES: dict[str, dict[str, Rates]] = {
         "claude-sonnet-5-5": Rates(
             input=2.00, output=10.00, cache_write_5m=2.50, cache_write_1h=4.00, cache_read=0.10
         ),
+        # Sonnet 5 (previous generation; step-5 second judge): verified 2026-11-07 on the live
+        # pricing page. Its cache reads are 0.1x input ($0.20), not Sonnet 5.5's 0.05x.
+        "claude-sonnet-5": Rates(
+            input=2.00, output=10.00, cache_write_5m=2.50, cache_write_1h=4.00, cache_read=0.20
+        ),
         "claude-opus-5-5": Rates(
             input=4.00, output=20.00, cache_write_5m=5.00, cache_write_1h=8.00, cache_read=0.20
         ),

@@ -248,3 +248,8 @@ def test_structured_output_goes_into_output_config_beside_the_effort():
     assert "output_config" not in build()
     with pytest.raises(ValueError, match="json_schema"):
         build(output_format={"type": "text"})
+
+
+def test_sonnet_5_turns_thinking_off_with_disabled():
+    request = build(model=ModelConfig(name="claude-sonnet-5"), tools=None)
+    assert request["thinking"] == {"type": "disabled"} and "output_config" not in request

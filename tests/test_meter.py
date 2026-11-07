@@ -131,3 +131,85 @@ def test_a_damaged_line_is_reported_with_its_number(make_meter, tmp_path):
 def test_budget_must_be_positive(make_meter):
     with pytest.raises(ValueError, match="budget_usd"):
         make_meter(budget_usd=0)
+
+
+async def test_the_refusal_breaker_trips_at_five_reasoning_extraction_refusals(make_meter):
+    from swarm.llm.meter import BREAKER_FILE, RefusalBreakerTripped, breaker_history
+
+    meter = make_meter()
+    tags = {"phase": "task", "agent": "A", "episode": 1}
+    for _ in range(4):
+        await meter.record("claude-haiku-5-5", Usage(), **tags, stop_reason="refusal",
+                           refusal_category="reasoning_extraction")  # fmt: skip
+    await meter.record("claude-haiku-5-5", Usage(), **tags, stop_reason="end_turn")
+    meter.ensure_within_budget()  # 4 refusals: still running
+    with pytest.raises(RefusalBreakerTripped, match="5 reasoning_extraction refusals"):
+        await meter.record("claude-haiku-5-5", Usage(), **tags, stop_reason="refusal",
+                           refusal_category="reasoning_extraction")  # fmt: skip
+    with pytest.raises(RefusalBreakerTripped, match="no new calls"):
+        meter.ensure_within_budget()
+    lines = list(read_usage_lines(meter.path))
+    assert [line.get("refusal") for line in lines].count("reasoning_extraction") == 5
+    assert "refusal" not in lines[4]
+    assert (meter.run_dir / BREAKER_FILE).exists()
+    assert breaker_history(meter.run_dir)[0]["refusals"] == {"reasoning_extraction": 5}
+    # A resumed run (a new meter on the same folder) starts counting from zero.
+    resumed = make_meter()
+    resumed.ensure_within_budget()
+    assert resumed.refusals == {} and resumed.tripped is None
+
+
+async def test_the_refusal_breaker_trips_at_ten_refusals_of_any_category(make_meter):
+    from swarm.llm.meter import RefusalBreakerTripped
+
+    meter = make_meter()
+    tags = {"phase": "judge_coordination", "agent": "pair", "episode": 3}
+    categories = ["cyber", "bio", None, "reasoning_extraction"] * 2 + ["cyber"]
+    for category in categories:  # 9 refusals, only 2 of them reasoning_extraction
+        await meter.record("claude-haiku-5-5", Usage(), **tags, stop_reason="refusal",
+                           refusal_category=category)  # fmt: skip
+    with pytest.raises(RefusalBreakerTripped, match="10 refusals"):
+        await meter.record("claude-haiku-5-5", Usage(), **tags, stop_reason="refusal",
+                           refusal_category="bio")  # fmt: skip
+    assert meter.tripped["refusals"]["unknown"] == 2
+
+
+async def test_a_run_may_lower_the_breaker_but_never_raise_it(tmp_path):
+    from swarm.llm.meter import CostMeter, RefusalBreakerTripped
+
+    strict = CostMeter(
+        tmp_path / "pilot",
+        1.0,
+        provider="anthropic",
+        cache_ttl="5m",
+        breaker_category_limits={"reasoning_extraction": 1},
+        breaker_any_limit=1,
+    )
+    with pytest.raises(RefusalBreakerTripped, match="1 refusals"):
+        await strict.record("claude-sonnet-5", Usage(), phase="judge", agent="pair", episode=1,
+                            stop_reason="refusal", refusal_category="cyber")  # fmt: skip
+    with pytest.raises(ValueError, match="only be lowered"):
+        CostMeter(tmp_path / "x", 1.0, provider="anthropic", cache_ttl="5m", breaker_any_limit=11)
+    with pytest.raises(ValueError, match="only be lowered"):
+        CostMeter(tmp_path / "y", 1.0, provider="anthropic", cache_ttl="5m",
+                  breaker_category_limits={"reasoning_extraction": 6})  # fmt: skip
+
+
+def test_the_sonnet_5_pilot_config_stops_at_the_first_refusal():
+    from pathlib import Path
+
+    from swarm.analysis.judges import JudgeConfig
+
+    root = Path(__file__).resolve().parents[1] / "configs" / "judges"
+    pilot = JudgeConfig.load(root / "sonnet5.yaml")
+    assert (pilot.model.name, pilot.model.thinking, pilot.concurrency, pilot.budget_usd) == (
+        "claude-sonnet-5", "off", 2, 1.0,
+    )  # fmt: skip
+    assert (pilot.breaker_reasoning_extraction, pilot.breaker_any) == (1, 1)
+    full = JudgeConfig.load(root / "sonnet5_full.yaml")
+    assert (full.judge, full.concurrency, full.budget_usd, full.breaker_any) == (
+        "sonnet5",
+        5,
+        4.0,
+        10,
+    )

@@ -34,9 +34,15 @@ from swarm.config import (
     Settings,
 )
 from swarm.episodes import episode_name, episode_task_ids, run_episode_to_files
-from swarm.judging import compute_pathways, make_sample, run_judge
+from swarm.judging import add_judge_to_sample, compute_pathways, make_sample, run_judge
 from swarm.llm.client import THINKING_OFF, AnthropicClient
-from swarm.llm.meter import USAGE_FILE, BudgetExceeded, CostMeter, summarize_usage_file
+from swarm.llm.meter import (
+    USAGE_FILE,
+    BudgetExceeded,
+    CostMeter,
+    RefusalBreakerTripped,
+    summarize_usage_file,
+)
 from swarm.llm.pricing import PRICES, cost_usd
 from swarm.llm.types import LLMResponse, text_block, user_message
 from swarm.tasks.generate import (
@@ -181,6 +187,11 @@ def ping(
     except BudgetExceeded as error:
         console.print(f"[red]over budget:[/red] {error}")
         raise typer.Exit(code=3) from None
+    except RefusalBreakerTripped as error:
+        console.print(
+            f"[red]REFUSAL BREAKER:[/red] {error} {error.details['refusals']}; run aborted"
+        )
+        raise typer.Exit(code=4) from None
     except anthropic.APIError as error:
         console.print(f"[red]API error:[/red] {type(error).__name__}: {error}")
         raise typer.Exit(code=1) from None
@@ -330,6 +341,11 @@ def calibrate(
     except BudgetExceeded as error:
         console.print(f"[red]over budget:[/red] {error}")
         raise typer.Exit(code=3) from None
+    except RefusalBreakerTripped as error:
+        console.print(
+            f"[red]REFUSAL BREAKER:[/red] {error} {error.details['refusals']}; run aborted"
+        )
+        raise typer.Exit(code=4) from None
     except anthropic.APIError as error:
         console.print(f"[red]API error:[/red] {type(error).__name__}: {error}")
         raise typer.Exit(code=1) from None
@@ -524,6 +540,11 @@ def episode_command(
     except BudgetExceeded as error:
         console.print(f"[red]over budget:[/red] {error}")
         raise typer.Exit(code=3) from None
+    except RefusalBreakerTripped as error:
+        console.print(
+            f"[red]REFUSAL BREAKER:[/red] {error} {error.details['refusals']}; run aborted"
+        )
+        raise typer.Exit(code=4) from None
     except anthropic.APIError as error:
         console.print(f"[red]API error:[/red] {type(error).__name__}: {error}")
         raise typer.Exit(code=1) from None
@@ -622,6 +643,11 @@ def trajectories_command(
     except BudgetExceeded as error:
         console.print(f"[red]over budget:[/red] {error}")
         raise typer.Exit(code=3) from None
+    except RefusalBreakerTripped as error:
+        console.print(
+            f"[red]REFUSAL BREAKER:[/red] {error} {error.details['refusals']}; run aborted"
+        )
+        raise typer.Exit(code=4) from None
     except anthropic.APIError as error:
         console.print(f"[red]API error:[/red] {type(error).__name__}: {error}")
         raise typer.Exit(code=1) from None
@@ -735,16 +761,28 @@ def judge_command(
     limit: Annotated[
         int | None, typer.Option("--limit", help="At most this many new items per arm (pilot).")
     ] = None,
+    kind: Annotated[
+        str | None, typer.Option("--kind", help="Only this item kind: coordination or relaxation.")
+    ] = None,
+    interleave: Annotated[
+        bool,
+        typer.Option(
+            "--interleave", help="One pass over all arms ordered by episode (live, sync only)."
+        ),
+    ] = False,
 ) -> None:
     """Label every episode of the arms with one judge (resumes; items already labelled are
     skipped). Live unless --dry-run (a live run needs SWARM_LIVE=1)."""
+    if kind not in (None, "coordination", "relaxation"):
+        console.print("[red]--kind must be coordination or relaxation[/red]")
+        raise typer.Exit(code=1)
     if backend not in ("sync", "batch"):
         console.print("[red]--backend must be sync or batch[/red]")
         raise typer.Exit(code=1)
     arms = _load_arms(arm_files)
     try:
         judge = JudgeConfig.load(judge_file)
-        run = judge.run_config(dry_run=dry_run)
+        judge.run_config(dry_run=dry_run)  # the live locks
         if not dry_run and Settings().anthropic_api_key() is None:
             raise LiveCallRefused("ANTHROPIC_API_KEY is not set (put it in .env)")
     except (ValueError, OSError) as error:
@@ -753,16 +791,27 @@ def judge_command(
     except LiveCallRefused as error:
         console.print(f"[red]refused:[/red] {error}")
         raise typer.Exit(code=2) from None
-    meter = CostMeter.for_run(run)
+    meter = judge.meter(dry_run=dry_run)
     console.print(
         f"{'dry run (keyword judge)' if dry_run else 'LIVE'}: judge {judge.judge} = "
         f"{judge.model.name} (thinking {judge.model.thinking}, effort {judge.model.effort}), "
-        f"{backend}, {judge.concurrency} at a time, budget ${judge.budget_usd:g} (spent "
+        f"{backend}, {judge.concurrency} at a time, breaker at "
+        f"{judge.breaker_reasoning_extraction} reasoning_extraction / {judge.breaker_any} any "
+        f"refusals, budget ${judge.budget_usd:g} (spent "
         f"${meter.total_usd:.4f}) on {', '.join(a.arm for a in arms)}"
     )
     try:
         counts = asyncio.run(
-            run_judge(arms, judge, dry_run=dry_run, meter=meter, backend=backend, limit=limit)
+            run_judge(
+                arms,
+                judge,
+                dry_run=dry_run,
+                meter=meter,
+                backend=backend,
+                limit=limit,
+                kind=kind,
+                interleave=interleave,
+            )
         )
     except LiveCallRefused as error:
         console.print(f"[red]refused:[/red] {error}")
@@ -770,6 +819,11 @@ def judge_command(
     except BudgetExceeded as error:
         console.print(f"[red]over budget:[/red] {error}")
         raise typer.Exit(code=3) from None
+    except RefusalBreakerTripped as error:
+        console.print(
+            f"[red]REFUSAL BREAKER:[/red] {error} {error.details['refusals']}; run aborted"
+        )
+        raise typer.Exit(code=4) from None
     except anthropic.APIError as error:
         console.print(f"[red]API error:[/red] {type(error).__name__}: {error}")
         raise typer.Exit(code=1) from None
@@ -791,13 +845,23 @@ def pathways_command(
     ],
     primary: Annotated[str, typer.Option(help="The judge that fills `pathway`.")] = "sonnet",
     secondary: Annotated[str, typer.Option(help="The second judge.")] = "haiku",
+    compare: Annotated[
+        list[str] | None,
+        typer.Option("--compare", help="A further judge to compare with the primary (repeatable)."),
+    ] = None,
     dry_run: Annotated[bool, typer.Option("--dry-run", help="The dry-run arms.")] = False,
 ) -> None:
     """Final pathways from both judges' labels, judge agreement, and the counts in each summary
     (offline: no API calls)."""
     arms = _load_arms(arm_files)
     try:
-        report = compute_pathways(arms, primary=primary, secondary=secondary, dry_run=dry_run)
+        report = compute_pathways(
+            arms,
+            primary=primary,
+            secondary=secondary,
+            dry_run=dry_run,
+            compare=tuple(compare or ()),
+        )
     except (ValueError, OSError) as error:
         console.print(f"[red]{error}[/red]")
         raise typer.Exit(code=1) from None
@@ -831,13 +895,26 @@ def pathways_command(
             str(data["stated_vs_acted"]),
         )
     console.print(table)
-    agreement_table = Table(title=f"item agreement, {first} vs {second}", title_justify="left")
-    for column in ("scope", "kind", "n", "agreement", "kappa", "specific agreement per class"):
+    agreement_table = Table(title=f"item agreement with {first}", title_justify="left")
+    for column in (
+        "judge",
+        "scope",
+        "kind",
+        "n",
+        "agreement",
+        "kappa",
+        "specific agreement per class",
+    ):
         agreement_table.add_column(column)
-    scopes = [("pooled", report["pooled_item_agreement"])] + [
-        (arm, data["item_agreement"]) for arm, data in report["arms"].items()
+    scopes = [
+        (other, "pooled", by_kind)
+        for other, by_kind in report["pooled_item_agreement_by_judge"].items()
+    ] + [
+        (other, arm, by_kind)
+        for arm, data in report["arms"].items()
+        for other, by_kind in data["item_agreement_by_judge"].items()
     ]
-    for scope, by_kind in scopes:
+    for other, scope, by_kind in scopes:
         for kind, a in by_kind.items():
             per_class = ", ".join(
                 f"{label} {c['specific_agreement']:.2f}"
@@ -846,6 +923,7 @@ def pathways_command(
                 for label, c in a["per_class"].items()
             )
             agreement_table.add_row(
+                other,
                 scope,
                 kind,
                 str(a["n"]),
@@ -890,6 +968,27 @@ def validate_sample(
     )
 
 
+@validate_app.command("add-judge")
+def validate_add_judge(
+    arm_files: Annotated[
+        list[Path], typer.Option("--arm", help="An arm's YAML file (repeatable).")
+    ],
+    judge: Annotated[str, typer.Option(help="The judge whose labels join the key.")],
+    key: Annotated[Path, typer.Option(help="The sample's key (JSON).")] = Path(
+        "runs/validation/step5_validation_key.json"
+    ),
+    dry_run: Annotated[bool, typer.Option("--dry-run", help="The dry-run arms.")] = False,
+) -> None:
+    """Add a further judge's labels to an existing sample key; the sheet is not touched."""
+    arms = _load_arms(arm_files)
+    try:
+        labelled = add_judge_to_sample(arms, judge, key, dry_run=dry_run)
+    except (ValueError, OSError) as error:
+        console.print(f"[red]{error}[/red]")
+        raise typer.Exit(code=1) from None
+    console.print(f"{key}: {judge} labels on {labelled} items (the sheet is unchanged)")
+
+
 @validate_app.command("score")
 def validate_score(
     sheet: Annotated[Path, typer.Option(help="The labelled sheet (CSV).")],
@@ -921,6 +1020,13 @@ def validate_score(
                 "-" if a["kappa"] is None else f"{a['kappa']:.2f}",
             )
     console.print(table)
+    for judge, by_kind in report["judges"].items():
+        for kind, a in by_kind.items():
+            for d in a["disagreements"]:
+                console.print(
+                    f"  disagreement {judge} {kind} {d['item']} ({d['item_id']}): "
+                    f"human {d['human']}, judge {d['judge']}"
+                )
     console.print(f"wrote {out}")
 
 

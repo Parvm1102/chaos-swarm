@@ -1,0 +1,14 @@
+# Step 5, second judge on Sonnet 5 (user decision 2026-11-07, after Sonnet 5.5's suspension):
+# the guarded PILOT. 30 coordination items of arm 2, thinking disabled, 2 at a time, $1 cap.
+# Rule fixed before the pilot: any refusal -> stop, Sonnet 5 retired, no retry.
+judge: sonnet5
+model:
+  name: claude-sonnet-5
+  max_tokens: 4096
+  thinking: "off"
+budget_usd: 1.0
+concurrency: 2
+cache_ttl: 5m
+# "Any refusal -> stop", enforced by the run's breaker:
+breaker_reasoning_extraction: 1
+breaker_any: 1

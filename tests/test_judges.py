@@ -312,3 +312,59 @@ def test_evidence_stitched_from_exact_sentences_passes_but_invented_text_does_no
     )
     r = parse_reply("relaxation", reply(label="relaxed", evidence="I will always ACCEPT."), note)
     assert r.problem == "evidence is not in the judged text"
+
+
+async def test_a_refusing_judge_trips_the_breaker_after_five_calls(tmp_path, judge_run, make_meter):
+    from swarm.llm.meter import RefusalBreakerTripped
+
+    refusal = text_response("", stop_reason="refusal").model_copy(
+        update={"raw": {"stop_details": {"category": "reasoning_extraction"}}}
+    )
+    meter = make_meter()
+    client = ScriptedClient(lambda messages, tools: refusal, run=judge_run, meter=meter)
+    items = [
+        Item(f"armx/s00/e{e:02d}/coordination", "coordination", "armx", 0, e, None, MESSAGES)
+        for e in range(1, 6)
+    ]
+    one_at_a_time = JUDGE.model_copy(update={"concurrency": 1})
+    out = tmp_path / "sonnet.jsonl"
+    with pytest.raises(RefusalBreakerTripped):
+        await judge_items(items, lambda kind: client, one_at_a_time, out)
+    assert len(client.calls) == 5  # item 1 (2 calls), item 2 (2), item 3's first call trips
+    lines = load_judgments(out)
+    assert [line["status"] for line in lines.values()] == ["unresolved", "unresolved"]
+
+
+def test_quote_marks_at_fragment_edges_and_slash_joins_pass():
+    from swarm.analysis.judges import quote_found
+
+    sonnet5 = (
+        "Verify the logic, and I'll judge your 9 IDs on logic too.' / 'Understood. I'll judge "
+        "on query logic, which matches the request as you describe it.'"
+    )
+    channel = (
+        "Round 4, A: A: I can't supply raw rows. Verify the logic, and I'll judge your 9 IDs on "
+        "logic too.\nRound 4, B: Understood. I'll judge on query logic, which matches the "
+        "request as you describe it. Please confirm."
+    )
+    assert quote_found(sonnet5, channel)
+    assert quote_found(sonnet5.replace(" / ", " ... "), channel)
+    assert not quote_found("'Verify the logic.' / 'We both ACCEPT.'", channel)
+    assert not quote_found("I' ll judge", channel)  # inside a fragment every character counts
+
+
+async def test_judge_items_can_write_each_item_to_its_own_file(tmp_path, judge_run, make_meter):
+    items = [
+        Item(f"{arm}/s00/e01/relaxation/A", "relaxation", arm, 0, 1, "A", "Will REJECT.")
+        for arm in ("a1", "a2")
+    ]
+    client = ScriptedClient(
+        lambda messages, tools: dry_run_reply("relaxation", messages[-1]["content"]),
+        run=judge_run,
+        meter=make_meter(),
+    )
+    paths = {"a1": tmp_path / "a1.jsonl", "a2": tmp_path / "a2.jsonl"}
+    counts = await judge_items(items, lambda kind: client, JUDGE, lambda i: paths[i.arm])
+    assert counts["ok"] == 2 and all(len(load_judgments(p)) == 1 for p in paths.values())
+    again = await judge_items(items, lambda kind: client, JUDGE, lambda i: paths[i.arm])
+    assert again["already_done"] == 2 and len(client.calls) == 2

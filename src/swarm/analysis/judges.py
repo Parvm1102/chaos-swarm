@@ -14,7 +14,9 @@ judge_relaxation). Every label that claims something ("agreement", "proposal", "
 (whitespace collapsed, otherwise exact). The live pilot showed Sonnet joining two separate
 sentences of a note into one evidence string, each copied exactly; so evidence also passes when
 every fragment (split at sentence ends, at "..." and at runs of two or more spaces) appears
-verbatim in the judged text, in order. Nothing invented can pass either way.
+verbatim in the judged text, in order. The Sonnet 5 pilot also wrapped fragments in quote marks
+and joined them with " / ": quote marks at a fragment's edges are dropped and " / " also splits.
+Nothing invented can pass either way.
 
 A reply that fails (a refusal, a max_tokens stop, JSON that does not match the schema, a failed
 quote check) is retried once; after that the item is
@@ -43,7 +45,15 @@ from pydantic import BaseModel, ConfigDict, Field
 
 from swarm.calibrate import first_error
 from swarm.config import CacheTTL, ModelConfig, Provider, RunConfig
-from swarm.llm.client import LLMClient, Tags, build_request_kwargs, text_response, to_llm_response
+from swarm.llm.client import (
+    LLMClient,
+    Tags,
+    build_request_kwargs,
+    refusal_category,
+    text_response,
+    to_llm_response,
+)
+from swarm.llm.meter import BREAKER_ANY_LIMIT, BREAKER_CATEGORY_LIMITS, CostMeter
 from swarm.llm.pricing import cost_usd
 from swarm.llm.types import LLMResponse, Usage, text_block, user_message
 from swarm.prompts import load_prompt
@@ -102,6 +112,23 @@ class JudgeConfig(BaseModel):
     concurrency: int = Field(default=10, ge=1)
     cache_ttl: CacheTTL = "5m"
     seed: int = 0
+    # Refusal breaker limits for this judge's runs; only stricter than the project rule.
+    breaker_reasoning_extraction: int = Field(
+        default=BREAKER_CATEGORY_LIMITS["reasoning_extraction"], ge=1
+    )
+    breaker_any: int = Field(default=BREAKER_ANY_LIMIT, ge=1)
+
+    def meter(self, *, dry_run: bool) -> CostMeter:
+        """The cost meter (and refusal breaker) for this judge's run folder."""
+        run = self.run_config(dry_run=dry_run)
+        return CostMeter(
+            run.run_dir,
+            run.budget_usd,
+            provider=run.provider,
+            cache_ttl=run.cache_ttl,
+            breaker_category_limits={"reasoning_extraction": self.breaker_reasoning_extraction},
+            breaker_any_limit=self.breaker_any,
+        )
 
     def run_name(self, *, dry_run: bool) -> str:
         return f"judges_{self.judge}" + ("_dry" if dry_run else "")
@@ -215,7 +242,8 @@ def normalize(text: str) -> str:
     return re.sub(r"\s+", " ", text).strip()
 
 
-_FRAGMENT_BREAK = re.compile(r"(?<=[.!?])\s+|\.\.\.|\u2026|\s{2,}")
+_FRAGMENT_BREAK = re.compile(r"(?<=[.!?])\s+|\.\.\.|\u2026|\s{2,}|\s/\s")
+_QUOTE_MARKS = "'\"\u2018\u2019\u201c\u201d"
 
 
 def quote_found(evidence: str, judged_text: str) -> bool:
@@ -224,7 +252,10 @@ def quote_found(evidence: str, judged_text: str) -> bool:
     text = normalize(judged_text)
     if normalize(evidence) in text:
         return True
-    fragments = [normalize(f) for f in _FRAGMENT_BREAK.split(evidence) if normalize(f)]
+    # Quote marks at a fragment's edges are the judge's own (Sonnet 5 wrote "too.' ... 'Under");
+    # inside a fragment every character must match.
+    pieces = (normalize(f).strip(_QUOTE_MARKS).strip() for f in _FRAGMENT_BREAK.split(evidence))
+    fragments = [piece for piece in pieces if piece]
     position = 0
     for fragment in fragments:
         found = text.find(fragment, position)
@@ -392,24 +423,30 @@ async def judge_items(
     items: list[Item],
     client_for: Callable[[Kind], LLMClient],
     judge: JudgeConfig,
-    out_path: Path,
+    out_path: Path | Callable[[Item], Path],
     *,
     limit: int | None = None,
 ) -> dict[str, int]:
-    """Label every item not yet in `out_path` (at most `limit` of them), `judge.concurrency` at
-    a time; append each judgment line as it finishes. Returns counts by status."""
-    done = load_judgments(out_path)
+    """Label every item not yet judged (at most `limit` of them), `judge.concurrency` at a time,
+    roughly in list order; append each judgment line as it finishes. `out_path` is one file, or
+    a function giving each item's file (items of several arms in one interleaved run). Returns
+    counts by status."""
+    path_for = out_path if callable(out_path) else (lambda item: out_path)
+    paths = {path_for(item) for item in items}
+    done: dict[str, dict[str, Any]] = {}
+    for path in paths:
+        done.update(load_judgments(path))
+        path.parent.mkdir(parents=True, exist_ok=True)
     pending = [item for item in items if item.item_id not in done]
     if limit is not None:
         pending = pending[:limit]
-    out_path.parent.mkdir(parents=True, exist_ok=True)
     gate = asyncio.Semaphore(judge.concurrency)
     counts: dict[str, int] = {"ok": 0, "unresolved": 0, "skipped": 0}
 
     async def one(item: Item) -> None:
         async with gate:
             line = await judge_item(client_for(item.kind), item, judge)
-        with out_path.open("ab") as f:
+        with path_for(item).open("ab") as f:
             f.write(orjson.dumps(line) + b"\n")
         counts[line["status"]] += 1
 
@@ -529,6 +566,8 @@ async def judge_items_batch(
                 agent=item.agent or "pair",
                 episode=item.episode,
                 batch=True,
+                stop_reason=response.stop_reason,
+                refusal_category=refusal_category(response),
             )
             entry["usage"], entry["usd"] = _add(entry["usage"], response.usage), entry["usd"] + usd
             reply = parse_reply(item.kind, response, item.text)

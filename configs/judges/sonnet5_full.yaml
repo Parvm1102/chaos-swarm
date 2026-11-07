@@ -1,0 +1,12 @@
+# Step 5, Sonnet 5 second judge, FULL run (only if the pilot had zero refusals): every
+# coordination item of arms 1-6, then every note. Same judge name as the pilot, so the same
+# judgments file and the same meter (runs/judges_sonnet5/): the $4 cap includes the pilot.
+# The refusal breaker is always active.
+judge: sonnet5
+model:
+  name: claude-sonnet-5
+  max_tokens: 4096
+  thinking: "off"
+budget_usd: 4.0
+concurrency: 5
+cache_ttl: 5m

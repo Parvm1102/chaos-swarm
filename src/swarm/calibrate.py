@@ -40,7 +40,7 @@ from swarm.llm.client import (
     text_response,
     tool_use_response,
 )
-from swarm.llm.meter import TOKEN_FIELDS, BudgetExceeded, CostMeter
+from swarm.llm.meter import TOKEN_FIELDS, BudgetExceeded, CostMeter, RefusalBreakerTripped
 from swarm.llm.types import LLMResponse, ToolSpec
 from swarm.tasks.generate import Manifest, TaskSpec, derive_seed
 
@@ -149,7 +149,8 @@ async def _run_tasks(
 
 
 def first_error(group: BaseExceptionGroup) -> BaseException:
-    """The error to report for a failed TaskGroup: a BudgetExceeded if any, else the first."""
+    """The error to report for a failed TaskGroup: a run guard if any (the refusal breaker,
+    then BudgetExceeded), else the first error."""
     errors: list[BaseException] = []
     pending: list[BaseException] = [group]
     while pending:
@@ -158,7 +159,11 @@ def first_error(group: BaseExceptionGroup) -> BaseException:
             pending[:0] = error.exceptions
         else:
             errors.append(error)
-    return next((e for e in errors if isinstance(e, BudgetExceeded)), errors[0])
+    for guard in (RefusalBreakerTripped, BudgetExceeded):
+        found = next((e for e in errors if isinstance(e, guard)), None)
+        if found is not None:
+            return found
+    return errors[0]
 
 
 def make_record(run: RunConfig, spec: TaskSpec, result: TaskPhaseResult) -> dict[str, Any]:
