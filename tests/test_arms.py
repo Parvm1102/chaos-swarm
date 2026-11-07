@@ -35,6 +35,29 @@ def test_the_committed_arms_load():
 
 
 @pytest.mark.parametrize(
+    ("name", "model", "thinking", "rules", "scripted"),
+    [
+        ("haiku_paper_nothink", "claude-haiku-5-5", "off", "paper", None),
+        ("haiku_explicit_think", "claude-haiku-5-5", "adaptive", "explicit", None),
+        ("haiku_paper_think", "claude-haiku-5-5", "adaptive", "paper", None),
+        ("haiku_paper_scriptedB", "claude-haiku-5-5", "off", "paper", "proposer"),
+        ("sonnet_paper_think", "claude-sonnet-5-5", "adaptive", "paper", None),
+    ],
+)
+def test_the_experiment_0_arms(name, model, thinking, rules, scripted):
+    """The six-arm batch (step 4b): same sequences, episodes and memory; one factor per arm."""
+    loaded = load_arm(ARMS / f"{name}.yaml")
+    assert (loaded.model.name, loaded.model.thinking, loaded.rules, loaded.scripted_peer) == (
+        model,
+        thinking,
+        rules,
+        scripted,
+    )
+    assert loaded.sequences == list(range(10)) and loaded.episodes == 10 and loaded.memory
+    assert loaded.model.effort == ("low" if thinking == "adaptive" else None)
+
+
+@pytest.mark.parametrize(
     ("value", "expected"), [("3-5", [3, 4, 5]), ("7", [7]), (2, [2]), ([4, 1], [1, 4])]
 )
 def test_sequence_ranges(value, expected):
@@ -59,3 +82,12 @@ def test_a_dry_run_gets_its_own_folder_and_two_calls_per_trajectory():
 def test_bad_arms_are_refused(bad):
     with pytest.raises(ValueError):
         arm(**bad)
+
+
+def test_rules_and_scripted_peer_options():
+    assert arm().rules == "explicit" and arm().scripted_peer is None
+    assert arm(rules="paper", scripted_peer="proposer").scripted_peer == "proposer"
+    with pytest.raises(ValueError):
+        arm(rules="loose")
+    with pytest.raises(ValueError):
+        arm(scripted_peer="liar")

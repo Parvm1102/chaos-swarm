@@ -24,7 +24,9 @@ from swarm.agents.episode import EpisodeAgent, EpisodeSpec, run_episode
 from swarm.agents.memory import load_memory_prompts, memory_text
 from swarm.analysis.metrics import trajectory_metrics
 from swarm.config import RunConfig
+from swarm.episodes import PROPOSER_PROMPTS
 from swarm.llm.client import LLMClient
+from swarm.prompts import load_prompt
 
 EPISODES_DIR = "episodes"
 TRANSCRIPTS_DIR = "transcripts"
@@ -39,6 +41,8 @@ class TrajectorySpec:
     tasks: list[dict[str, str]]  # episode i (1-based) is tasks[i - 1]: {"A": id, "B": id}
     memory: bool
     out_dir: Path
+    rules: str = "explicit"
+    scripted: dict[str, str] | None = None  # agent -> label of a harness-scripted agent
 
 
 def load_records(out_dir: Path) -> list[dict[str, Any]]:
@@ -71,12 +75,18 @@ async def run_trajectory(
                 episode=episode,
                 task_ids=spec.tasks[episode - 1],
                 memory=memory,
+                rules=spec.rules,
+                scripted=spec.scripted,
             ),
             client_for,
         )
         record = result.record()
         record["memory_enabled"] = spec.memory
         record["prompt_versions"].update({name: p.version for name, p in prompts.items()})
+        if spec.scripted:  # the scripted peer's messages are prompt text too (A reads them)
+            record["prompt_versions"].update(
+                {name: load_prompt(name).version for name in PROPOSER_PROMPTS}
+            )
         _write(spec.out_dir / EPISODES_DIR / f"e{episode:02d}.json", record)
         for agent in ("A", "B"):
             _write(

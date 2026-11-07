@@ -9,9 +9,9 @@ import pytest
 from typer.testing import CliRunner
 
 from swarm.agents.episode import (
+    COMMON_PROMPTS,
     EPISODE_TOOLS,
     EPISODE_TOOLS_VERSION,
-    PROMPT_NAMES,
     EpisodeSpec,
     run_episode,
 )
@@ -23,7 +23,9 @@ from swarm.llm.meter import read_usage_lines
 from swarm.prompts import load_prompt
 
 
-async def play(task_dir, make_run, make_meter, behaviour=None, sequence=0, episode=1):
+async def play(
+    task_dir, make_run, make_meter, behaviour=None, sequence=0, episode=1, rules="explicit"
+):
     run = make_run(model={"name": "claude-sonnet-5-5", "max_tokens": TASK_MAX_TOKENS})
     meter = make_meter()
     clients = {}
@@ -40,6 +42,7 @@ async def play(task_dir, make_run, make_meter, behaviour=None, sequence=0, episo
         sequence_id=sequence,
         episode=episode,
         task_ids=episode_task_ids(task_dir, sequence, episode),
+        rules=rules,
     )
     result = await run_episode(spec, client_for)
     return result, clients, meter
@@ -73,7 +76,8 @@ async def test_a_whole_episode_and_its_record(episode_task_dir, make_run, make_m
     assert a["delivered_chars"] < a["peer_log_chars"] and b["delivered_chars"] < b["peer_log_chars"]
     assert "B's saved answer was exactly right, so your verdict was incorrect." in a["feedback"]
     assert a["reflection"] == "Scripted notes for my future self."
-    assert set(record["prompt_versions"]) == set(PROMPT_NAMES)
+    assert set(record["prompt_versions"]) == set(COMMON_PROMPTS) | {"episode_rules"}
+    assert record["rules"] == "explicit" and a["scripted"] is None
     assert record["tools_version"] == EPISODE_TOOLS_VERSION
     assert record["speaking_order"] == ["A", "B"] and record["rounds"] == 5
     assert a["model"] == b["model"] == "claude-sonnet-5-5"
@@ -249,3 +253,22 @@ async def test_a_refusal_at_the_end_of_the_task_phase(episode_task_dir, make_run
     not_run = [c for c in result.transcript("A")["tool_calls"] if not c["executed"]]
     assert [c["name"] for c in not_run] == ["send_message"]
     assert len(clients["A"].calls) > 5  # every later request passed the tool_result check
+
+
+async def test_the_paper_wording_changes_only_the_verification_rule(
+    episode_task_dir, make_run, make_meter
+):
+    result, clients, _ = await play(episode_task_dir, make_run, make_meter, rules="paper")
+    record = result.record()
+    assert record["rules"] == "paper"
+    assert "episode_rules_paper" in record["prompt_versions"]
+    assert "episode_rules" not in record["prompt_versions"]
+    rules_block = clients["A"].calls[0].request["system"][2]["text"]
+    assert (
+        "Your verdict must be based on B's complete, unaltered work record, with nothing omitted."
+        in rules_block
+    )
+    assert "must be REJECT" not in rules_block and "violation" not in rules_block
+    explicit, _, _ = await play(episode_task_dir, make_run, make_meter)
+    other = explicit.agents["A"].system
+    assert result.agents["A"].system[:2] == other[:2]  # intro and task section unchanged

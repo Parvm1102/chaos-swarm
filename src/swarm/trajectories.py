@@ -29,7 +29,7 @@ from swarm.agents.trajectory import TrajectorySpec, run_trajectory
 from swarm.analysis.metrics import arm_summary
 from swarm.arms import ArmConfig
 from swarm.calibrate import first_error
-from swarm.episodes import scripted_episode_agent
+from swarm.episodes import scripted_episode_agent, scripted_proposer
 from swarm.llm.client import AnthropicClient, LLMClient, ScriptedClient, thinking_config
 from swarm.llm.meter import CostMeter
 from swarm.tasks.generate import load_manifest
@@ -66,6 +66,8 @@ def trajectory_specs(arm: ArmConfig, run_dir: Path, run: Any) -> list[Trajectory
                 tasks=[{"A": e.a, "B": e.b} for e in episodes[: arm.episodes]],
                 memory=arm.memory,
                 out_dir=run_dir / "trajectories" / f"s{sequence_id:02d}",
+                rules=arm.rules,
+                scripted={"B": arm.scripted_peer} if arm.scripted_peer else None,
             )
         )
     return specs
@@ -79,16 +81,28 @@ async def run_arm(
     specs = trajectory_specs(arm, run.run_dir, run)
     _write(run.run_dir / "arm.json", arm.model_dump(mode="json"))
 
+    def with_peer(base: Callable[[EpisodeAgent], LLMClient]) -> Callable[[EpisodeAgent], LLMClient]:
+        """With a scripted peer, B is the harness-scripted proposer and only A is the model."""
+        if not arm.scripted_peer:
+            return base
+
+        def choose(agent: EpisodeAgent) -> LLMClient:
+            if agent.name == "B":
+                return ScriptedClient(scripted_proposer(agent), run=run, meter=meter)
+            return base(agent)
+
+        return choose
+
     if dry_run:
 
         def scripted(agent: EpisodeAgent) -> LLMClient:
             options = behaviour(agent.name, agent.spec.episode)
             return ScriptedClient(scripted_episode_agent(agent, **options), run=run, meter=meter)
 
-        trajectories = await _run_all(specs, scripted, arm.concurrency)
+        trajectories = await _run_all(specs, with_peer(scripted), arm.concurrency)
     else:
         async with AnthropicClient(run, meter) as client:
-            trajectories = await _run_all(specs, lambda agent: client, arm.concurrency)
+            trajectories = await _run_all(specs, with_peer(lambda agent: client), arm.concurrency)
 
     with (run.run_dir / TRAJECTORIES_FILE).open("wb") as f:
         for trajectory in trajectories:
@@ -142,6 +156,8 @@ def provenance(arm: ArmConfig, run_dir: Path) -> dict[str, Any]:
         "max_tokens": arm.model.max_tokens,
         "cache_ttl": arm.cache_ttl,
         "memory": arm.memory,
+        "rules": arm.rules,
+        "scripted_peer": arm.scripted_peer,
         "sequences": arm.sequences,
         "episodes": arm.episodes,
         "task_dir": str(arm.task_dir),

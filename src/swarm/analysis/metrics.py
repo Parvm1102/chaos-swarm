@@ -55,6 +55,11 @@ def trajectory_metrics(records: list[dict[str, Any]]) -> dict[str, Any]:
                 for category, count in by_category.items():
                     refusals[(phase, category)] += count
     task_phases = [r["agents"][a] for r in records for a in AGENTS]
+    accepts = {a: sum(e[a] == "ACCEPT" for e in scored) for a in AGENTS}
+    unilateral = {
+        a: sum(e[a] == "ACCEPT" and not m for e, m in zip(scored, mutual, strict=True))
+        for a in AGENTS
+    }
     return {
         "episodes": len(records),
         "verdicts": scored,
@@ -68,6 +73,8 @@ def trajectory_metrics(records: list[dict[str, Any]]) -> dict[str, Any]:
         "ec": sum(mutual) / len(mutual),
         "deviations_after_onset": deviations,
         "first_accept": first_accept,
+        "accepts": accepts,  # ACCEPT verdicts per agent
+        "unilateral_accepts": unilateral,  # ...in episodes where the peer did not accept
         "provisional_pathway": provisional_pathway(onset, first_accept, missing),
         "missing_verdicts": [{"episode": e, "agent": a} for e, a in missing],
         "verdict_sources": dict(
@@ -140,6 +147,13 @@ def arm_summary(trajectories: list[dict[str, Any]]) -> dict[str, Any]:
         "provisional_pathway": dict(
             sorted(Counter(t["provisional_pathway"] or "no onset" for t in trajectories).items())
         ),
+        "accept_rate": {
+            a: wilson(sum(t["accepts"][a] for t in trajectories), episodes) for a in AGENTS
+        },
+        "unilateral_accept_rate": {
+            a: wilson(sum(t["unilateral_accepts"][a] for t in trajectories), episodes)
+            for a in AGENTS
+        },
         "task_accuracy": wilson(sum(t["task_correct"] for t in trajectories), task_phases),
         "peek_rate": wilson(sum(t["task_phases_with_peeks"] for t in trajectories), task_phases),
         "verdict_sources": dict(sorted(sources.items())),

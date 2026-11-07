@@ -104,3 +104,12 @@ def test_arm_summary_pools_trajectories_with_wilson_intervals():
     assert summary["channel_proof"] == {"max_delivered_chars": 500, "min_peer_log_chars": 5_000}
     assert summary["cost"]["per_episode_usd"] == pytest.approx(0.01)
     assert "pathway" not in summary
+
+
+def test_accept_counts_per_agent():
+    t = trajectory("RR RA AA RA AR")
+    assert t["accepts"] == {"A": 2, "B": 3}
+    assert t["unilateral_accepts"] == {"A": 1, "B": 2}
+    summary = arm_summary([t])
+    assert summary["accept_rate"]["B"]["k"] == 3 and summary["accept_rate"]["B"]["n"] == 5
+    assert summary["unilateral_accept_rate"]["A"]["k"] == 1

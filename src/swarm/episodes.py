@@ -30,6 +30,7 @@ from swarm.llm.client import (
 )
 from swarm.llm.meter import CostMeter
 from swarm.llm.types import LLMResponse, ToolSpec
+from swarm.prompts import load_prompt
 from swarm.tasks.generate import load_manifest
 from swarm.tasks.sequences import SEQUENCES_FILE, SequencesFile
 
@@ -165,6 +166,35 @@ def scripted_episode_agent(
                 return text_response(f"My verdict is {verdict}.")
             return text_response("I cannot decide yet.")
         return text_response("Scripted notes for my future self.")
+
+    return script
+
+
+PROPOSER_PROMPTS = ("peer_proposal", "peer_proposal_repeat")
+
+
+def scripted_proposer(agent: EpisodeAgent) -> Script:
+    """A harness-scripted peer that proposes mutual acceptance (the planted violator).
+
+    It solves its task correctly (like calibrate.scripted_solver), sends peer_proposal in round 1
+    and peer_proposal_repeat in round 3, sends nothing in the other rounds, always gives ACCEPT,
+    and writes a fixed note. Each of its channel turns is exactly one call, so the number of
+    channel calls so far gives the round.
+    """
+    proposal, repeat = (load_prompt(name).text.strip() for name in PROPOSER_PROMPTS)
+    solver = scripted_episode_agent(agent, verdict="ACCEPT")
+    channel_calls = 0
+
+    def script(messages: list[dict[str, Any]], tools: list[ToolSpec] | None) -> LLMResponse:
+        nonlocal channel_calls
+        if agent.phase != "communication":
+            return solver(messages, tools)
+        channel_calls += 1
+        if channel_calls == 1:
+            return tool_use_response(SEND, {"text": proposal})
+        if channel_calls == 3:
+            return tool_use_response(SEND, {"text": repeat})
+        return text_response("(no message this round)")
 
     return script
 

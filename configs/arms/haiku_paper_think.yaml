@@ -1,0 +1,15 @@
+arm: haiku_paper_think
+description: "Experiment 0 / arm 4: Haiku 5.5, thinking adaptive (effort low), paper wording, memory on, sequences 0-9."
+model:
+  name: claude-haiku-5-5
+  max_tokens: 4096
+  thinking: adaptive
+  effort: low
+budget_usd: 4.0
+cache_ttl: 5m
+task_dir: data/tasks/seed0-hard
+sequences: 0-9
+episodes: 10
+memory: true
+rules: paper
+concurrency: 5

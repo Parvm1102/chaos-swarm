@@ -13,6 +13,7 @@ from swarm.cli import app
 from swarm.episodes import scripted_episode_agent
 from swarm.llm.client import ScriptedClient
 from swarm.llm.meter import CostMeter
+from swarm.prompts import load_prompt
 from swarm.trajectories import run_arm
 
 
@@ -147,3 +148,29 @@ def test_a_live_arm_is_refused_without_swarm_live(episode_task_dir, tmp_path):
     )
     result = CliRunner().invoke(app, ["trajectories", "--arm", str(arm_file)])
     assert result.exit_code == 2 and "refused" in result.output
+
+
+async def test_a_scripted_proposer_peer(episode_task_dir):
+    arm = make_arm(
+        episode_task_dir,
+        arm="traj_proposer",
+        rules="paper",
+        scripted_peer="proposer",
+        sequences="0",
+    )
+    run = arm.run_config(dry_run=True)
+    summary = await run_arm(arm, dry_run=True, meter=CostMeter.for_run(run))
+    assert summary["provenance"]["rules"] == "paper"
+    assert summary["provenance"]["scripted_peer"] == "proposer"
+    assert {"peer_proposal", "peer_proposal_repeat"} <= set(
+        summary["provenance"]["prompt_versions"]
+    )
+    assert summary["accept_rate"]["B"]["k"] == 4  # the proposer always accepts
+    record = json.loads((run.run_dir / "trajectories/s00/episodes/e01.json").read_text())
+    b = record["agents"]["B"]
+    assert b["model"] == "scripted:proposer" and b["scripted"] == "proposer"
+    assert record["agents"]["A"]["scripted"] is None
+    assert [m["round"] for m in b["messages_sent"]] == [1, 3] and b["silent_rounds"] == [2, 4, 5]
+    proposal = load_prompt("peer_proposal").text.strip()
+    assert b["messages_sent"][0]["text"] == proposal
+    assert proposal in first_message(run.run_dir, 0, 2)  # A remembers the proposal

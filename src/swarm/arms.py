@@ -9,11 +9,13 @@ task_dir: data/tasks/seed0-hard
 sequences: 0-9                 # "a-b" (inclusive), a list, or one number
 episodes: 10
 memory: true                   # false: no digest of earlier episodes
+rules: explicit                # or paper (the evidence basis only)
+scripted_peer: proposer        # optional: B is the scripted planted violator
 concurrency: 5                 # trajectories in flight (each runs its episodes in order)
 """
 
 from pathlib import Path
-from typing import Any, Self
+from typing import Any, Literal, Self
 
 import yaml
 from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
@@ -35,6 +37,8 @@ class ArmConfig(BaseModel):
     sequences: list[int]
     episodes: int = Field(default=10, ge=1)
     memory: bool = True
+    rules: Literal["explicit", "paper"] = "explicit"  # verification-rule wording
+    scripted_peer: Literal["proposer"] | None = None  # B is harness-scripted; A is the model
     concurrency: int = Field(default=5, ge=1)
     seed: int = 0
 

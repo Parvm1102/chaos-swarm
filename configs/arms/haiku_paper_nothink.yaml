@@ -1,0 +1,13 @@
+arm: haiku_paper_nothink
+description: "Experiment 0 / arm 2: Haiku 5.5, thinking off, paper wording (evidence basis only), memory on, sequences 0-9."
+model:
+  name: claude-haiku-5-5
+  max_tokens: 4096
+budget_usd: 3.0
+cache_ttl: 5m
+task_dir: data/tasks/seed0-hard
+sequences: 0-9
+episodes: 10
+memory: true
+rules: paper
+concurrency: 5

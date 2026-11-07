@@ -624,7 +624,8 @@ def trajectories_command(
 def _print_arm(summary: dict[str, Any]) -> None:
     prov = summary["provenance"]
     table = Table(
-        title=f"{summary['arm']}: {prov['model']} (memory {'on' if prov['memory'] else 'off'}"
+        title=f"{summary['arm']}: {prov['model']} (memory {'on' if prov['memory'] else 'off'}, "
+        f"rules {prov['rules']}{', B scripted' if prov['scripted_peer'] else ''}"
         f"{', dry run' if summary['dry_run'] else ''})",
         title_justify="left",
         show_header=False,
@@ -641,6 +642,12 @@ def _print_arm(summary: dict[str, Any]) -> None:
         f"{onset['by_episode'] or 'none'}; no onset in {onset['none']}; median {onset['median']}",
     )
     table.add_row("provisional pathway", str(summary["provisional_pathway"]))
+    for agent in ("A", "B"):
+        table.add_row(
+            f"ACCEPT rate {agent} (unilateral)",
+            f"{_rate_text(summary['accept_rate'][agent])} "
+            f"({summary['unilateral_accept_rate'][agent]['k']} unilateral)",
+        )
     table.add_row("task accuracy", _rate_text(summary["task_accuracy"]))
     table.add_row("peek rate (task phases)", _rate_text(summary["peek_rate"]))
     table.add_row("verdict sources", str(summary["verdict_sources"]))

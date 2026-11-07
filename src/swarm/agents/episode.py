@@ -79,10 +79,9 @@ PHASE_TOOLS: dict[str, frozenset[str]] = {
     "verdict": frozenset({VERDICT, GET_RECORD}),
     "reflection": frozenset(),
 }
-PROMPT_NAMES = (
+COMMON_PROMPTS = (
     "episode_intro",
     "task_phase_system",
-    "episode_rules",
     "episode_open",
     "memory_none",
     "communication_open",
@@ -94,6 +93,10 @@ PROMPT_NAMES = (
     "feedback",
     "reflection",
 )
+# The verification-rule variants (one per arm). "explicit": the compliant default stated outright
+# (verdict must be REJECT; a violation regardless of the outcome). "paper": the evidence basis only.
+RULES_PROMPTS = {"explicit": "episode_rules", "paper": "episode_rules_paper"}
+PROMPT_NAMES = (*COMMON_PROMPTS, *RULES_PROMPTS.values())  # every episode prompt file
 
 
 @dataclass(frozen=True)
@@ -104,6 +107,8 @@ class EpisodeSpec:
     episode: int  # 1-based
     task_ids: dict[str, str]  # agent -> task id
     memory: dict[str, str] | None = None  # agent -> rendered notes; None: no earlier episodes
+    rules: str = "explicit"  # a key of RULES_PROMPTS
+    scripted: dict[str, str] | None = None  # agent -> label, for a harness-scripted agent
 
 
 @dataclass(frozen=True)
@@ -135,7 +140,12 @@ class EpisodeAgent:
             text_block(render(prompts["episode_intro"], agent=name, peer=self.peer)),
             text_block(prompts["task_phase_system"].text),  # verbatim, as calibrated
             text_block(
-                render(prompts["episode_rules"], peer=self.peer, rounds=ROUNDS, limit=MESSAGE_LIMIT)
+                render(
+                    prompts[RULES_PROMPTS[spec.rules]],
+                    peer=self.peer,
+                    rounds=ROUNDS,
+                    limit=MESSAGE_LIMIT,
+                )
             ),
         ]
         self.messages: list[dict[str, Any]] = []
@@ -308,13 +318,17 @@ class EpisodeResult:
     def record(self) -> dict[str, Any]:
         """The episode record (runs/<run>/episodes/s<seq>_e<ep>.json)."""
         run = self.spec.run
+        scripted = self.spec.scripted or {}
         agents = {}
         for name, agent in self.agents.items():
             peer = agent.peer
             task = agent.task_call().result
             usage = agent.usage_by_phase()
             agents[name] = {
-                "model": agent.client.run.model.name if agent.client else None,
+                "model": f"scripted:{scripted[name]}"
+                if name in scripted
+                else (agent.client.run.model.name if agent.client else None),
+                "scripted": scripted.get(name),
                 "thinking": thinking_provenance(run.model),
                 "task_id": agent.env.spec.task_id,
                 "template": agent.env.spec.template,
@@ -361,6 +375,7 @@ class EpisodeResult:
             "task_dir": str(self.spec.task_dir),
             "sequence_id": self.spec.sequence_id,
             "episode": self.spec.episode,
+            "rules": self.spec.rules,
             "rounds": ROUNDS,
             "message_limit": MESSAGE_LIMIT,
             "speaking_order": list(SPEAKING_ORDER),
@@ -415,7 +430,10 @@ async def run_episode(
     """Run one episode for the pair A, B and return its result."""
     if set(spec.task_ids) != set(SPEAKING_ORDER):
         raise ValueError(f"task_ids must name agents {SPEAKING_ORDER}, got {sorted(spec.task_ids)}")
-    prompts = {name: load_prompt(name) for name in PROMPT_NAMES}
+    if spec.rules not in RULES_PROMPTS:
+        raise ValueError(f"unknown rules variant {spec.rules!r}; choose from {list(RULES_PROMPTS)}")
+    names = (*COMMON_PROMPTS, RULES_PROMPTS[spec.rules])
+    prompts = {name: load_prompt(name) for name in names}
     channel = Channel()
     started = time.perf_counter()
     with (
