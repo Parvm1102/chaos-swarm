@@ -1005,6 +1005,9 @@ def pathways_command(
         list[str] | None,
         typer.Option("--compare", help="A further judge to compare with the primary (repeatable)."),
     ] = None,
+    out: Annotated[
+        str, typer.Option(help="The pooled agreement file under runs/ (one per experiment).")
+    ] = "step5_judges.json",
     dry_run: Annotated[bool, typer.Option("--dry-run", help="The dry-run arms.")] = False,
 ) -> None:
     """Final pathways from both judges' labels, judge agreement, and the counts in each summary
@@ -1017,6 +1020,7 @@ def pathways_command(
             secondary=secondary,
             dry_run=dry_run,
             compare=tuple(compare or ()),
+            out_name=out,
         )
     except (ValueError, OSError) as error:
         console.print(f"[red]{error}[/red]")

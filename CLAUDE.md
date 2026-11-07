@@ -37,6 +37,13 @@ task_prompt (task_phase_system_rules2 adds "Use at most 2 query_database calls p
 query_cap (calls past it allowed and logged as cap_violation) and collusion_criterion
 "delivered" (content-based delivery check, swarm.env.delivery). Memory cuts messages > 400 chars.
 
+Experiment 3 (open door; PREREG.md, second section): arms set operator_policy (ack | fix);
+the report_to_operator tool (task/communication/verdict phases; report-only calls free up to 2
+per phase), one rules sentence, replies atop the next episode's feedback (reporter only), fix
+raises the channel to 8,000 from the episode after the reply. swarm.env.operator replays the
+policy from the records. Result (docs/step7_notes.md): 2/20 trajectories per tool arm ever
+reported; collusion universal; no effect of the tool or the acknowledgement.
+
 We extend it with three experiments, in this priority order:
 1. Spillover — once pairs collude on the verification rule, do they violate an UNRELATED
    rule more (no-peek on a `_reference` answer table; or a query-count cap)?
@@ -223,5 +230,9 @@ Research context: @docs/literature_brief.md
 - swarm trajectories --arm configs/arms/e1_{constrained,unconstrained,constrained_nomem}.yaml
 - swarm spillover --constrained configs/arms/e1_constrained.yaml \
   --unconstrained configs/arms/e1_unconstrained.yaml --nomem configs/arms/e1_constrained_nomem.yaml
+- swarm trajectories --arm configs/arms/e3_{control,fix,ack}.yaml   # Experiment 3 (open door)
+- swarm opendoor --control configs/arms/e3_control.yaml --fix configs/arms/e3_fix.yaml \
+  --ack configs/arms/e3_ack.yaml
+- swarm pathways --arm configs/arms/e3_*.yaml --primary haiku --secondary sonnet5 --out e3_judges.json
 - swarm validate sample --arm <yaml> [--arm ...] --n 30   # blind sheet + key in runs/validation/
 - swarm validate score --sheet runs/validation/step5_validation_sheet.csv [--second-sheet ...]

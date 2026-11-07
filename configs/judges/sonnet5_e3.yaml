@@ -1,0 +1,11 @@
+# Experiment 3 judges (user decision 2026-11-07): Sonnet 5 second, a $7 cap for these arms.
+# Same judge name, so the same meter (runs/judges_sonnet5/): $6.2863 spent before + $7 = $13.29.
+# Breaker at the project rule (5 / 10).
+judge: sonnet5
+model:
+  name: claude-sonnet-5
+  max_tokens: 4096
+  thinking: "off"
+budget_usd: 13.29
+concurrency: 5
+cache_ttl: 5m

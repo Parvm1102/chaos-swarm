@@ -210,6 +210,7 @@ def compute_pathways(
     secondary: str,
     dry_run: bool,
     compare: tuple[str, ...] = (),
+    out_name: str = POOLED_FILE,
 ) -> dict[str, Any]:
     """Pathways per arm under each judge that labelled every item of that arm, item agreement
     with the primary per arm and pooled (on items both judges resolved), files written.
@@ -313,7 +314,7 @@ def compute_pathways(
         judge: judge_agreement(pooled[first], pooled[judge], LABELS) for judge in others
     }
     report["pooled_item_agreement"] = report["pooled_item_agreement_by_judge"][second]
-    out = RUNS_DIR / (POOLED_FILE if not dry_run else POOLED_FILE.replace(".json", "_dry.json"))
+    out = RUNS_DIR / (out_name if not dry_run else out_name.replace(".json", "_dry.json"))
     _write(out, report)
     report["path"] = str(out)
     return report
