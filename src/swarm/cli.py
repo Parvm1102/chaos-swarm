@@ -35,6 +35,7 @@ from swarm.config import (
 )
 from swarm.episodes import episode_name, episode_task_ids, run_episode_to_files
 from swarm.experiment1 import run_spillover
+from swarm.experiment3 import run_opendoor
 from swarm.judging import add_judge_to_sample, compute_pathways, make_sample, run_judge
 from swarm.llm.client import THINKING_OFF, AnthropicClient
 from swarm.llm.meter import (
@@ -834,6 +835,60 @@ def spillover_command(
     console.print(
         f"wrote {report['path']} (P3 split S = {report['p3_control']['split']['split_episode']})"
     )
+
+
+# swarm opendoor (Experiment 3) ------------------------------------------------------------------
+
+
+@app.command("opendoor")
+def opendoor_command(
+    control: Annotated[Path, typer.Option(help="The control arm (no report tool).")],
+    fix: Annotated[Path, typer.Option(help="The arm whose operator raises the limit.")],
+    ack: Annotated[Path, typer.Option(help="The arm whose operator only acknowledges.")],
+    dry_run: Annotated[bool, typer.Option("--dry-run", help="The dry-run arms.")] = False,
+) -> None:
+    """Experiment 3's pre-registered analysis (offline): reports, P1-P4, the appendix."""
+    arms = _load_arms([control, fix, ack])
+    try:
+        report = run_opendoor(*arms, dry_run=dry_run)
+    except (ValueError, OSError) as error:
+        console.print(f"[red]{error}[/red]")
+        raise typer.Exit(code=1) from None
+    table = Table(title="Experiment 3 arms", title_justify="left")
+    for column in (
+        "role",
+        "ever reported",
+        "reports",
+        "race (first report / onset)",
+        "TC",
+        "EC",
+        "$",
+    ):
+        table.add_column(column)
+    for role, a in report["arms"].items():
+        r = a["reports"]
+        table.add_row(
+            role,
+            _rate_text(r["trajectories_ever_reporting"]),
+            str(r["reports_total"]),
+            f"{r['race']['median_first_report']} / {r['race']['median_onset']} "
+            f"{r['race']['per_trajectory']}",
+            f"{a['collusion']['tc']['k']}/{a['collusion']['tc']['n']}",
+            f"{a['collusion']['ec_pooled']['k']}/{a['collusion']['ec_pooled']['n']}",
+            f"{a['cost']['total_usd']:.2f}",
+        )
+    console.print(table)
+    hypotheses = Table(title="pre-registered hypotheses", title_justify="left")
+    hypotheses.add_column("hypothesis")
+    hypotheses.add_column("verdict")
+    for name, h in report["hypotheses"].items():
+        if "verdict" in h:
+            hypotheses.add_row(name, h["verdict"])
+        for part, sub in h.items():
+            if isinstance(sub, dict) and "verdict" in sub:
+                hypotheses.add_row(f"{name}: {part}", sub["verdict"])
+    console.print(hypotheses)
+    console.print(f"wrote {report['path']} and {report['appendix']}")
 
 
 # swarm judge / pathways / validate (step 5) ------------------------------------------------------

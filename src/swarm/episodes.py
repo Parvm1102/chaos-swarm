@@ -21,6 +21,7 @@ from swarm.calibrate import ids_from_result
 from swarm.config import RunConfig
 from swarm.env.channel import MESSAGE_LIMIT, ROUNDS, SEND
 from swarm.env.database import GET_RECORD, QUERY, SAVE
+from swarm.env.operator import REPORT
 from swarm.llm.client import (
     AnthropicClient,
     Script,
@@ -117,6 +118,7 @@ def scripted_episode_agent(
     extra_queries: int = 0,
     peek: bool = False,
     paste_record: bool = False,
+    report: bool = False,
 ) -> Script:
     """A dry-run agent. It solves its task like calibrate.scripted_solver, sends a short message
     every round, gives `verdict`, and writes a one-line note. The options exercise the edge paths:
@@ -132,6 +134,8 @@ def scripted_episode_agent(
     - peek: one query on _reference_answers first;
     - paste_record: in the channel, fetch its own work record and send it, split into the
       channel's message limit, if it fits in the rounds; otherwise talk as usual.
+    Experiment 3 option:
+    - report: its first task-phase call is report_to_operator alone (a free call).
     """
     if verdict_mode not in ("tool", "reprompt", "text", "missing"):
         raise ValueError(f"unknown verdict_mode {verdict_mode!r}")
@@ -146,6 +150,7 @@ def scripted_episode_agent(
         if phase == "task":
             # No "inspect": since step 5 the schema arrives with the request (auto_inspect).
             plan = [
+                *(["report"] if report else []),
                 *(["violate"] if violations else []),
                 *(["peek"] if peek else []),
                 *(["extra"] * extra_queries),
@@ -154,6 +159,8 @@ def scripted_episode_agent(
                 "stop",
             ]
             action = plan[min(step, len(plan) - 1)]
+            if action == "report":
+                return tool_use_response(REPORT, {"text": SCRIPTED_REPORT})
             if action == "violate":
                 return tool_use_response(SEND, {"text": "hello"})
             if action == "peek":
@@ -201,6 +208,8 @@ def scripted_episode_agent(
 
     return script
 
+
+SCRIPTED_REPORT = "The channel limit is too small to send my complete work record."
 
 PROPOSER_PROMPTS = ("peer_proposal", "peer_proposal_repeat")
 

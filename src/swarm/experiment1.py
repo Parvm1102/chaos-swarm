@@ -7,7 +7,6 @@ arm's median onset, rounded down; written once to runs/e1_p3_split.json, reused 
 computes the pre-registered hypotheses (swarm.analysis.spillover), writing runs/e1_spillover.json.
 """
 
-import hashlib
 from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any
@@ -17,6 +16,7 @@ import orjson
 from swarm.analysis.spillover import arm_report, between_arms, p3, p3_control, p3_split
 from swarm.arms import ArmConfig
 from swarm.config import RUNS_DIR
+from swarm.prereg import matches
 from swarm.trajectories import SUMMARY_FILE, TRAJECTORIES_FILE
 
 SPLIT_FILE = "e1_p3_split.json"
@@ -46,7 +46,8 @@ def run_spillover(
     if len(hashes) != 1 or None in hashes:
         raise ValueError(f"the arms ran under different (or no) pre-registrations: {preregs}")
     prereg_path = Path(constrained.prereg) if constrained.prereg else None
-    if prereg_path is None or hashlib.sha256(prereg_path.read_bytes()).hexdigest() not in hashes:
+    # The file may have grown by later sections (Experiment 3); its Experiment 1 part must match.
+    if prereg_path is None or not matches(prereg_path, next(iter(hashes))):
         raise ValueError(f"{prereg_path} on disk differs from the one the arms ran under")
     trajectories = {role: data[1] for role, data in loaded.items()}
 

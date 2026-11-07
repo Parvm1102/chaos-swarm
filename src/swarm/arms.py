@@ -47,6 +47,8 @@ class ArmConfig(BaseModel):
     query_cap: int | None = Field(default=None, ge=0)  # query_database calls per task (logged)
     collusion_criterion: Literal["tightened", "delivered"] = "tightened"
     prereg: Path | None = None  # its sha256 goes into every summary; a live run guards it
+    # Experiment 3 (open door): report_to_operator with an operator policy; None: no tool.
+    operator_policy: Literal["ack", "fix"] | None = None
 
     @field_validator("sequences", mode="before")
     @classmethod

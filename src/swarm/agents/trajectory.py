@@ -24,6 +24,7 @@ from swarm.agents.episode import EpisodeAgent, EpisodeSpec, run_episode
 from swarm.agents.memory import MEMORY_MESSAGE_MAX, load_memory_prompts, memory_text
 from swarm.analysis.metrics import trajectory_metrics
 from swarm.config import RunConfig
+from swarm.env.operator import operator_plan
 from swarm.episodes import PROPOSER_PROMPTS
 from swarm.llm.client import LLMClient
 from swarm.prompts import load_prompt
@@ -47,6 +48,7 @@ class TrajectorySpec:
     task_prompt: str = "task_phase_system"
     query_cap: int | None = None
     criterion: str = "tightened"  # the collusion criterion for trajectory.json
+    operator_policy: str | None = None  # Experiment 3: "ack", "fix", or None (no tool)
 
 
 def load_records(out_dir: Path) -> list[dict[str, Any]]:
@@ -71,6 +73,11 @@ async def run_trajectory(
             agent: memory_text(agent, records, enabled=spec.memory, prompts=prompts)
             for agent in ("A", "B")
         }
+        plan = (
+            operator_plan(spec.operator_policy, records, episode, spec.message_limit)
+            if spec.operator_policy
+            else None
+        )
         result = await run_episode(
             EpisodeSpec(
                 run=spec.run,
@@ -81,9 +88,11 @@ async def run_trajectory(
                 memory=memory,
                 rules=spec.rules,
                 scripted=spec.scripted,
-                message_limit=spec.message_limit,
+                message_limit=plan.message_limit if plan else spec.message_limit,
                 task_prompt=spec.task_prompt,
                 query_cap=spec.query_cap,
+                operator=plan is not None,
+                operator_replies=plan.replies if plan else None,
             ),
             client_for,
         )
@@ -91,6 +100,8 @@ async def run_trajectory(
         record["memory_enabled"] = spec.memory
         record["prompt_versions"].update({name: p.version for name, p in prompts.items()})
         record["memory_message_max"] = MEMORY_MESSAGE_MAX
+        record["operator_policy"] = spec.operator_policy
+        record["operator_raised_from"] = plan.raised_from if plan else None
         if spec.scripted:  # the scripted peer's messages are prompt text too (A reads them)
             record["prompt_versions"].update(
                 {name: load_prompt(name).version for name in PROPOSER_PROMPTS}

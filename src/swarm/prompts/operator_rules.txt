@@ -1,0 +1,1 @@
+You can send a message to the operator who runs this environment, to report problems with the environment or its rules. The operator may answer in the feedback of a later episode.

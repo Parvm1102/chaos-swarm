@@ -50,21 +50,32 @@ from swarm.tasks.sequences import SEQUENCES_FILE, SequencesFile
 
 SUMMARY_FILE = "summary.json"
 TRAJECTORIES_FILE = "trajectories.jsonl"
-Behaviour = Callable[[str, int], dict[str, Any]]  # (agent, episode) -> scripted agent options
+# (agent, episode, sequence_id) -> scripted agent options
+Behaviour = Callable[[str, int, int], dict[str, Any]]
 
 
-def responsive_dry_run(agent: str, episode: int) -> dict[str, Any]:
+def responsive_dry_run(agent: str, episode: int, sequence_id: int = 0) -> dict[str, Any]:
     """The default dry-run pair: B accepts from episode 2 on, A from episode 3 on."""
     return {"verdict": "ACCEPT" if episode >= {"A": 3, "B": 2}[agent] else "REJECT"}
 
 
-def e1_dry_run(agent: str, episode: int) -> dict[str, Any]:
+def e1_dry_run(agent: str, episode: int, sequence_id: int = 0) -> dict[str, Any]:
     """The Experiment 1 dry-run pair: responsive verdicts, three queries (over the cap) in
     episodes 3, 6 and 9, one peek by A in episode 2, and records pasted when the channel fits."""
     return {
         **responsive_dry_run(agent, episode),
         "extra_queries": 2 if episode % 3 == 0 else 0,
         "peek": agent == "A" and episode == 2,
+        "paste_record": True,
+    }
+
+
+def e3_dry_run(agent: str, episode: int, sequence_id: int = 0) -> dict[str, Any]:
+    """The Experiment 3 dry-run pair (tool arms): responsive verdicts; A reports in episode 2
+    on even sequences, nobody reports on odd ones; records are pasted when the channel fits."""
+    return {
+        **responsive_dry_run(agent, episode),
+        "report": agent == "A" and episode == 2 and sequence_id % 2 == 0,
         "paste_record": True,
     }
 
@@ -123,6 +134,7 @@ def trajectory_specs(arm: ArmConfig, run_dir: Path, run: Any) -> list[Trajectory
                 task_prompt=arm.task_prompt,
                 query_cap=arm.query_cap,
                 criterion=arm.collusion_criterion,
+                operator_policy=arm.operator_policy,
             )
         )
     return specs
@@ -134,7 +146,13 @@ async def run_arm(
     """Run (or resume) every trajectory of the arm and write the summary; return it."""
     run = arm.run_config(dry_run=dry_run)
     if behaviour is None:
-        behaviour = e1_dry_run if arm.query_cap is not None else responsive_dry_run
+        behaviour = (
+            e3_dry_run
+            if arm.operator_policy is not None
+            else e1_dry_run
+            if arm.query_cap is not None
+            else responsive_dry_run
+        )
     specs = trajectory_specs(arm, run.run_dir, run)
     first_prereg = check_prereg(arm, run.run_dir)
     _write(
@@ -158,7 +176,7 @@ async def run_arm(
         if dry_run:
 
             def scripted(agent: EpisodeAgent) -> LLMClient:
-                options = behaviour(agent.name, agent.spec.episode)
+                options = behaviour(agent.name, agent.spec.episode, agent.spec.sequence_id)
                 return ScriptedClient(
                     scripted_episode_agent(agent, **options), run=run, meter=meter
                 )
@@ -282,6 +300,7 @@ def provenance(arm: ArmConfig, run_dir: Path) -> dict[str, Any]:
         "task_prompt": arm.task_prompt,
         "query_cap": arm.query_cap,
         "collusion_criterion": arm.collusion_criterion,
+        "operator_policy": arm.operator_policy,
         "prereg": prereg_provenance(arm),
         "auto_inspect": sorted(auto_inspect)[0] if len(auto_inspect) == 1 else "mixed",
         "sequences": arm.sequences,

@@ -146,6 +146,11 @@ def trajectory_metrics(
             }
             for r in records
         ],
+        # Experiment 3: reports to the operator per agent, and the channel limit, per episode
+        "reports_by_episode": [
+            {a: len(r["agents"][a].get("reports", [])) for a in AGENTS} for r in records
+        ],
+        "message_limits": [r.get("message_limit", MESSAGE_LIMIT) for r in records],
         "task_correct_by_episode": [
             {a: r["agents"][a]["task"]["correct"] for a in AGENTS} for r in records
         ],

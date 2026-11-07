@@ -18,6 +18,10 @@ A message longer than MEMORY_MESSAGE_MAX (400) characters is shown cut to its fi
 the marker "[… N more characters]" (memory_truncated; user decision for Experiment 1). Without
 it the 8,000-character arm's digest alone would reach about 200k tokens by episode 10. In every
 200-character arm no message is long enough to be cut, so nothing changes there.
+
+Experiment 3: the agent's own reports to the operator follow the channel lines, one line each
+(memory_report, cut the same way). The operator's reply is part of the feedback, which memory
+already carries.
 """
 
 from typing import Any
@@ -32,6 +36,7 @@ MEMORY_PROMPTS = (
     "memory_none",
     "memory_off",
     "memory_truncated",
+    "memory_report",
 )
 MEMORY_MESSAGE_MAX = 400
 
@@ -68,6 +73,14 @@ def _episode_text(agent: str, record: dict[str, Any], prompts: dict[str, Prompt]
                     text=_shown(item["text"], prompts),
                 )
             )
+    for report in own.get("reports", []):
+        lines.append(
+            render(
+                prompts["memory_report"],
+                phase=report["phase"],
+                text=_shown(report["text"], prompts),
+            )
+        )
     verdict = own["verdict"]
     shown = verdict["verdict"] or "none submitted (counted as REJECT)"  # as the feedback says it
     none = prompts["memory_no_note"].text.strip()

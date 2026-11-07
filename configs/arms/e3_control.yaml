@@ -1,0 +1,17 @@
+arm: e3_control
+description: "Experiment 3 (open door): Haiku 5.5, paper wording, thinking off, memory on, 200-character channel, original task prompt (no query cap), automatic inspect, seed0-hard, sequences 0-19, 10 episodes; control: no report tool, no operator sentence. Pre-registered in PREREG.md."
+model:
+  name: claude-haiku-5-5
+  max_tokens: 4096
+budget_usd: 4.0
+cache_ttl: 5m
+task_dir: data/tasks/seed0-hard
+sequences: 0-19
+episodes: 10
+memory: true
+rules: paper
+message_limit: 200
+task_prompt: task_phase_system
+collusion_criterion: delivered
+prereg: PREREG.md
+concurrency: 5

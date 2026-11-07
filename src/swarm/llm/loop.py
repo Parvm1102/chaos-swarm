@@ -14,6 +14,10 @@ Handlers are harness code. A handler that raises ToolError is reporting a mistak
 tool_result and the loop continues. Any other exception is a harness bug and propagates.
 
 The task phase (step 2) and the verdict phase (step 3) both run on this loop.
+
+Free calls (Experiment 3): a model call whose tool calls are ALL `free_tool` (report_to_operator)
+does not count against max_turns, for at most `max_free_turns` such calls; LoopResult.free_turns
+says how many were used. Every other call counts as before.
 """
 
 import copy
@@ -83,6 +87,7 @@ class LoopResult:
     tool_calls: list[ToolCallRecord]
     responses: list[LLMResponse]
     stop_cause: StopCause
+    free_turns: int = 0  # calls that did not count against max_turns (free_tool only)
 
     @property
     def turns(self) -> int:
@@ -104,10 +109,15 @@ async def run_tool_loop(
     max_tokens: int,
     tags: Tags,
     tool_choice: dict[str, Any] | None = None,
+    free_tool: str | None = None,
+    max_free_turns: int = 0,
 ) -> LoopResult:
-    """Run the model with tools until it stops, a handler returns STOP, or max_turns calls."""
+    """Run the model with tools until it stops, a handler returns STOP, or max_turns counted
+    calls (calls of free_tool alone are free, up to max_free_turns; module docstring)."""
     if max_turns < 1:
         raise ValueError(f"max_turns must be >= 1, got {max_turns}")
+    if max_free_turns < 0:
+        raise ValueError(f"max_free_turns must be >= 0, got {max_free_turns}")
     missing = sorted({tool.name for tool in tools or []} - set(handlers))
     if missing:
         raise ValueError(f"tools without a handler: {missing}")
@@ -115,7 +125,9 @@ async def run_tool_loop(
     history = copy.deepcopy(messages)  # the caller's list is never modified
     records: list[ToolCallRecord] = []
     responses: list[LLMResponse] = []
-    for turn in range(1, max_turns + 1):
+    counted = free = turn = 0
+    while counted < max_turns:
+        turn += 1
         response = await client.complete(
             system=system,
             messages=history,
@@ -149,9 +161,17 @@ async def run_tool_loop(
                         [tool_result_block(r.call.id, r.result, is_error=True) for r in unanswered]
                     )
                 )
-            return LoopResult(history, records, responses, cause)
+            return LoopResult(history, records, responses, cause, free)
         if not response.tool_calls:
             raise RuntimeError(f"stop_reason 'tool_use' without a tool call on turn {turn}")
+        if (
+            free_tool is not None
+            and free < max_free_turns
+            and all(call.name == free_tool for call in response.tool_calls)
+        ):
+            free += 1
+        else:
+            counted += 1
 
         results: list[dict[str, Any]] = []
         stopped = False
@@ -164,9 +184,9 @@ async def run_tool_loop(
             results.append(tool_result_block(call.id, record.result, is_error=record.is_error))
         history.append(tool_results_message(results))
         if stopped:
-            return LoopResult(history, records, responses, "stop_tool")
+            return LoopResult(history, records, responses, "stop_tool", free)
 
-    return LoopResult(history, records, responses, "max_turns")
+    return LoopResult(history, records, responses, "max_turns", free)
 
 
 async def _run_tool(

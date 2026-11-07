@@ -217,7 +217,7 @@ async def test_the_refusal_breaker_aborts_an_arm_and_the_arm_resumes(episode_tas
             arm,
             dry_run=True,
             meter=CostMeter.for_run(run),
-            behaviour=lambda agent, episode: {"refuse_in_task": True},
+            behaviour=lambda agent, episode, sequence_id: {"refuse_in_task": True},
         )
     summary = json.loads((run.run_dir / "summary.json").read_text())
     assert summary["aborted_by_breaker"] is True

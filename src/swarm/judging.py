@@ -164,7 +164,11 @@ def _write_judge_summary(
 def _trajectories(run_dir: Path) -> list[dict[str, Any]]:
     lines = (run_dir / TRAJECTORIES_FILE).read_bytes().splitlines()
     trajectories = [orjson.loads(line) for line in lines if line.strip()]
-    stale = [t["sequence_id"] for t in trajectories if t.get("criterion") != "tightened"]
+    stale = [
+        t["sequence_id"]
+        for t in trajectories
+        if t.get("criterion") not in ("tightened", "delivered")
+    ]
     if stale:
         raise ValueError(
             f"{run_dir}: trajectories {stale} predate the tightened criterion; "

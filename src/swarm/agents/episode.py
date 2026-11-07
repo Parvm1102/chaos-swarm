@@ -29,6 +29,7 @@ import asyncio
 import copy
 import hashlib
 import time
+from collections import Counter
 from collections.abc import Callable, Coroutine, Iterable
 from dataclasses import dataclass
 from pathlib import Path
@@ -60,6 +61,7 @@ from swarm.env.channel import (
 )
 from swarm.env.database import GET_RECORD, INSPECT, QUERY, SAVE, TASK_TOOLS, TaskEnv, TaskOutcome
 from swarm.env.delivery import record_delivery
+from swarm.env.operator import FREE_REPORT_CALLS, OPERATOR_PROMPTS, REPORT, REPORT_TOOL
 from swarm.llm.client import LLMClient, Tags, thinking_provenance
 from swarm.llm.loop import Handler, LoopResult, Stop, ToolError, run_tool_loop
 from swarm.llm.meter import TOKEN_FIELDS
@@ -75,9 +77,11 @@ NO_TOOLS = {"type": "none"}
 EPISODE_TOOLS = [*TASK_TOOLS, SEND_MESSAGE_TOOL, SUBMIT_VERDICT_TOOL]
 
 
-def episode_tools(limit: int = MESSAGE_LIMIT) -> list[ToolSpec]:
-    """The episode's one tool list; only send_message depends on the arm (its limit)."""
-    return [*TASK_TOOLS, send_message_tool(limit), SUBMIT_VERDICT_TOOL]
+def episode_tools(limit: int = MESSAGE_LIMIT, operator: bool = False) -> list[ToolSpec]:
+    """The episode's one tool list: send_message states the arm's limit, and Experiment 3's
+    tool arms add report_to_operator."""
+    tools = [*TASK_TOOLS, send_message_tool(limit), SUBMIT_VERDICT_TOOL]
+    return [*tools, REPORT_TOOL] if operator else tools
 
 
 def tools_version(tools: list[ToolSpec]) -> str:
@@ -90,9 +94,9 @@ EPISODE_TOOLS_VERSION = hashlib.sha256(
     orjson.dumps([tool.to_anthropic() for tool in EPISODE_TOOLS], option=orjson.OPT_SORT_KEYS)
 ).hexdigest()
 PHASE_TOOLS: dict[str, frozenset[str]] = {
-    "task": frozenset({INSPECT, QUERY, SAVE, GET_RECORD}),
-    "communication": frozenset({SEND, GET_RECORD}),
-    "verdict": frozenset({VERDICT, GET_RECORD}),
+    "task": frozenset({INSPECT, QUERY, SAVE, GET_RECORD, REPORT}),
+    "communication": frozenset({SEND, GET_RECORD, REPORT}),
+    "verdict": frozenset({VERDICT, GET_RECORD, REPORT}),
     "reflection": frozenset(),
 }
 COMMON_PROMPTS = (
@@ -132,6 +136,8 @@ class EpisodeSpec:
     message_limit: int = MESSAGE_LIMIT  # characters per channel message (Experiment 1: 8,000)
     task_prompt: str = "task_phase_system"  # one of TASK_PROMPTS
     query_cap: int | None = None  # Experiment 1: 2 query_database calls per task (logged)
+    operator: bool = False  # Experiment 3: report_to_operator and its rules sentence
+    operator_replies: dict[str, str] | None = None  # agent -> reply atop this episode's feedback
 
 
 @dataclass(frozen=True)
@@ -159,19 +165,22 @@ class EpisodeAgent:
         self.channel = channel
         self.client: LLMClient | None = None
         self.phase = "task"
-        self.tools = episode_tools(spec.message_limit)
+        self.tools = episode_tools(spec.message_limit, spec.operator)
+        rules = render(
+            prompts[RULES_PROMPTS[spec.rules]],
+            peer=self.peer,
+            rounds=ROUNDS,
+            limit=spec.message_limit,
+        )
+        if spec.operator:  # the one neutral sentence, as the rules block's last paragraph
+            rules = f"{rules}\n\n{prompts['operator_rules'].text.strip()}"
         self.system = [
             text_block(render(prompts["episode_intro"], agent=name, peer=self.peer)),
             text_block(prompts[spec.task_prompt].text),  # verbatim, as calibrated
-            text_block(
-                render(
-                    prompts[RULES_PROMPTS[spec.rules]],
-                    peer=self.peer,
-                    rounds=ROUNDS,
-                    limit=spec.message_limit,
-                )
-            ),
+            text_block(rules),
         ]
+        self.reports: list[dict[str, Any]] = []
+        self.free_report_calls: Counter[str] = Counter()  # phase -> report-only calls not counted
         self.messages: list[dict[str, Any]] = []
         self.calls: list[PhaseCall] = []
         self.violations: list[dict[str, Any]] = []
@@ -179,7 +188,11 @@ class EpisodeAgent:
         self.reflection = ""
         self._verdict_source = "tool"
         task_handlers = env.handlers()
-        own: dict[str, Handler] = {SEND: self._send, VERDICT: self._submit_verdict}
+        own: dict[str, Handler] = {
+            SEND: self._send,
+            VERDICT: self._submit_verdict,
+            REPORT: self._report,
+        }
         self.handlers = {
             tool.name: self._gated(tool.name, task_handlers.get(tool.name) or own[tool.name])
             for tool in self.tools
@@ -204,6 +217,22 @@ class EpisodeAgent:
             raise ToolError("error: send_message needs one argument, text: a string")
         return Stop(self.channel.send(self.name, text))  # a delivered message ends the turn
 
+    def _report(self, arguments: dict[str, Any]) -> str:
+        text = arguments.get("text")
+        if not isinstance(text, str) or not text.strip():
+            raise ToolError(
+                "error: report_to_operator needs one argument, text: a non-empty string"
+            )
+        self.reports.append(
+            {
+                "phase": self.phase,
+                "call": len(self.reports) + 1,
+                "round": self.channel.open_round if self.phase == "communication" else None,
+                "text": text,
+            }
+        )
+        return self.prompts["operator_report_result"].text.strip()
+
     def _submit_verdict(self, arguments: dict[str, Any]) -> Stop:
         verdict, justification = arguments.get("verdict"), arguments.get("justification")
         if verdict not in VERDICTS or not isinstance(justification, str):
@@ -224,6 +253,7 @@ class EpisodeAgent:
         if self.client is None:
             raise RuntimeError(f"agent {self.name} has no client")
         self.phase = phase
+        free = FREE_REPORT_CALLS - self.free_report_calls[phase] if self.spec.operator else 0
         result = await run_tool_loop(
             self.client,
             system=self.system,
@@ -234,7 +264,10 @@ class EpisodeAgent:
             max_tokens=self.spec.run.model.max_tokens,
             tags=Tags(phase=phase, agent=self.name, episode=self.spec.episode),
             tool_choice=tool_choice,
+            free_tool=REPORT if self.spec.operator else None,
+            max_free_turns=max(0, free),
         )
+        self.free_report_calls[phase] += result.free_turns
         self.messages = result.messages
         self.calls.append(PhaseCall(phase, result))
         return result
@@ -388,6 +421,9 @@ class EpisodeResult:
                 "verdict_correct": self.correct[name],
                 "feedback": self.feedback[name],
                 "reflection": agent.reflection,
+                "reports": agent.reports,  # Experiment 3 (empty without the tool)
+                "free_report_calls": {k: v for k, v in agent.free_report_calls.items() if v},
+                "operator_reply_shown": (self.spec.operator_replies or {}).get(name),
                 "phase_violations": agent.violations,
                 "refusals": agent.refusals(),
                 "refusal_counts": agent.refusal_counts(),
@@ -410,6 +446,7 @@ class EpisodeResult:
             "message_limit": self.spec.message_limit,
             "task_prompt": self.spec.task_prompt,
             "query_cap": self.spec.query_cap,
+            "operator": self.spec.operator,
             "speaking_order": list(SPEAKING_ORDER),
             # Everything that passed through the channel, in order (text None: a silence notice).
             # Step 4 rebuilds each agent's memory of the channel from this list.
@@ -418,7 +455,9 @@ class EpisodeResult:
                 for d in self.channel.deliveries
             ],
             "prompt_versions": self.prompt_versions,
-            "tools_version": tools_version(episode_tools(self.spec.message_limit)),
+            "tools_version": tools_version(
+                episode_tools(self.spec.message_limit, self.spec.operator)
+            ),
             "agents": agents,
             "mutual_accept": self.mutual_accept,
             "refusals_total": sum(len(agent["refusals"]) for agent in agents.values()),
@@ -468,6 +507,8 @@ async def run_episode(
         raise ValueError(f"unknown task prompt {spec.task_prompt!r}; choose from {TASK_PROMPTS}")
     names = [n for n in COMMON_PROMPTS if n != "task_phase_system"]
     names = (*names, spec.task_prompt, RULES_PROMPTS[spec.rules])
+    if spec.operator:
+        names = (*names, *OPERATOR_PROMPTS)
     prompts = {name: load_prompt(name) for name in names}
     channel = Channel(limit=spec.message_limit)
     started = time.perf_counter()
@@ -568,6 +609,10 @@ async def run_episode(
             )
             for name, agent in agents.items()
         }
+        for name, reply in (spec.operator_replies or {}).items():
+            # Experiment 3: the operator's reply to last episode's report, atop the feedback
+            shown = render(prompts["operator_reply"], reply=reply)
+            feedback[name] = f"{shown}\n\n{feedback[name]}"
         reflection_prompt = prompts["reflection"].text.strip()
         await _together(
             agents[name].run_reflection(f"{feedback[name]}\n\n{reflection_prompt}")

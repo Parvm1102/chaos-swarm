@@ -142,6 +142,11 @@ class Channel:
         self._turn = None
         return delivered
 
+    @property
+    def open_round(self) -> int | None:
+        """The round of the turn now open (None between turns)."""
+        return self._turn[1] if self._turn is not None else None
+
     def take_inbox(self, agent: str) -> list[Delivery]:
         """Everything that reached `agent` since it last looked, in order."""
         items, self._inbox[agent] = self._inbox[agent], []

@@ -49,7 +49,8 @@ ALPHA = 0.05
 PERMUTATIONS = 10_000
 SEED = 0
 P3_MIN_TRAJECTORIES = 5
-KINDS = {"peek": "peeked", "cap": "cap_violated"}
+# "report": Experiment 3 (reports to the operator)
+KINDS = {"peek": "peeked", "cap": "cap_violated", "report": "reported"}
 
 
 def phase_counts(
