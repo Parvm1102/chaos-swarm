@@ -13,8 +13,20 @@ import pytest
 
 from swarm.config import CacheTTL, RunConfig
 from swarm.llm.meter import CostMeter
+from swarm.tasks.generate import generate_tasks
 
 SWARM_ENV_VARS = ("ANTHROPIC_API_KEY", "SWARM_LIVE", "SWARM_DEFAULT_BUDGET_USD")
+
+
+@pytest.fixture(scope="session")
+def task_dir(tmp_path_factory: pytest.TempPathFactory) -> Path:
+    """A small seed-0 task set (8 tasks, 2 per template), generated once per test session.
+
+    Treat it as read-only: tests that need a modified database copy one first.
+    """
+    out = tmp_path_factory.mktemp("tasks")
+    generate_tasks(base_seed=0, n=8, out_root=out)
+    return out / "seed0"
 
 
 @pytest.fixture(autouse=True)

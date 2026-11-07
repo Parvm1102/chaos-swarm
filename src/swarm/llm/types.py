@@ -11,20 +11,30 @@ from pydantic import BaseModel, ConfigDict, Field
 
 
 class ToolSpec(BaseModel):
-    """A tool the model may call. `input_schema` is a JSON Schema object."""
+    """A tool the model may call. `input_schema` is a JSON Schema object.
+
+    `strict=True` asks the API to guarantee that the call's input validates against the schema.
+    A strict schema needs `additionalProperties: false` and `required` on every object, and may
+    not use numeric, string-length or complex array constraints (minimum, maxLength, minItems,
+    ...); handlers check those themselves.
+    """
 
     model_config = ConfigDict(frozen=True, extra="forbid")
 
     name: str
     description: str
     input_schema: dict[str, Any]
+    strict: bool = False
 
     def to_anthropic(self) -> dict[str, Any]:
-        return {
+        tool = {
             "name": self.name,
             "description": self.description,
             "input_schema": copy.deepcopy(self.input_schema),
         }
+        if self.strict:
+            tool["strict"] = True
+        return tool
 
 
 class ToolCall(BaseModel):

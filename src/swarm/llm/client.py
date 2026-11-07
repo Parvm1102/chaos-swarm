@@ -40,13 +40,18 @@ Retries: tenacity is the only retry layer (the SDK's own retries are off). It re
 (including 529 overloaded) and network errors or timeouts with jittered exponential backoff
 (1 s doubling to 60 s, or the server's ``retry-after`` when longer), at most 8 attempts, and
 logs every retry at WARNING. Other 4xx errors are never retried: they are bugs or bad config.
+
+Pacing: at most ``run.concurrency`` calls are in flight at once (a semaphore), and every attempt,
+retries included, first waits for the provider's ``Pacer``, which spaces request starts at least
+``PACING_S[provider]`` seconds apart. Anthropic needs no spacing (0 s); AgentRouter will.
 """
 
 import asyncio
 import copy
 import itertools
 import logging
-from collections.abc import Callable, Iterator
+import time
+from collections.abc import Awaitable, Callable, Iterator
 from dataclasses import dataclass
 from typing import Any, Protocol, Self, TypedDict
 
@@ -91,6 +96,10 @@ MAX_ATTEMPTS = 8
 MAX_WAIT_S = 60.0
 REQUEST_TIMEOUT_S = 120.0
 
+# Minimum seconds between the starts of two requests, per provider. Anthropic needs none: the
+# in-flight semaphore and the 429 backoff are enough. AgentRouter will need about 2.5 s.
+PACING_S: dict[str, float] = {"anthropic": 0.0}
+
 RetryWait = Callable[[RetryCallState], float]
 
 
@@ -104,7 +113,9 @@ class Tags(TypedDict):
 
 class LLMClient(Protocol):
     """What the tool loop and every later phase call: AnthropicClient (live) or
-    ScriptedClient (dry-run)."""
+    ScriptedClient (dry-run). `run` says which provider, model and cache TTL the calls use."""
+
+    run: RunConfig
 
     async def complete(
         self,
@@ -261,6 +272,41 @@ def to_llm_response(message: anthropic.types.Message) -> LLMResponse:
     )
 
 
+# Pacing ---------------------------------------------------------------------------------------
+
+
+class Pacer:
+    """Spaces request starts at least `interval_s` seconds apart; 0 means no spacing.
+
+    `clock` and `sleep` exist so tests can run it on a fake clock.
+    """
+
+    def __init__(
+        self,
+        interval_s: float,
+        *,
+        clock: Callable[[], float] = time.monotonic,
+        sleep: Callable[[float], Awaitable[None]] = asyncio.sleep,
+    ) -> None:
+        if interval_s < 0:
+            raise ValueError(f"interval_s must be >= 0, got {interval_s}")
+        self.interval_s = interval_s
+        self._clock = clock
+        self._sleep = sleep
+        self._lock = asyncio.Lock()
+        self._next_start = 0.0
+
+    async def wait(self) -> None:
+        """Return when the next request may start."""
+        if self.interval_s == 0:
+            return
+        async with self._lock:
+            delay = self._next_start - self._clock()
+            if delay > 0:
+                await self._sleep(delay)
+            self._next_start = self._clock() + self.interval_s
+
+
 # The live client ----------------------------------------------------------------------------
 
 
@@ -293,6 +339,7 @@ class AnthropicClient:
         self.meter = meter
         self._retry_wait = retry_wait if retry_wait is not None else _backoff_or_retry_after
         self._in_flight = asyncio.Semaphore(run.concurrency)
+        self._pacer = Pacer(PACING_S[run.provider])
         # max_retries=0: tenacity (below) is the only retry layer, so every retry is logged.
         self._sdk = (
             sdk
@@ -346,6 +393,7 @@ class AnthropicClient:
         )
         async for attempt in retrying:
             with attempt:
+                await self._pacer.wait()
                 message = await self._sdk.messages.create(**request)
         return message
 

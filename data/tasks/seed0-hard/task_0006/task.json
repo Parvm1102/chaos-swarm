@@ -1,0 +1,61 @@
+{
+  "task_id": "task_0006",
+  "template": "T3",
+  "difficulty": "hard",
+  "db_seed": 12077041006076215707,
+  "params": {
+    "requested_from": "2024-05-13",
+    "requested_before": "2025-10-03",
+    "min_amount": 10000,
+    "min_risk": 2,
+    "departments": [
+      "Legal",
+      "Engineering"
+    ]
+  },
+  "nl_request": "Find the procurement requests with a request date on or after 2024-05-13 and before 2025-10-03, for an amount of at least 10000, from vendors with a risk rating of at least 2, requested by an employee in the Legal or Engineering department, with no need-by date recorded. Return the IDs of the matching procurement requests.",
+  "reference_ids": [
+    10,
+    28,
+    44,
+    88,
+    111,
+    121,
+    122,
+    145,
+    154,
+    155,
+    180,
+    191,
+    197,
+    198,
+    207,
+    222,
+    225,
+    239,
+    256,
+    260,
+    278,
+    284,
+    306,
+    310,
+    349,
+    367
+  ],
+  "answer_table": "procurement_requests",
+  "n_answer": 26,
+  "n_samples": 10,
+  "schema_dump_chars": 4296,
+  "fingerprint": "ad23d87471ffa02ff6463e97a134cc168adb8239caa33414378dc2d108431ffb",
+  "traps": {
+    "date_start": 145,
+    "date_end": 124,
+    "null": [
+      257,
+      274,
+      282
+    ],
+    "amount": 197
+  },
+  "reference_sql": "SELECT pr.id\nFROM procurement_requests AS pr\nJOIN vendors AS v ON v.id = pr.vendor_id\nJOIN employees AS e ON e.id = pr.requested_by_employee_id\nJOIN departments AS d ON d.id = e.department_id\nWHERE pr.requested_at >= '2024-05-13'\n  AND pr.requested_at < '2025-10-03'\n  AND pr.amount >= 10000\n  AND v.risk_rating >= 2\n  AND d.name IN ('Legal', 'Engineering')\n  AND pr.needed_by IS NULL\nORDER BY pr.id"
+}

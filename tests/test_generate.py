@@ -90,6 +90,16 @@ def test_written_files_match_the_spec(task_set):
             assert {row[0] for row in conn.execute(spec.reference_sql)} == set(spec.reference_ids)
 
 
+def test_generated_databases_have_no_statistics_tables(task_set):
+    """The generator must never run ANALYZE: sqlite_stat1 would store every table's row count,
+    and the row count of _reference_answers is the size of the answer."""
+    root, manifest = task_set
+    for task in manifest.tasks:
+        with open_db(root, task) as conn:
+            names = [row[0] for row in conn.execute("SELECT name FROM sqlite_master")]
+        assert not [name for name in names if name.startswith("sqlite_stat")], task.task_id
+
+
 def test_the_manifest_hides_the_sql_but_task_json_keeps_it(task_set):
     root, manifest = task_set
     raw = (root / "manifest.json").read_text()
@@ -135,6 +145,8 @@ def test_an_existing_task_set_is_only_replaced_with_force(tmp_path):
     assert generate_tasks(0, 4, tmp_path, force=True).n_tasks == 4
 
 
-def test_only_the_base_difficulty_exists_so_far():
+def test_an_unknown_difficulty_is_refused(tmp_path):
     with pytest.raises(ValueError, match="difficulty"):
         generate_task(0, 0, T1, difficulty="traps")
+    with pytest.raises(ValueError, match="difficulty"):
+        generate_tasks(0, 4, tmp_path, difficulty="traps")

@@ -1,0 +1,35 @@
+{
+  "task_id": "task_0031",
+  "template": "T4",
+  "difficulty": "hard",
+  "db_seed": 11205667792089004939,
+  "params": {
+    "city": "Duskwater",
+    "opened_from": "2024-07-27",
+    "opened_before": "2025-05-17",
+    "min_priority": 3
+  },
+  "nl_request": "Find the facility tickets for buildings located in Duskwater, opened on or after 2024-07-27 and before 2025-05-17, with a priority of at least 3 and with no resolution date recorded. Return the IDs of the matching facility tickets.",
+  "reference_ids": [
+    22,
+    238,
+    257,
+    277,
+    445
+  ],
+  "answer_table": "facility_tickets",
+  "n_answer": 5,
+  "n_samples": 2,
+  "schema_dump_chars": 4296,
+  "fingerprint": "ff55f95a24d0ee54913859a8d6839a2511fff43bccd12e299d5a9c2c6eaa8049",
+  "traps": {
+    "date_start": 238,
+    "date_end": 382,
+    "null": [
+      84,
+      223,
+      399
+    ]
+  },
+  "reference_sql": "SELECT t.id\nFROM facility_tickets AS t\nJOIN buildings AS b ON b.id = t.building_id\nWHERE b.city = 'Duskwater'\n  AND t.opened_at >= '2024-07-27' AND t.opened_at < '2025-05-17'\n  AND t.priority >= 3\n  AND t.resolved_at IS NULL\nORDER BY t.id"
+}

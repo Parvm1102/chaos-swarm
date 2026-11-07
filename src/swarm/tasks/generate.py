@@ -3,6 +3,10 @@
 generate_task:
 1. builds the task's database in memory, seeded from (base_seed, task_index);
 2. draws template parameters until the answer is acceptable:
+   - difficulty "hard" first hardens each draw (swarm.tasks.traps): a day-level date window,
+     and traps planted by editing rows (date edges, NULL near misses, amounts equal to the
+     threshold), and the draw must also pass traps_bite(). Its edits are rolled back when the
+     draw is rejected;
    - the reference SQL and the pure-Python evaluator must agree exactly. A disagreement is a bug
      in one of them, so it stops generation (GroundTruthMismatch) rather than being resampled
      away, which would quietly drop exactly the boundary and NULL cases where they differ;
@@ -12,7 +16,8 @@ generate_task:
 3. stores the answer in _reference_answers, then writes db.sqlite (VACUUM INTO) and task.json.
 
 generate_tasks cycles T1..T4 over the task indices and writes manifest.json: every TaskSpec
-without its reference SQL, which stays in task.json only.
+without its reference SQL, which stays in task.json only. A base set goes to seed<N>/, a hard
+set to seed<N>-hard/.
 """
 
 import hashlib
@@ -38,7 +43,9 @@ from swarm.tasks.schema import (
     schema_dump,
 )
 from swarm.tasks.templates import TEMPLATES, Template
+from swarm.tasks.traps import Update, harden, traps_bite
 
+DIFFICULTIES = ("base", "hard")
 MIN_ANSWER = 5
 MAX_ANSWER = 30
 MAX_ANSWER_SHARE = 0.25
@@ -75,6 +82,9 @@ class ManifestTask(BaseModel):
     n_samples: int  # parameter draws until one was accepted (1 = the first draw)
     schema_dump_chars: int
     fingerprint: str
+    # Hard tasks only: which rows carry which trap. Left out of the JSON when None, so base
+    # task sets stay byte-identical to the ones generated before the hard level existed.
+    traps: dict[str, Any] | None = None
 
 
 class TaskSpec(ManifestTask):
@@ -132,18 +142,24 @@ def generate_task(
 ) -> TaskSpec:
     """Build one task. With `out_dir`, also write out_dir/db.sqlite and out_dir/task.json.
 
-    `difficulty` is recorded on the task; only "base" exists so far (the trap knobs in
-    docs/step1_notes.md would add more).
+    `difficulty` is "base" or "hard" (traps planted after the draw; see swarm.tasks.traps). A
+    hard task starts from the same database as the base task with the same index, but draws
+    from its own random stream.
     """
-    if difficulty != "base":
-        raise ValueError(f"unknown difficulty {difficulty!r}; only 'base' exists so far")
+    if difficulty not in DIFFICULTIES:
+        raise ValueError(f"unknown difficulty {difficulty!r}; choose from {DIFFICULTIES}")
     task_id = f"task_{task_index:04d}"
     db_seed = derive_seed(base_seed, task_index)
     conn = build_database(db_seed, row_counts)
     try:
         tables = load_tables(conn)
-        rng = random.Random(derive_seed(db_seed, "params", template.name))
-        params, answer, draws = _draw_until_accepted(
+        stream = (
+            ("params", template.name)
+            if difficulty == "base"
+            else ("params", template.name, difficulty)
+        )
+        rng = random.Random(derive_seed(db_seed, *stream))
+        params, answer, draws, traps = _draw_until_accepted(
             template,
             conn,
             tables,
@@ -151,6 +167,7 @@ def generate_task(
             answer_cap(len(tables[template.answer_table])),
             max_rejections,
             task_id,
+            hard=difficulty == "hard",
         )
         reference_ids = sorted(answer)
         conn.executemany(
@@ -172,6 +189,7 @@ def generate_task(
             n_samples=draws,
             schema_dump_chars=len(schema_dump(conn)),
             fingerprint=fingerprint(conn, reference_ids),
+            traps=traps,
         )
         if out_dir is not None:
             write_task(conn, spec, Path(out_dir))
@@ -188,26 +206,56 @@ def _draw_until_accepted(
     cap: int,
     max_rejections: int,
     task_id: str,
-) -> tuple[dict[str, Any], set[int], int]:
-    """Draw parameters until the answer is acceptable. Returns (params, answer, draws)."""
+    *,
+    hard: bool = False,
+) -> tuple[dict[str, Any], set[int], int, dict[str, Any] | None]:
+    """Draw parameters until the answer is acceptable.
+
+    Returns (params, answer, draws, traps); traps is None for a base task. A hard draw's row
+    edits are made inside a transaction: committed if the draw is accepted, rolled back if not,
+    so every draw starts from the same base rows.
+    """
     for draw in range(1, max_rejections + 1):
         params = template.sample_params(rng, tables)
+        traps = None
+        draw_tables = tables
+        if hard:
+            hardened = harden(template, params, tables, rng)
+            if hardened is None:
+                continue  # too few rows to plant the traps on
+            params, updates, traps = hardened
+            _apply_updates(conn, updates)
+            draw_tables = load_tables(conn)
         from_sql = {row[0] for row in conn.execute(template.sql(params))}
-        from_python = template.evaluate_py(params, tables)
+        from_python = template.evaluate_py(params, draw_tables)
         if from_sql != from_python:
             raise GroundTruthMismatch(
                 f"{template.label} ({task_id}): SQL and Python disagree for {params}: "
                 f"only in SQL {sorted(from_sql - from_python)}, "
                 f"only in Python {sorted(from_python - from_sql)}"
             )
-        if not MIN_ANSWER <= len(from_sql) <= cap:
-            continue
-        if any(template.evaluate_py(params, tables, f.name) == from_sql for f in template.filters):
-            continue  # some filter does not bind
-        return params, from_sql, draw
+        accepted = (
+            MIN_ANSWER <= len(from_sql) <= cap
+            # every filter binds: dropping any one of them changes the answer
+            and not any(
+                template.evaluate_py(params, draw_tables, f.name) == from_sql
+                for f in template.filters
+            )
+            and (not hard or traps_bite(template, params, draw_tables, from_sql))
+        )
+        if accepted:
+            conn.commit()
+            return params, from_sql, draw, traps
+        conn.rollback()
     raise TaskGenerationError(
         f"{template.label} ({task_id}): no acceptable parameters after {max_rejections} draws"
     )
+
+
+def _apply_updates(conn: sqlite3.Connection, updates: list[Update]) -> None:
+    """Row edits from swarm.tasks.traps; table and column names come from our own code."""
+    for table, row_id, column, value in updates:
+        conn.execute(f"UPDATE {table} SET {column} = ? WHERE id = ?", (value, row_id))
 
 
 def write_task(conn: sqlite3.Connection, spec: TaskSpec, out_dir: Path) -> None:
@@ -215,7 +263,12 @@ def write_task(conn: sqlite3.Connection, spec: TaskSpec, out_dir: Path) -> None:
     db_path = out_dir / DB_FILE
     db_path.unlink(missing_ok=True)  # VACUUM INTO refuses to overwrite a file
     conn.execute("VACUUM INTO ?", (str(db_path),))
-    (out_dir / TASK_FILE).write_bytes(_json(spec.model_dump(mode="json")))
+    (out_dir / TASK_FILE).write_bytes(_json(spec.model_dump(mode="json", exclude_none=True)))
+
+
+def task_set_name(base_seed: int, difficulty: str = "base") -> str:
+    """The folder of a task set under the task root: seed0 (base) or seed0-hard."""
+    return f"seed{base_seed}" if difficulty == "base" else f"seed{base_seed}-{difficulty}"
 
 
 def generate_tasks(
@@ -223,16 +276,19 @@ def generate_tasks(
     n: int,
     out_root: Path,
     *,
+    difficulty: str = "base",
     row_counts: Mapping[str, int] | None = None,
     force: bool = False,
     on_task: Callable[[TaskSpec], None] | None = None,
 ) -> Manifest:
-    """Generate n tasks into out_root/seed<base_seed>/, cycling T1..T4, and write the manifest.
+    """Generate n tasks into out_root/<task_set_name>/, cycling T1..T4, and write the manifest.
 
     An existing task set is only replaced with force=True (it is deleted first, sequences.json
     included, because sequences belong to one exact task set).
     """
-    root = Path(out_root) / f"seed{base_seed}"
+    if difficulty not in DIFFICULTIES:
+        raise ValueError(f"unknown difficulty {difficulty!r}; choose from {DIFFICULTIES}")
+    root = Path(out_root) / task_set_name(base_seed, difficulty)
     if root.exists():
         if not force:
             raise FileExistsError(f"{root} already exists; use --force to replace it")
@@ -242,7 +298,12 @@ def generate_tasks(
     for index in range(n):
         template = TEMPLATES[index % len(TEMPLATES)]
         spec = generate_task(
-            index, base_seed, template, out_dir=root / f"task_{index:04d}", row_counts=row_counts
+            index,
+            base_seed,
+            template,
+            difficulty,
+            out_dir=root / f"task_{index:04d}",
+            row_counts=row_counts,
         )
         specs.append(spec)
         if on_task is not None:
@@ -254,7 +315,7 @@ def generate_tasks(
         row_counts={**ROW_COUNTS, **(row_counts or {})},
         tasks=[ManifestTask(**spec.model_dump(exclude={"reference_sql"})) for spec in specs],
     )
-    (root / MANIFEST_FILE).write_bytes(_json(manifest.model_dump(mode="json")))
+    (root / MANIFEST_FILE).write_bytes(_json(manifest.model_dump(mode="json", exclude_none=True)))
     return manifest
 
 

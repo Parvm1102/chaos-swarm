@@ -1,0 +1,1109 @@
+{
+  "seed": 0,
+  "task_set_seed": 0,
+  "manifest_digest": "6305b612a4dc480c318cc20d8f082530742bc3d9f1b31feb582bccd148d09936",
+  "n_sequences": 20,
+  "episodes": 10,
+  "sequences": [
+    {
+      "sequence_id": 0,
+      "episodes": [
+        {
+          "episode": 1,
+          "a": "task_0020",
+          "b": "task_0035"
+        },
+        {
+          "episode": 2,
+          "a": "task_0042",
+          "b": "task_0063"
+        },
+        {
+          "episode": 3,
+          "a": "task_0084",
+          "b": "task_0045"
+        },
+        {
+          "episode": 4,
+          "a": "task_0076",
+          "b": "task_0040"
+        },
+        {
+          "episode": 5,
+          "a": "task_0062",
+          "b": "task_0081"
+        },
+        {
+          "episode": 6,
+          "a": "task_0098",
+          "b": "task_0002"
+        },
+        {
+          "episode": 7,
+          "a": "task_0059",
+          "b": "task_0021"
+        },
+        {
+          "episode": 8,
+          "a": "task_0001",
+          "b": "task_0068"
+        },
+        {
+          "episode": 9,
+          "a": "task_0017",
+          "b": "task_0006"
+        },
+        {
+          "episode": 10,
+          "a": "task_0075",
+          "b": "task_0055"
+        }
+      ]
+    },
+    {
+      "sequence_id": 1,
+      "episodes": [
+        {
+          "episode": 1,
+          "a": "task_0015",
+          "b": "task_0034"
+        },
+        {
+          "episode": 2,
+          "a": "task_0023",
+          "b": "task_0069"
+        },
+        {
+          "episode": 3,
+          "a": "task_0072",
+          "b": "task_0013"
+        },
+        {
+          "episode": 4,
+          "a": "task_0080",
+          "b": "task_0003"
+        },
+        {
+          "episode": 5,
+          "a": "task_0024",
+          "b": "task_0083"
+        },
+        {
+          "episode": 6,
+          "a": "task_0057",
+          "b": "task_0038"
+        },
+        {
+          "episode": 7,
+          "a": "task_0026",
+          "b": "task_0064"
+        },
+        {
+          "episode": 8,
+          "a": "task_0067",
+          "b": "task_0014"
+        },
+        {
+          "episode": 9,
+          "a": "task_0086",
+          "b": "task_0093"
+        },
+        {
+          "episode": 10,
+          "a": "task_0041",
+          "b": "task_0092"
+        }
+      ]
+    },
+    {
+      "sequence_id": 2,
+      "episodes": [
+        {
+          "episode": 1,
+          "a": "task_0070",
+          "b": "task_0087"
+        },
+        {
+          "episode": 2,
+          "a": "task_0016",
+          "b": "task_0054"
+        },
+        {
+          "episode": 3,
+          "a": "task_0011",
+          "b": "task_0050"
+        },
+        {
+          "episode": 4,
+          "a": "task_0043",
+          "b": "task_0012"
+        },
+        {
+          "episode": 5,
+          "a": "task_0008",
+          "b": "task_0095"
+        },
+        {
+          "episode": 6,
+          "a": "task_0058",
+          "b": "task_0065"
+        },
+        {
+          "episode": 7,
+          "a": "task_0032",
+          "b": "task_0049"
+        },
+        {
+          "episode": 8,
+          "a": "task_0077",
+          "b": "task_0009"
+        },
+        {
+          "episode": 9,
+          "a": "task_0074",
+          "b": "task_0052"
+        },
+        {
+          "episode": 10,
+          "a": "task_0089",
+          "b": "task_0047"
+        }
+      ]
+    },
+    {
+      "sequence_id": 3,
+      "episodes": [
+        {
+          "episode": 1,
+          "a": "task_0037",
+          "b": "task_0097"
+        },
+        {
+          "episode": 2,
+          "a": "task_0090",
+          "b": "task_0079"
+        },
+        {
+          "episode": 3,
+          "a": "task_0088",
+          "b": "task_0091"
+        },
+        {
+          "episode": 4,
+          "a": "task_0029",
+          "b": "task_0030"
+        },
+        {
+          "episode": 5,
+          "a": "task_0071",
+          "b": "task_0007"
+        },
+        {
+          "episode": 6,
+          "a": "task_0025",
+          "b": "task_0005"
+        },
+        {
+          "episode": 7,
+          "a": "task_0046",
+          "b": "task_0048"
+        },
+        {
+          "episode": 8,
+          "a": "task_0019",
+          "b": "task_0078"
+        },
+        {
+          "episode": 9,
+          "a": "task_0000",
+          "b": "task_0056"
+        },
+        {
+          "episode": 10,
+          "a": "task_0028",
+          "b": "task_0066"
+        }
+      ]
+    },
+    {
+      "sequence_id": 4,
+      "episodes": [
+        {
+          "episode": 1,
+          "a": "task_0027",
+          "b": "task_0094"
+        },
+        {
+          "episode": 2,
+          "a": "task_0061",
+          "b": "task_0060"
+        },
+        {
+          "episode": 3,
+          "a": "task_0010",
+          "b": "task_0036"
+        },
+        {
+          "episode": 4,
+          "a": "task_0022",
+          "b": "task_0099"
+        },
+        {
+          "episode": 5,
+          "a": "task_0082",
+          "b": "task_0085"
+        },
+        {
+          "episode": 6,
+          "a": "task_0096",
+          "b": "task_0073"
+        },
+        {
+          "episode": 7,
+          "a": "task_0033",
+          "b": "task_0018"
+        },
+        {
+          "episode": 8,
+          "a": "task_0044",
+          "b": "task_0051"
+        },
+        {
+          "episode": 9,
+          "a": "task_0031",
+          "b": "task_0053"
+        },
+        {
+          "episode": 10,
+          "a": "task_0039",
+          "b": "task_0004"
+        }
+      ]
+    },
+    {
+      "sequence_id": 5,
+      "episodes": [
+        {
+          "episode": 1,
+          "a": "task_0022",
+          "b": "task_0096"
+        },
+        {
+          "episode": 2,
+          "a": "task_0009",
+          "b": "task_0036"
+        },
+        {
+          "episode": 3,
+          "a": "task_0088",
+          "b": "task_0054"
+        },
+        {
+          "episode": 4,
+          "a": "task_0002",
+          "b": "task_0031"
+        },
+        {
+          "episode": 5,
+          "a": "task_0053",
+          "b": "task_0058"
+        },
+        {
+          "episode": 6,
+          "a": "task_0083",
+          "b": "task_0021"
+        },
+        {
+          "episode": 7,
+          "a": "task_0051",
+          "b": "task_0033"
+        },
+        {
+          "episode": 8,
+          "a": "task_0020",
+          "b": "task_0067"
+        },
+        {
+          "episode": 9,
+          "a": "task_0008",
+          "b": "task_0030"
+        },
+        {
+          "episode": 10,
+          "a": "task_0079",
+          "b": "task_0085"
+        }
+      ]
+    },
+    {
+      "sequence_id": 6,
+      "episodes": [
+        {
+          "episode": 1,
+          "a": "task_0005",
+          "b": "task_0081"
+        },
+        {
+          "episode": 2,
+          "a": "task_0074",
+          "b": "task_0045"
+        },
+        {
+          "episode": 3,
+          "a": "task_0041",
+          "b": "task_0095"
+        },
+        {
+          "episode": 4,
+          "a": "task_0075",
+          "b": "task_0072"
+        },
+        {
+          "episode": 5,
+          "a": "task_0034",
+          "b": "task_0062"
+        },
+        {
+          "episode": 6,
+          "a": "task_0061",
+          "b": "task_0092"
+        },
+        {
+          "episode": 7,
+          "a": "task_0044",
+          "b": "task_0084"
+        },
+        {
+          "episode": 8,
+          "a": "task_0028",
+          "b": "task_0090"
+        },
+        {
+          "episode": 9,
+          "a": "task_0091",
+          "b": "task_0007"
+        },
+        {
+          "episode": 10,
+          "a": "task_0099",
+          "b": "task_0010"
+        }
+      ]
+    },
+    {
+      "sequence_id": 7,
+      "episodes": [
+        {
+          "episode": 1,
+          "a": "task_0011",
+          "b": "task_0070"
+        },
+        {
+          "episode": 2,
+          "a": "task_0029",
+          "b": "task_0065"
+        },
+        {
+          "episode": 3,
+          "a": "task_0003",
+          "b": "task_0046"
+        },
+        {
+          "episode": 4,
+          "a": "task_0016",
+          "b": "task_0019"
+        },
+        {
+          "episode": 5,
+          "a": "task_0060",
+          "b": "task_0014"
+        },
+        {
+          "episode": 6,
+          "a": "task_0024",
+          "b": "task_0049"
+        },
+        {
+          "episode": 7,
+          "a": "task_0093",
+          "b": "task_0063"
+        },
+        {
+          "episode": 8,
+          "a": "task_0006",
+          "b": "task_0077"
+        },
+        {
+          "episode": 9,
+          "a": "task_0042",
+          "b": "task_0004"
+        },
+        {
+          "episode": 10,
+          "a": "task_0027",
+          "b": "task_0064"
+        }
+      ]
+    },
+    {
+      "sequence_id": 8,
+      "episodes": [
+        {
+          "episode": 1,
+          "a": "task_0035",
+          "b": "task_0052"
+        },
+        {
+          "episode": 2,
+          "a": "task_0032",
+          "b": "task_0071"
+        },
+        {
+          "episode": 3,
+          "a": "task_0015",
+          "b": "task_0098"
+        },
+        {
+          "episode": 4,
+          "a": "task_0086",
+          "b": "task_0047"
+        },
+        {
+          "episode": 5,
+          "a": "task_0068",
+          "b": "task_0039"
+        },
+        {
+          "episode": 6,
+          "a": "task_0048",
+          "b": "task_0078"
+        },
+        {
+          "episode": 7,
+          "a": "task_0025",
+          "b": "task_0089"
+        },
+        {
+          "episode": 8,
+          "a": "task_0069",
+          "b": "task_0094"
+        },
+        {
+          "episode": 9,
+          "a": "task_0017",
+          "b": "task_0012"
+        },
+        {
+          "episode": 10,
+          "a": "task_0082",
+          "b": "task_0097"
+        }
+      ]
+    },
+    {
+      "sequence_id": 9,
+      "episodes": [
+        {
+          "episode": 1,
+          "a": "task_0066",
+          "b": "task_0057"
+        },
+        {
+          "episode": 2,
+          "a": "task_0076",
+          "b": "task_0040"
+        },
+        {
+          "episode": 3,
+          "a": "task_0037",
+          "b": "task_0050"
+        },
+        {
+          "episode": 4,
+          "a": "task_0026",
+          "b": "task_0000"
+        },
+        {
+          "episode": 5,
+          "a": "task_0013",
+          "b": "task_0018"
+        },
+        {
+          "episode": 6,
+          "a": "task_0038",
+          "b": "task_0073"
+        },
+        {
+          "episode": 7,
+          "a": "task_0043",
+          "b": "task_0023"
+        },
+        {
+          "episode": 8,
+          "a": "task_0087",
+          "b": "task_0055"
+        },
+        {
+          "episode": 9,
+          "a": "task_0001",
+          "b": "task_0059"
+        },
+        {
+          "episode": 10,
+          "a": "task_0056",
+          "b": "task_0080"
+        }
+      ]
+    },
+    {
+      "sequence_id": 10,
+      "episodes": [
+        {
+          "episode": 1,
+          "a": "task_0041",
+          "b": "task_0067"
+        },
+        {
+          "episode": 2,
+          "a": "task_0094",
+          "b": "task_0062"
+        },
+        {
+          "episode": 3,
+          "a": "task_0034",
+          "b": "task_0020"
+        },
+        {
+          "episode": 4,
+          "a": "task_0069",
+          "b": "task_0089"
+        },
+        {
+          "episode": 5,
+          "a": "task_0004",
+          "b": "task_0055"
+        },
+        {
+          "episode": 6,
+          "a": "task_0013",
+          "b": "task_0074"
+        },
+        {
+          "episode": 7,
+          "a": "task_0086",
+          "b": "task_0012"
+        },
+        {
+          "episode": 8,
+          "a": "task_0076",
+          "b": "task_0048"
+        },
+        {
+          "episode": 9,
+          "a": "task_0063",
+          "b": "task_0005"
+        },
+        {
+          "episode": 10,
+          "a": "task_0083",
+          "b": "task_0011"
+        }
+      ]
+    },
+    {
+      "sequence_id": 11,
+      "episodes": [
+        {
+          "episode": 1,
+          "a": "task_0035",
+          "b": "task_0009"
+        },
+        {
+          "episode": 2,
+          "a": "task_0032",
+          "b": "task_0031"
+        },
+        {
+          "episode": 3,
+          "a": "task_0021",
+          "b": "task_0072"
+        },
+        {
+          "episode": 4,
+          "a": "task_0017",
+          "b": "task_0077"
+        },
+        {
+          "episode": 5,
+          "a": "task_0024",
+          "b": "task_0015"
+        },
+        {
+          "episode": 6,
+          "a": "task_0038",
+          "b": "task_0087"
+        },
+        {
+          "episode": 7,
+          "a": "task_0078",
+          "b": "task_0049"
+        },
+        {
+          "episode": 8,
+          "a": "task_0043",
+          "b": "task_0060"
+        },
+        {
+          "episode": 9,
+          "a": "task_0084",
+          "b": "task_0030"
+        },
+        {
+          "episode": 10,
+          "a": "task_0066",
+          "b": "task_0042"
+        }
+      ]
+    },
+    {
+      "sequence_id": 12,
+      "episodes": [
+        {
+          "episode": 1,
+          "a": "task_0065",
+          "b": "task_0001"
+        },
+        {
+          "episode": 2,
+          "a": "task_0025",
+          "b": "task_0052"
+        },
+        {
+          "episode": 3,
+          "a": "task_0070",
+          "b": "task_0008"
+        },
+        {
+          "episode": 4,
+          "a": "task_0088",
+          "b": "task_0006"
+        },
+        {
+          "episode": 5,
+          "a": "task_0016",
+          "b": "task_0002"
+        },
+        {
+          "episode": 6,
+          "a": "task_0091",
+          "b": "task_0085"
+        },
+        {
+          "episode": 7,
+          "a": "task_0095",
+          "b": "task_0039"
+        },
+        {
+          "episode": 8,
+          "a": "task_0099",
+          "b": "task_0027"
+        },
+        {
+          "episode": 9,
+          "a": "task_0029",
+          "b": "task_0022"
+        },
+        {
+          "episode": 10,
+          "a": "task_0050",
+          "b": "task_0068"
+        }
+      ]
+    },
+    {
+      "sequence_id": 13,
+      "episodes": [
+        {
+          "episode": 1,
+          "a": "task_0064",
+          "b": "task_0058"
+        },
+        {
+          "episode": 2,
+          "a": "task_0073",
+          "b": "task_0045"
+        },
+        {
+          "episode": 3,
+          "a": "task_0047",
+          "b": "task_0028"
+        },
+        {
+          "episode": 4,
+          "a": "task_0053",
+          "b": "task_0057"
+        },
+        {
+          "episode": 5,
+          "a": "task_0026",
+          "b": "task_0092"
+        },
+        {
+          "episode": 6,
+          "a": "task_0098",
+          "b": "task_0023"
+        },
+        {
+          "episode": 7,
+          "a": "task_0093",
+          "b": "task_0090"
+        },
+        {
+          "episode": 8,
+          "a": "task_0014",
+          "b": "task_0036"
+        },
+        {
+          "episode": 9,
+          "a": "task_0000",
+          "b": "task_0079"
+        },
+        {
+          "episode": 10,
+          "a": "task_0071",
+          "b": "task_0003"
+        }
+      ]
+    },
+    {
+      "sequence_id": 14,
+      "episodes": [
+        {
+          "episode": 1,
+          "a": "task_0044",
+          "b": "task_0007"
+        },
+        {
+          "episode": 2,
+          "a": "task_0096",
+          "b": "task_0097"
+        },
+        {
+          "episode": 3,
+          "a": "task_0018",
+          "b": "task_0051"
+        },
+        {
+          "episode": 4,
+          "a": "task_0046",
+          "b": "task_0037"
+        },
+        {
+          "episode": 5,
+          "a": "task_0056",
+          "b": "task_0040"
+        },
+        {
+          "episode": 6,
+          "a": "task_0075",
+          "b": "task_0080"
+        },
+        {
+          "episode": 7,
+          "a": "task_0081",
+          "b": "task_0061"
+        },
+        {
+          "episode": 8,
+          "a": "task_0059",
+          "b": "task_0019"
+        },
+        {
+          "episode": 9,
+          "a": "task_0010",
+          "b": "task_0054"
+        },
+        {
+          "episode": 10,
+          "a": "task_0033",
+          "b": "task_0082"
+        }
+      ]
+    },
+    {
+      "sequence_id": 15,
+      "episodes": [
+        {
+          "episode": 1,
+          "a": "task_0035",
+          "b": "task_0024"
+        },
+        {
+          "episode": 2,
+          "a": "task_0005",
+          "b": "task_0054"
+        },
+        {
+          "episode": 3,
+          "a": "task_0057",
+          "b": "task_0018"
+        },
+        {
+          "episode": 4,
+          "a": "task_0096",
+          "b": "task_0083"
+        },
+        {
+          "episode": 5,
+          "a": "task_0016",
+          "b": "task_0097"
+        },
+        {
+          "episode": 6,
+          "a": "task_0027",
+          "b": "task_0051"
+        },
+        {
+          "episode": 7,
+          "a": "task_0090",
+          "b": "task_0077"
+        },
+        {
+          "episode": 8,
+          "a": "task_0021",
+          "b": "task_0064"
+        },
+        {
+          "episode": 9,
+          "a": "task_0086",
+          "b": "task_0052"
+        },
+        {
+          "episode": 10,
+          "a": "task_0026",
+          "b": "task_0043"
+        }
+      ]
+    },
+    {
+      "sequence_id": 16,
+      "episodes": [
+        {
+          "episode": 1,
+          "a": "task_0066",
+          "b": "task_0041"
+        },
+        {
+          "episode": 2,
+          "a": "task_0033",
+          "b": "task_0036"
+        },
+        {
+          "episode": 3,
+          "a": "task_0022",
+          "b": "task_0039"
+        },
+        {
+          "episode": 4,
+          "a": "task_0004",
+          "b": "task_0042"
+        },
+        {
+          "episode": 5,
+          "a": "task_0059",
+          "b": "task_0081"
+        },
+        {
+          "episode": 6,
+          "a": "task_0031",
+          "b": "task_0069"
+        },
+        {
+          "episode": 7,
+          "a": "task_0063",
+          "b": "task_0058"
+        },
+        {
+          "episode": 8,
+          "a": "task_0053",
+          "b": "task_0084"
+        },
+        {
+          "episode": 9,
+          "a": "task_0044",
+          "b": "task_0092"
+        },
+        {
+          "episode": 10,
+          "a": "task_0006",
+          "b": "task_0019"
+        }
+      ]
+    },
+    {
+      "sequence_id": 17,
+      "episodes": [
+        {
+          "episode": 1,
+          "a": "task_0080",
+          "b": "task_0070"
+        },
+        {
+          "episode": 2,
+          "a": "task_0034",
+          "b": "task_0046"
+        },
+        {
+          "episode": 3,
+          "a": "task_0049",
+          "b": "task_0061"
+        },
+        {
+          "episode": 4,
+          "a": "task_0028",
+          "b": "task_0000"
+        },
+        {
+          "episode": 5,
+          "a": "task_0072",
+          "b": "task_0067"
+        },
+        {
+          "episode": 6,
+          "a": "task_0010",
+          "b": "task_0095"
+        },
+        {
+          "episode": 7,
+          "a": "task_0045",
+          "b": "task_0013"
+        },
+        {
+          "episode": 8,
+          "a": "task_0098",
+          "b": "task_0025"
+        },
+        {
+          "episode": 9,
+          "a": "task_0071",
+          "b": "task_0020"
+        },
+        {
+          "episode": 10,
+          "a": "task_0047",
+          "b": "task_0099"
+        }
+      ]
+    },
+    {
+      "sequence_id": 18,
+      "episodes": [
+        {
+          "episode": 1,
+          "a": "task_0060",
+          "b": "task_0056"
+        },
+        {
+          "episode": 2,
+          "a": "task_0007",
+          "b": "task_0073"
+        },
+        {
+          "episode": 3,
+          "a": "task_0068",
+          "b": "task_0091"
+        },
+        {
+          "episode": 4,
+          "a": "task_0011",
+          "b": "task_0001"
+        },
+        {
+          "episode": 5,
+          "a": "task_0037",
+          "b": "task_0093"
+        },
+        {
+          "episode": 6,
+          "a": "task_0078",
+          "b": "task_0038"
+        },
+        {
+          "episode": 7,
+          "a": "task_0023",
+          "b": "task_0012"
+        },
+        {
+          "episode": 8,
+          "a": "task_0074",
+          "b": "task_0030"
+        },
+        {
+          "episode": 9,
+          "a": "task_0014",
+          "b": "task_0055"
+        },
+        {
+          "episode": 10,
+          "a": "task_0065",
+          "b": "task_0048"
+        }
+      ]
+    },
+    {
+      "sequence_id": 19,
+      "episodes": [
+        {
+          "episode": 1,
+          "a": "task_0003",
+          "b": "task_0002"
+        },
+        {
+          "episode": 2,
+          "a": "task_0032",
+          "b": "task_0085"
+        },
+        {
+          "episode": 3,
+          "a": "task_0015",
+          "b": "task_0082"
+        },
+        {
+          "episode": 4,
+          "a": "task_0009",
+          "b": "task_0089"
+        },
+        {
+          "episode": 5,
+          "a": "task_0094",
+          "b": "task_0088"
+        },
+        {
+          "episode": 6,
+          "a": "task_0079",
+          "b": "task_0050"
+        },
+        {
+          "episode": 7,
+          "a": "task_0029",
+          "b": "task_0076"
+        },
+        {
+          "episode": 8,
+          "a": "task_0017",
+          "b": "task_0040"
+        },
+        {
+          "episode": 9,
+          "a": "task_0062",
+          "b": "task_0075"
+        },
+        {
+          "episode": 10,
+          "a": "task_0008",
+          "b": "task_0087"
+        }
+      ]
+    }
+  ]
+}

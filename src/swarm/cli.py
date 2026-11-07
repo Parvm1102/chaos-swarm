@@ -1,8 +1,9 @@
-"""The `swarm` command line: check-env, ping, cost-report, and the `tasks` sub-app."""
+"""The `swarm` command line: check-env, ping, cost-report, calibrate, and the `tasks` sub-app."""
 
 import asyncio
 import logging
 import platform
+import shutil
 import sys
 import time
 from datetime import UTC, datetime
@@ -17,18 +18,30 @@ from rich.logging import RichHandler
 from rich.progress import Progress
 from rich.table import Table
 
-from swarm.config import RUNS_DIR, LiveCallRefused, ModelConfig, Provider, RunConfig, Settings
-from swarm.llm.client import AnthropicClient
+from swarm.agents.task_agent import TASK_MAX_TOKENS
+from swarm.calibrate import pick_tasks, run_calibration, summarize_calibration, write_summary
+from swarm.config import (
+    RUNS_DIR,
+    CacheTTL,
+    LiveCallRefused,
+    ModelConfig,
+    Provider,
+    RunConfig,
+    Settings,
+)
+from swarm.llm.client import THINKING_OFF, AnthropicClient
 from swarm.llm.meter import USAGE_FILE, BudgetExceeded, CostMeter, summarize_usage_file
-from swarm.llm.pricing import cost_usd
+from swarm.llm.pricing import PRICES, cost_usd
 from swarm.llm.types import LLMResponse, text_block, user_message
 from swarm.tasks.generate import (
+    DIFFICULTIES,
     GroundTruthMismatch,
     TaskGenerationError,
     generate_tasks,
     load_manifest,
     load_task,
     summarize,
+    task_set_name,
 )
 from swarm.tasks.sequences import SEQUENCES_FILE, make_sequences, write_sequences
 from swarm.tasks.templates import TEMPLATES_BY_NAME
@@ -41,8 +54,10 @@ app.add_typer(tasks_app, name="tasks")
 console = Console()
 DEFAULT_TASK_ROOT = Path("data/tasks")
 
-# The --provider choices come straight from config.Provider, so the CLI cannot drift from it.
+# The --provider and --cache-ttl choices come straight from config, so the CLI cannot drift.
 ProviderName = StrEnum("ProviderName", {name: name for name in get_args(Provider)})
+CacheTTLName = StrEnum("CacheTTLName", {ttl: ttl for ttl in get_args(CacheTTL)})
+DifficultyName = StrEnum("DifficultyName", {name: name for name in DIFFICULTIES})
 
 PING_PROMPT = "Reply with the single word pong"
 # Deliberately long and fixed: the API does not cache prefixes shorter than 512 tokens, so a
@@ -221,23 +236,212 @@ def _usage_cells(bucket: dict[str, Any]) -> list[str]:
     ]
 
 
+# swarm calibrate ------------------------------------------------------------------------------
+
+
+@app.command()
+def calibrate(
+    model: Annotated[
+        str, typer.Option(help="provider/model, e.g. anthropic/claude-haiku-5-5.")
+    ] = "anthropic/claude-sonnet-5-5",
+    n: Annotated[int, typer.Option(help="Number of tasks, spread evenly over T1..T4.")] = 20,
+    seed: Annotated[int, typer.Option(help="Seed for picking the tasks.")] = 0,
+    run_name: Annotated[
+        str | None,
+        typer.Option(help="Folder under runs/ (default calib_<model>_<ttl>, plus _dry)."),
+    ] = None,
+    cache_ttl: Annotated[CacheTTLName, typer.Option(help="Prompt-cache TTL.")] = CacheTTLName["5m"],
+    dry_run: Annotated[
+        bool, typer.Option("--dry-run", help="Offline scripted agent: no API calls, $0.")
+    ] = False,
+    task_dir: Annotated[Path, typer.Option(help="Task set folder.")] = DEFAULT_TASK_ROOT / "seed0",
+    budget: Annotated[
+        float | None, typer.Option(help="USD cap for this run (default SWARM_DEFAULT_BUDGET_USD).")
+    ] = None,
+    concurrency: Annotated[int, typer.Option(min=1, help="Task phases in flight at once.")] = 4,
+    force: Annotated[bool, typer.Option(help="Replace an existing run folder.")] = False,
+) -> None:
+    """Solo calibration: n task phases without a peer; accuracy, peek rate, cost, cache use.
+
+    Live unless --dry-run, and a live run needs SWARM_LIVE=1. Writes runs/<run>/calibration.jsonl,
+    summary.json, transcripts/ and usage.jsonl.
+    """
+    provider, model_name = _parse_model(model)
+    name = run_name or f"calib_{model_name}_{cache_ttl.value}" + ("_dry" if dry_run else "")
+    settings = Settings()
+    try:
+        run = RunConfig(
+            run_name=name,
+            provider=provider,
+            model=ModelConfig(name=model_name, max_tokens=TASK_MAX_TOKENS),
+            budget_usd=budget if budget is not None else settings.SWARM_DEFAULT_BUDGET_USD,
+            dry_run=dry_run,
+            concurrency=concurrency,
+            cache_ttl=cache_ttl.value,
+            seed=seed,
+        )
+        if not dry_run and settings.anthropic_api_key() is None:  # before any folder is made
+            raise LiveCallRefused("ANTHROPIC_API_KEY is not set (put it in .env)")
+    except LiveCallRefused as error:
+        console.print(f"[red]refused:[/red] {error}")
+        raise typer.Exit(code=2) from None
+
+    manifest = load_manifest(task_dir)
+    try:
+        task_ids = pick_tasks(manifest, n, seed)
+    except ValueError as error:
+        console.print(f"[red]{error}[/red]")
+        raise typer.Exit(code=1) from None
+    if run.run_dir.exists():
+        if not force:
+            console.print(
+                f"[red]{run.run_dir} already exists; choose another --run-name or pass "
+                "--force[/red]"
+            )
+            raise typer.Exit(code=1)
+        shutil.rmtree(run.run_dir)
+
+    meter = CostMeter.for_run(run)
+    mode = "dry run (scripted agent)" if dry_run else "LIVE"
+    console.print(
+        f"{mode}: {len(task_ids)} task phases on {provider}/{model_name}, cache {run.cache_ttl}, "
+        f"{concurrency} at a time, budget ${run.budget_usd:g} -> {run.run_dir}"
+    )
+    try:
+        records = asyncio.run(run_calibration(run, task_dir, task_ids, meter))
+    except LiveCallRefused as error:
+        console.print(f"[red]refused:[/red] {error}")
+        raise typer.Exit(code=2) from None
+    except BudgetExceeded as error:
+        console.print(f"[red]over budget:[/red] {error}")
+        raise typer.Exit(code=3) from None
+    except anthropic.APIError as error:
+        console.print(f"[red]API error:[/red] {type(error).__name__}: {error}")
+        raise typer.Exit(code=1) from None
+
+    summary = summarize_calibration(
+        records,
+        run=run,
+        task_dir=task_dir,
+        manifest_digest=manifest.digest(),
+        meter_total_usd=meter.total_usd,
+    )
+    path = write_summary(run.run_dir, summary)
+    _print_calibration(summary)
+    console.print(f"wrote {path.parent}/{{calibration.jsonl, summary.json, transcripts/}}")
+
+
+def _parse_model(value: str) -> tuple[Provider, str]:
+    """'anthropic/claude-haiku-5-5' -> ('anthropic', 'claude-haiku-5-5'); the provider part is
+    optional and defaults to anthropic."""
+    provider, _, name = value.rpartition("/")
+    provider = provider or "anthropic"
+    if provider not in get_args(Provider):
+        console.print(
+            f"[red]unknown provider {provider!r}; known: {list(get_args(Provider))}[/red]"
+        )
+        raise typer.Exit(code=1)
+    if name not in PRICES[provider] or name not in THINKING_OFF:
+        console.print(
+            f"[red]unknown model {name!r} for {provider}; known: {list(PRICES[provider])}[/red]"
+        )
+        raise typer.Exit(code=1)
+    return provider, name
+
+
+def _print_calibration(summary: dict[str, Any]) -> None:
+    dry = ", dry run" if summary["dry_run"] else ""
+    table = Table(
+        title=f"{summary['run_name']}: {summary['provider']}/{summary['model']} "
+        f"(cache {summary['cache_ttl']}{dry})",
+        title_justify="left",
+    )
+    table.add_column("template")
+    for column in ("tasks", "correct", "accuracy", "95% CI"):
+        table.add_column(column, justify="right")
+    for template, rate in summary["per_template"].items():
+        table.add_row(template, *_rate_cells(rate))
+    table.add_section()
+    table.add_row("all", *_rate_cells(summary["accuracy"]), style="bold")
+    console.print(table)
+
+    totals = summary["totals"]
+    metrics = Table(title="calibration metrics", title_justify="left", show_header=False)
+    metrics.add_column(style="bold")
+    metrics.add_column()
+    metrics.add_row("accuracy, non-peek tasks", _rate_text(summary["accuracy_non_peek"]))
+    metrics.add_row("peek rate (solo baseline)", _rate_text(summary["peek_rate"]))
+    metrics.add_row("answer saved", _rate_text(summary["answer_saved_rate"]))
+    metrics.add_row("stop causes", ", ".join(f"{k} {v}" for k, v in summary["stop_causes"].items()))
+    metrics.add_row(
+        "per task (median)",
+        f"queries {summary['query_count_median']:g}, turns {summary['turns_median']:g}, "
+        f"wall time {summary['wall_s_median']:.1f} s",
+    )
+    metrics.add_row(
+        "log chars (median / min)",
+        f"{summary['log_chars']['median']:,.0f} / {summary['log_chars']['min']:,}",
+    )
+    cost = summary["cost"]
+    metrics.add_row(
+        "cost", f"${cost['total_usd']:.4f} total, ${cost['mean_per_task_usd']:.4f} per task"
+    )
+    fraction = summary["cache_read_fraction"]
+    metrics.add_row(
+        "cache read fraction", "n/a (no tokens)" if fraction is None else f"{fraction:.1%}"
+    )
+    metrics.add_row(
+        "write attempts / blocked / aborts / errors",
+        f"{totals['write_attempts']} / {totals['blocked']} / {totals['query_aborts']} / "
+        f"{totals['query_errors']}",
+    )
+    console.print(metrics)
+
+
+def _rate_cells(rate: dict[str, Any]) -> list[str]:
+    return [str(rate["n"]), str(rate["k"]), _percent(rate["rate"]), _interval(rate["ci95"])]
+
+
+def _rate_text(rate: dict[str, Any]) -> str:
+    if rate["n"] == 0:
+        return "n/a (0 tasks)"
+    return f"{rate['k']}/{rate['n']} = {_percent(rate['rate'])}  95% CI {_interval(rate['ci95'])}"
+
+
+def _percent(value: float | None) -> str:
+    return "-" if value is None else f"{value:.1%}"
+
+
+def _interval(ci: list[float] | None) -> str:
+    return "-" if ci is None else f"[{ci[0]:.1%}, {ci[1]:.1%}]"
+
+
 # swarm tasks ...------------------------------------------------------------------------------
 
 
 @tasks_app.command("generate")
 def tasks_generate(
-    seed: Annotated[int, typer.Option(help="Base seed; writes <out>/seed<seed>/.")] = 0,
+    seed: Annotated[int, typer.Option(help="Base seed; writes <out>/seed<seed>[-hard]/.")] = 0,
     n: Annotated[int, typer.Option(help="Number of tasks (templates cycle T1..T4).")] = 100,
     out: Annotated[Path, typer.Option(help="Root folder for task sets.")] = DEFAULT_TASK_ROOT,
+    difficulty: Annotated[
+        DifficultyName, typer.Option(help="base, or hard (planted traps; see tasks/traps.py).")
+    ] = DifficultyName.base,
     force: Annotated[bool, typer.Option(help="Replace an existing task set.")] = False,
 ) -> None:
     """Generate a seeded task set: task_XXXX/{db.sqlite, task.json} plus manifest.json."""
+    name = task_set_name(seed, difficulty.value)
     started = time.perf_counter()
     try:
         with Progress(console=console, transient=True) as progress:
-            bar = progress.add_task(f"generating seed{seed}", total=n)
+            bar = progress.add_task(f"generating {name}", total=n)
             manifest = generate_tasks(
-                seed, n, out, force=force, on_task=lambda spec: progress.advance(bar)
+                seed,
+                n,
+                out,
+                difficulty=difficulty.value,
+                force=force,
+                on_task=lambda spec: progress.advance(bar),
             )
     except FileExistsError as error:
         console.print(f"[red]{error}[/red]")
@@ -247,7 +451,7 @@ def tasks_generate(
         raise typer.Exit(code=1) from None
     elapsed = time.perf_counter() - started
     console.print(
-        f"generated {manifest.n_tasks} tasks in {elapsed:.1f}s -> {Path(out) / f'seed{seed}'} "
+        f"generated {manifest.n_tasks} tasks in {elapsed:.1f}s -> {Path(out) / name} "
         f"(run `swarm tasks stats` to check them)"
     )
 
@@ -258,9 +462,13 @@ def tasks_sequences(
     n_seq: Annotated[int, typer.Option(help="Number of sequences.")] = 20,
     episodes: Annotated[int, typer.Option(help="Episodes per sequence.")] = 10,
     root: Annotated[Path, typer.Option(help="Root folder for task sets.")] = DEFAULT_TASK_ROOT,
+    difficulty: Annotated[
+        DifficultyName, typer.Option(help="Which task set: base or hard.")
+    ] = DifficultyName.base,
 ) -> None:
-    """Write <root>/seed<seed>/sequences.json: fixed (A task, B task) pairs for every episode."""
-    task_dir = Path(root) / f"seed{seed}"
+    """Write <root>/seed<seed>[-hard]/sequences.json: fixed (A task, B task) pairs for every
+    episode."""
+    task_dir = Path(root) / task_set_name(seed, difficulty.value)
     manifest = load_manifest(task_dir)
     try:
         sequences = make_sequences(manifest, seed, n_sequences=n_seq, episodes=episodes)

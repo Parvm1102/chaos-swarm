@@ -1,0 +1,42 @@
+{
+  "task_id": "task_0057",
+  "template": "T2",
+  "difficulty": "hard",
+  "db_seed": 2821649178230958432,
+  "params": {
+    "hired_from": "2024-12-24",
+    "hired_before": "2025-12-31",
+    "note_type": "update",
+    "min_severity": 2,
+    "region": "west"
+  },
+  "nl_request": "Find the employees hired on or after 2024-12-24 and before 2025-12-31 who wrote at least one update note on a support case that has a severity of at least 2, has no closed date recorded, and belongs to a customer in the west region. Return the IDs of the matching employees.",
+  "reference_ids": [
+    7,
+    15,
+    18,
+    45,
+    50,
+    57,
+    77,
+    91,
+    99,
+    102,
+    109
+  ],
+  "answer_table": "employees",
+  "n_answer": 11,
+  "n_samples": 1,
+  "schema_dump_chars": 4296,
+  "fingerprint": "3e4d4b9c3b9bf9913e62b3d25f4f5677ce30ea4577fb28cab111c89cd3e5ba6f",
+  "traps": {
+    "date_start": 50,
+    "date_end": 104,
+    "null": [
+      42,
+      101,
+      119
+    ]
+  },
+  "reference_sql": "SELECT e.id\nFROM employees AS e\nWHERE e.hired_at >= '2024-12-24' AND e.hired_at < '2025-12-31'\n  AND EXISTS (\n    SELECT 1\n    FROM case_notes AS n\n    JOIN support_cases AS sc ON sc.id = n.case_id\n    JOIN customers AS c ON c.id = sc.customer_id\n    WHERE n.author_employee_id = e.id\n      AND n.note_type = 'update'\n      AND sc.severity >= 2\n      AND sc.closed_at IS NULL\n      AND c.region = 'west'\n  )\nORDER BY e.id"
+}

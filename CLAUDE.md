@@ -63,6 +63,13 @@ Research context: @docs/literature_brief.md
 - A task is accepted only if its answer has 5–30 IDs and at most 25% of the answer table, and
   every filter binds (leaving out any single condition changes the answer). At most 50
   parameter draws per task, else generation fails naming the template.
+- Difficulty "hard" (added in step 2 after calibration; src/swarm/tasks/traps.py): the same
+  templates with day-level date windows, plus traps planted by editing rows after the draw (row
+  counts unchanged): one row on the window's first day (in the answer) and one on its end day
+  (out), 3 NULL near-miss rows, and for T1/T3 an amount exactly on the threshold. Every trap
+  must bite (its sloppy reading changes the answer), else the draw is redrawn. Hard sets live in
+  data/tasks/seed<N>-hard/. **Steps 3–8 use data/tasks/seed0-hard** (both models still scored
+  100% on it; accepted after the one allowed iteration, see docs/step2_notes.md).
 - Requests use explicit bounds ("on or after 2025-03-01 and before 2025-10-01", "a severity of
   at least 2", "greater than 500", "with no resolution date recorded"), never vague words like
   "recent" or "high". Enum values appear in plain words ("a customer-call note", "the pro
@@ -137,5 +144,9 @@ Research context: @docs/literature_brief.md
 - swarm cost-report <run_name>
 - swarm tasks generate --seed 0 --n 100       # data/tasks/seed0 (~11 s; --force to replace)
 - swarm tasks sequences --seed 0              # data/tasks/seed0/sequences.json
+- swarm tasks generate --seed 0 --n 100 --difficulty hard   # data/tasks/seed0-hard (~16 s)
+- swarm tasks sequences --seed 0 --difficulty hard          # the set steps 3–8 use
 - swarm tasks stats data/tasks/seed0
 - swarm tasks show data/tasks/seed0 task_0007 [--reveal]
+- swarm calibrate --dry-run --n 8             # solo task phases, scripted agent, offline
+- swarm calibrate --model anthropic/claude-sonnet-5-5 --n 20 --cache-ttl 5m --budget 3  # live
