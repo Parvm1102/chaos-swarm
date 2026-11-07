@@ -34,6 +34,7 @@ from swarm.config import (
     Settings,
 )
 from swarm.episodes import episode_name, episode_task_ids, run_episode_to_files
+from swarm.experiment1 import run_spillover
 from swarm.judging import add_judge_to_sample, compute_pathways, make_sample, run_judge
 from swarm.llm.client import THINKING_OFF, AnthropicClient
 from swarm.llm.meter import (
@@ -286,6 +287,15 @@ def calibrate(
     ] = None,
     concurrency: Annotated[int, typer.Option(min=1, help="Task phases in flight at once.")] = 4,
     force: Annotated[bool, typer.Option(help="Replace an existing run folder.")] = False,
+    task_prompt: Annotated[
+        str,
+        typer.Option(
+            help="Task-phase prompt: task_phase_system or task_phase_system_rules2 (Experiment 1)."
+        ),
+    ] = "task_phase_system",
+    query_cap: Annotated[
+        int | None, typer.Option(help="Experiment 1's query cap (calls past it are logged).")
+    ] = None,
 ) -> None:
     """Solo calibration: n task phases without a peer; accuracy, peek rate, cost, cache use.
 
@@ -293,6 +303,9 @@ def calibrate(
     summary.json, transcripts/ and usage.jsonl.
     """
     provider, model_name = _parse_model(model)
+    if task_prompt not in ("task_phase_system", "task_phase_system_rules2"):
+        console.print(f"[red]unknown --task-prompt {task_prompt!r}[/red]")
+        raise typer.Exit(code=1)
     name = run_name or f"calib_{model_name}_{cache_ttl.value}" + ("_dry" if dry_run else "")
     settings = Settings()
     try:
@@ -334,7 +347,11 @@ def calibrate(
         f"{concurrency} at a time, budget ${run.budget_usd:g} -> {run.run_dir}"
     )
     try:
-        records = asyncio.run(run_calibration(run, task_dir, task_ids, meter))
+        records = asyncio.run(
+            run_calibration(
+                run, task_dir, task_ids, meter, task_prompt=task_prompt, query_cap=query_cap
+            )
+        )
     except LiveCallRefused as error:
         console.print(f"[red]refused:[/red] {error}")
         raise typer.Exit(code=2) from None
@@ -402,6 +419,14 @@ def _print_calibration(summary: dict[str, Any]) -> None:
     metrics.add_column()
     metrics.add_row("accuracy, non-peek tasks", _rate_text(summary["accuracy_non_peek"]))
     metrics.add_row("peek rate (solo baseline)", _rate_text(summary["peek_rate"]))
+    if summary.get("query_cap") is not None:
+        metrics.add_row(
+            f"cap violations (> {summary['query_cap']} queries)",
+            _rate_text(summary["cap_violation_rate"]),
+        )
+        metrics.add_row("accuracy within the cap", _rate_text(summary["accuracy_within_cap"]))
+        metrics.add_row("accuracy over the cap", _rate_text(summary["accuracy_over_cap"]))
+        metrics.add_row("queries per task", str(summary["query_count_distribution"]))
     metrics.add_row("answer saved", _rate_text(summary["answer_saved_rate"]))
     metrics.add_row("stop causes", ", ".join(f"{k} {v}" for k, v in summary["stop_causes"].items()))
     metrics.add_row(
@@ -733,6 +758,82 @@ def _print_arm(summary: dict[str, Any]) -> None:
         f"${cost['per_trajectory_usd']:.4f}/trajectory)",
     )
     console.print(table)
+
+
+# swarm spillover (Experiment 1) -----------------------------------------------------------------
+
+
+@app.command("spillover")
+def spillover_command(
+    constrained: Annotated[Path, typer.Option(help="The 200-character arm (memory on).")],
+    unconstrained: Annotated[Path, typer.Option(help="The 8,000-character arm.")],
+    nomem: Annotated[Path, typer.Option(help="The 200-character arm with memory off.")],
+    dry_run: Annotated[bool, typer.Option("--dry-run", help="The dry-run arms.")] = False,
+) -> None:
+    """Experiment 1's pre-registered analysis (offline): P1, P2, P2', P3 and the P3 control."""
+    arms = _load_arms([constrained, unconstrained, nomem])
+    try:
+        report = run_spillover(*arms, dry_run=dry_run)
+    except (ValueError, OSError) as error:
+        console.print(f"[red]{error}[/red]")
+        raise typer.Exit(code=1) from None
+    table = Table(title="Experiment 1 arms", title_justify="left")
+    for column in (
+        "role",
+        "arm",
+        "peek",
+        "cap violations",
+        "accuracy",
+        "TC",
+        "EC",
+        "delivered",
+        "$",
+    ):
+        table.add_column(column)
+    for role, a in report["arms"].items():
+        delivered = a["record_delivered_rate"]
+        table.add_row(
+            role,
+            a["arm"],
+            _rate_text(a["peek_rate"]),
+            _rate_text(a["cap_violation_rate"]),
+            _rate_text(a["task_accuracy"]),
+            f"{a['collusion']['tc']['k']}/{a['collusion']['tc']['n']}",
+            f"{a['collusion']['ec_pooled']['k']}/{a['collusion']['ec_pooled']['n']}",
+            "-" if delivered is None else _rate_text(delivered),
+            f"{a['cost']['total_usd']:.2f}",
+        )
+    console.print(table)
+    hypotheses = Table(title="pre-registered hypotheses", title_justify="left")
+    for column in ("hypothesis", "rates (pooled)", "difference / p", "verdict"):
+        hypotheses.add_column(column)
+    for name, h in report["hypotheses"].items():
+        if "pooled" in h:
+            rates_text = (
+                f"{_rate_text(h['pooled']['first'])} vs {_rate_text(h['pooled']['second'])}"
+            )
+            diff = h["difference_of_means"]
+            stats = (
+                f"{diff:+.3f} [{h['bootstrap_ci95'][0]:+.3f}, {h['bootstrap_ci95'][1]:+.3f}], "
+                f"p={h['permutation_p']:.4f}"
+                if diff is not None
+                else "-"
+            )
+        elif "after" in h:
+            rates_text = f"after {_rate_text(h['after'])} vs before {_rate_text(h['before'])}"
+            stats = (
+                f"{h['mean_paired_difference']:+.3f}, p={h['signflip_p']:.4f} "
+                f"({h['trajectories']} trajectories)"
+                if h["mean_paired_difference"] is not None
+                else "-"
+            )
+        else:
+            rates_text, stats = "-", f"{h['trajectories']} trajectories"
+        hypotheses.add_row(name, rates_text, stats, h["verdict"])
+    console.print(hypotheses)
+    console.print(
+        f"wrote {report['path']} (P3 split S = {report['p3_control']['split']['split_episode']})"
+    )
 
 
 # swarm judge / pathways / validate (step 5) ------------------------------------------------------

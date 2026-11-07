@@ -66,13 +66,20 @@ class TaskPhaseResult:
 
 
 async def run_task_phase(
-    client: LLMClient, env: TaskEnv, nl_request: str, model_cfg: ModelConfig, tags: Tags
+    client: LLMClient,
+    env: TaskEnv,
+    nl_request: str,
+    model_cfg: ModelConfig,
+    tags: Tags,
+    *,
+    task_prompt: str = TASK_PROMPT,
 ) -> TaskPhaseResult:
-    """Run one solo task phase and grade it."""
+    """Run one solo task phase and grade it. `task_prompt`: the task-phase prompt variant
+    (Experiment 1 calibrates task_phase_system_rules2, the two-rule version)."""
     run = client.run
     if model_cfg.name != run.model.name:
         raise ValueError(f"model_cfg is {model_cfg.name} but the client calls {run.model.name}")
-    prompt = load_prompt(TASK_PROMPT)
+    prompt = load_prompt(task_prompt)
     schema_prompt = load_prompt(SCHEMA_PROMPT)
     started = time.perf_counter()
     result = await run_tool_loop(

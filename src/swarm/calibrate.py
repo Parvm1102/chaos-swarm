@@ -28,7 +28,7 @@ from typing import Any
 
 import orjson
 
-from swarm.agents.task_agent import MAX_TURNS, TaskPhaseResult, run_task_phase
+from swarm.agents.task_agent import MAX_TURNS, TASK_PROMPT, TaskPhaseResult, run_task_phase
 from swarm.config import RunConfig
 from swarm.env.database import QUERY, SAVE, TaskEnv
 from swarm.llm.client import (
@@ -97,17 +97,25 @@ def ids_from_result(text: str) -> list[int]:
 
 
 async def run_calibration(
-    run: RunConfig, task_dir: Path, task_ids: list[str], meter: CostMeter
+    run: RunConfig,
+    task_dir: Path,
+    task_ids: list[str],
+    meter: CostMeter,
+    *,
+    task_prompt: str = TASK_PROMPT,
+    query_cap: int | None = None,
 ) -> list[dict[str, Any]]:
-    """Solve every task once; return the records in task_ids order."""
+    """Solve every task once; return the records in task_ids order. `task_prompt` and
+    `query_cap`: Experiment 1's capped calibration (the no-social-pressure baseline)."""
+    options = {"task_prompt": task_prompt, "query_cap": query_cap}
     if run.dry_run:
 
         def scripted(spec: TaskSpec) -> LLMClient:
             return ScriptedClient(scripted_solver(spec), run=run, meter=meter)
 
-        return await _run_tasks(run, task_dir, task_ids, scripted)
+        return await _run_tasks(run, task_dir, task_ids, scripted, **options)
     async with AnthropicClient(run, meter) as client:
-        return await _run_tasks(run, task_dir, task_ids, lambda spec: client)
+        return await _run_tasks(run, task_dir, task_ids, lambda spec: client, **options)
 
 
 async def _run_tasks(
@@ -115,6 +123,9 @@ async def _run_tasks(
     task_dir: Path,
     task_ids: list[str],
     client_for: Callable[[TaskSpec], LLMClient],
+    *,
+    task_prompt: str = TASK_PROMPT,
+    query_cap: int | None = None,
 ) -> list[dict[str, Any]]:
     # The gate limits task phases, not calls, so a task's wall time is its own and not time
     # spent queueing behind other tasks.
@@ -123,7 +134,7 @@ async def _run_tasks(
 
     async def solve(task_id: str) -> None:
         async with gate:
-            with TaskEnv.open(task_dir, task_id) as env:
+            with TaskEnv.open(task_dir, task_id, query_cap=query_cap) as env:
                 spec = env.spec
                 result = await run_task_phase(
                     client_for(spec),
@@ -131,8 +142,9 @@ async def _run_tasks(
                     spec.nl_request,
                     run.model,
                     Tags(phase="task", agent=task_id, episode=0),
+                    task_prompt=task_prompt,
                 )
-        record = make_record(run, spec, result)
+        record = make_record(run, spec, result) | {"task_prompt": task_prompt}
         _append_jsonl(run.run_dir / CALIBRATION_FILE, record)
         _write_json(
             run.run_dir / TRANSCRIPTS_DIR / f"{task_id}.json", make_transcript(spec, result)
@@ -279,6 +291,14 @@ def summarize_calibration(
         "accuracy": wilson(sum(o["correct"] for o in outcomes), n),
         "accuracy_non_peek": wilson(sum(o["correct"] for o in non_peek), len(non_peek)),
         "peek_rate": wilson(sum(o["peeked"] for o in outcomes), n),
+        "task_prompt": records[0].get("task_prompt", TASK_PROMPT),
+        "query_cap": outcomes[0].get("query_cap"),
+        "cap_violation_rate": wilson(sum(o.get("cap_violations", 0) > 0 for o in outcomes), n),
+        "accuracy_within_cap": _accuracy_where(outcomes, violated=False),
+        "accuracy_over_cap": _accuracy_where(outcomes, violated=True),
+        "query_count_distribution": {  # JSON keys
+            str(k): v for k, v in sorted(Counter(o["query_count"] for o in outcomes).items())
+        },
         "answer_saved_rate": wilson(sum(o["answer_saved"] for o in outcomes), n),
         "per_template": {
             template: wilson(sum(correct), len(correct))
@@ -322,3 +342,8 @@ def _append_jsonl(path: Path, line: dict[str, Any]) -> None:
 def _write_json(path: Path, data: dict[str, Any]) -> None:
     path.parent.mkdir(parents=True, exist_ok=True)
     path.write_bytes(orjson.dumps(data, option=orjson.OPT_INDENT_2) + b"\n")
+
+
+def _accuracy_where(outcomes: list[dict[str, Any]], *, violated: bool) -> dict[str, Any]:
+    chosen = [o for o in outcomes if (o.get("cap_violations", 0) > 0) == violated]
+    return wilson(sum(o["correct"] for o in chosen), len(chosen))

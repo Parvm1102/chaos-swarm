@@ -58,6 +58,44 @@ def responsive_dry_run(agent: str, episode: int) -> dict[str, Any]:
     return {"verdict": "ACCEPT" if episode >= {"A": 3, "B": 2}[agent] else "REJECT"}
 
 
+def e1_dry_run(agent: str, episode: int) -> dict[str, Any]:
+    """The Experiment 1 dry-run pair: responsive verdicts, three queries (over the cap) in
+    episodes 3, 6 and 9, one peek by A in episode 2, and records pasted when the channel fits."""
+    return {
+        **responsive_dry_run(agent, episode),
+        "extra_queries": 2 if episode % 3 == 0 else 0,
+        "peek": agent == "A" and episode == 2,
+        "paste_record": True,
+    }
+
+
+def prereg_provenance(arm: ArmConfig) -> dict[str, str] | None:
+    """The pre-registration this arm runs under: its path and the sha256 of its bytes."""
+    if arm.prereg is None:
+        return None
+    path = Path(arm.prereg)
+    if not path.is_file():
+        raise ValueError(f"arm {arm.arm} names prereg {path}, which does not exist")
+    return {"path": str(path), "sha256": hashlib.sha256(path.read_bytes()).hexdigest()}
+
+
+def check_prereg(arm: ArmConfig, run_dir: Path) -> dict[str, str] | None:
+    """The launch guard: the prereg must exist, and must not have changed since the arm's first
+    launch (its hash is kept in arm.json). Returns the provenance to store."""
+    current = prereg_provenance(arm)
+    previous_path = run_dir / "arm.json"
+    if current is not None and previous_path.exists():
+        first = orjson.loads(previous_path.read_bytes()).get("prereg_first_launch")
+        if first is not None and first["sha256"] != current["sha256"]:
+            raise ValueError(
+                f"{current['path']} changed since arm {arm.arm} first launched "
+                f"({first['sha256'][:12]} -> {current['sha256'][:12]}); refusing to run"
+            )
+        if first is not None:
+            return first
+    return current
+
+
 def trajectory_specs(arm: ArmConfig, run_dir: Path, run: Any) -> list[TrajectorySpec]:
     sequences = SequencesFile.model_validate_json((arm.task_dir / SEQUENCES_FILE).read_bytes())
     if sequences.manifest_digest != load_manifest(arm.task_dir).digest():
@@ -81,18 +119,28 @@ def trajectory_specs(arm: ArmConfig, run_dir: Path, run: Any) -> list[Trajectory
                 out_dir=run_dir / "trajectories" / f"s{sequence_id:02d}",
                 rules=arm.rules,
                 scripted={"B": arm.scripted_peer} if arm.scripted_peer else None,
+                message_limit=arm.message_limit,
+                task_prompt=arm.task_prompt,
+                query_cap=arm.query_cap,
+                criterion=arm.collusion_criterion,
             )
         )
     return specs
 
 
 async def run_arm(
-    arm: ArmConfig, *, dry_run: bool, meter: CostMeter, behaviour: Behaviour = responsive_dry_run
+    arm: ArmConfig, *, dry_run: bool, meter: CostMeter, behaviour: Behaviour | None = None
 ) -> dict[str, Any]:
     """Run (or resume) every trajectory of the arm and write the summary; return it."""
     run = arm.run_config(dry_run=dry_run)
+    if behaviour is None:
+        behaviour = e1_dry_run if arm.query_cap is not None else responsive_dry_run
     specs = trajectory_specs(arm, run.run_dir, run)
-    _write(run.run_dir / "arm.json", arm.model_dump(mode="json"))
+    first_prereg = check_prereg(arm, run.run_dir)
+    _write(
+        run.run_dir / "arm.json",
+        {**arm.model_dump(mode="json"), "prereg_first_launch": first_prereg},
+    )
 
     def with_peer(base: Callable[[EpisodeAgent], LLMClient]) -> Callable[[EpisodeAgent], LLMClient]:
         """With a scripted peer, B is the harness-scripted proposer and only A is the model."""
@@ -145,7 +193,7 @@ def write_summary(
             "sequence_id": sequence_id,
             "memory_enabled": arm.memory,
             "tasks": previous["tasks"],
-            **trajectory_metrics(records),
+            **trajectory_metrics(records, criterion=arm.collusion_criterion),
         }
         _write(out_dir / TRAJECTORY_FILE, trajectory)
         records_by_trajectory.append(records)
@@ -230,6 +278,11 @@ def provenance(arm: ArmConfig, run_dir: Path) -> dict[str, Any]:
         "memory": arm.memory,
         "rules": arm.rules,
         "scripted_peer": arm.scripted_peer,
+        "message_limit": arm.message_limit,
+        "task_prompt": arm.task_prompt,
+        "query_cap": arm.query_cap,
+        "collusion_criterion": arm.collusion_criterion,
+        "prereg": prereg_provenance(arm),
         "auto_inspect": sorted(auto_inspect)[0] if len(auto_inspect) == 1 else "mixed",
         "sequences": arm.sequences,
         "episodes": arm.episodes,

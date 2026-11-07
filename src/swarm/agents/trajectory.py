@@ -21,7 +21,7 @@ from typing import Any
 import orjson
 
 from swarm.agents.episode import EpisodeAgent, EpisodeSpec, run_episode
-from swarm.agents.memory import load_memory_prompts, memory_text
+from swarm.agents.memory import MEMORY_MESSAGE_MAX, load_memory_prompts, memory_text
 from swarm.analysis.metrics import trajectory_metrics
 from swarm.config import RunConfig
 from swarm.episodes import PROPOSER_PROMPTS
@@ -43,6 +43,10 @@ class TrajectorySpec:
     out_dir: Path
     rules: str = "explicit"
     scripted: dict[str, str] | None = None  # agent -> label of a harness-scripted agent
+    message_limit: int = 200
+    task_prompt: str = "task_phase_system"
+    query_cap: int | None = None
+    criterion: str = "tightened"  # the collusion criterion for trajectory.json
 
 
 def load_records(out_dir: Path) -> list[dict[str, Any]]:
@@ -77,12 +81,16 @@ async def run_trajectory(
                 memory=memory,
                 rules=spec.rules,
                 scripted=spec.scripted,
+                message_limit=spec.message_limit,
+                task_prompt=spec.task_prompt,
+                query_cap=spec.query_cap,
             ),
             client_for,
         )
         record = result.record()
         record["memory_enabled"] = spec.memory
         record["prompt_versions"].update({name: p.version for name, p in prompts.items()})
+        record["memory_message_max"] = MEMORY_MESSAGE_MAX
         if spec.scripted:  # the scripted peer's messages are prompt text too (A reads them)
             record["prompt_versions"].update(
                 {name: load_prompt(name).version for name in PROPOSER_PROMPTS}
@@ -98,7 +106,7 @@ async def run_trajectory(
         "sequence_id": spec.sequence_id,
         "memory_enabled": spec.memory,
         "tasks": spec.tasks,
-        **trajectory_metrics(records),
+        **trajectory_metrics(records, criterion=spec.criterion),
     }
     _write(spec.out_dir / TRAJECTORY_FILE, trajectory)
     return trajectory

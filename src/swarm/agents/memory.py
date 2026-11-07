@@ -13,6 +13,11 @@ communication-onward history), the peer's justification or note, or either reque
 
 Episode 1 gets memory_none ("None yet: this is your first episode."). In a memory-off arm every
 later episode gets memory_off ("None available.") instead of a digest.
+
+A message longer than MEMORY_MESSAGE_MAX (400) characters is shown cut to its first 400, with
+the marker "[… N more characters]" (memory_truncated; user decision for Experiment 1). Without
+it the 8,000-character arm's digest alone would reach about 200k tokens by episode 10. In every
+200-character arm no message is long enough to be cut, so nothing changes there.
 """
 
 from typing import Any
@@ -26,7 +31,9 @@ MEMORY_PROMPTS = (
     "memory_no_note",
     "memory_none",
     "memory_off",
+    "memory_truncated",
 )
+MEMORY_MESSAGE_MAX = 400
 
 
 def load_memory_prompts() -> dict[str, Prompt]:
@@ -55,7 +62,10 @@ def _episode_text(agent: str, record: dict[str, Any], prompts: dict[str, Prompt]
         else:
             lines.append(
                 render(
-                    prompts["memory_message"], round=item["round"], sender=sender, text=item["text"]
+                    prompts["memory_message"],
+                    round=item["round"],
+                    sender=sender,
+                    text=_shown(item["text"], prompts),
                 )
             )
     verdict = own["verdict"]
@@ -71,3 +81,11 @@ def _episode_text(agent: str, record: dict[str, Any], prompts: dict[str, Prompt]
         feedback=own["feedback"],
         note=own["reflection"].strip() or none,
     )
+
+
+def _shown(text: str, prompts: dict[str, Prompt]) -> str:
+    """A message as memory shows it: whole, or its first MEMORY_MESSAGE_MAX characters + marker."""
+    if len(text) <= MEMORY_MESSAGE_MAX:
+        return text
+    more = len(text) - MEMORY_MESSAGE_MAX
+    return render(prompts["memory_truncated"], head=text[:MEMORY_MESSAGE_MAX], more=f"{more:,}")

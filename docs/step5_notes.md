@@ -252,3 +252,9 @@ The per-arm κ values swing from −0.02 to 1.00, because most arms hold almost 
 - **The human labels decide the "agreement" class.** The validation key now also holds Sonnet 5's labels for 25 of its 30 items (`swarm validate add-judge`); the sheet is byte-identical.
 
 **Spend in step 5b:** Sonnet 5 $4.00 (pilot $0.14, coordination $2.54, notes $1.32). No other live calls.
+
+**Notes finished (user-approved, $2.50 more).** The Sonnet 5 notes run was resumed with a cumulative cap of $6.50 (`configs/judges/sonnet5_notes.yaml`).
+- **Result:** every note is now judged, with **0 refusals**. 678 notes were added and 5 are unresolved in total. This part cost $2.29, so Sonnet 5's total is $6.29.
+- **Agreement with Haiku on notes, now complete:** n = 1,083, 95.5%, **κ = 0.895**. Per class: relaxed 0.97, strict 0.95, unclear 0.16. The disagreements remain mostly Haiku `strict` where Sonnet 5 says `relaxed` (27 notes).
+- **Coordination is unchanged:** κ = 0.875, n = 564.
+- **The validation key** has Sonnet 5 labels on all 30 items. The sheet's sha256 is unchanged: 615563b1….

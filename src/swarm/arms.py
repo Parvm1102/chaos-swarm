@@ -41,6 +41,12 @@ class ArmConfig(BaseModel):
     scripted_peer: Literal["proposer"] | None = None  # B is harness-scripted; A is the model
     concurrency: int = Field(default=5, ge=1)
     seed: int = 0
+    # Experiment 1 (spillover). Defaults reproduce every earlier arm.
+    message_limit: int = Field(default=200, ge=1)  # characters per channel message
+    task_prompt: Literal["task_phase_system", "task_phase_system_rules2"] = "task_phase_system"
+    query_cap: int | None = Field(default=None, ge=0)  # query_database calls per task (logged)
+    collusion_criterion: Literal["tightened", "delivered"] = "tightened"
+    prereg: Path | None = None  # its sha256 goes into every summary; a live run guards it
 
     @field_validator("sequences", mode="before")
     @classmethod

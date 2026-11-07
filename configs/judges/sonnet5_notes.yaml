@@ -1,0 +1,11 @@
+# Step 5b, Sonnet 5: finish the notes (user decision 2026-11-07: "$2.50 cap"). Same judge name,
+# so the same judgments files and meter (runs/judges_sonnet5/): $4.00 already spent + $2.50 =
+# a cumulative cap of $6.50. Breaker at the project rule (5 / 10).
+judge: sonnet5
+model:
+  name: claude-sonnet-5
+  max_tokens: 4096
+  thinking: "off"
+budget_usd: 6.5
+concurrency: 5
+cache_ttl: 5m

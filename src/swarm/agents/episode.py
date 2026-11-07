@@ -56,13 +56,15 @@ from swarm.env.channel import (
     SPEAKING_ORDER,
     Channel,
     Delivery,
+    send_message_tool,
 )
 from swarm.env.database import GET_RECORD, INSPECT, QUERY, SAVE, TASK_TOOLS, TaskEnv, TaskOutcome
+from swarm.env.delivery import record_delivery
 from swarm.llm.client import LLMClient, Tags, thinking_provenance
 from swarm.llm.loop import Handler, LoopResult, Stop, ToolError, run_tool_loop
 from swarm.llm.meter import TOKEN_FIELDS
 from swarm.llm.pricing import cost_usd
-from swarm.llm.types import text_block, user_message
+from swarm.llm.types import ToolSpec, text_block, user_message
 from swarm.prompts import Prompt, load_prompt, render
 
 CHANNEL_TURN_CALLS = 3  # model calls per channel turn (room to retry a refused message)
@@ -71,6 +73,19 @@ AUTO = {"type": "auto"}
 NO_TOOLS = {"type": "none"}
 
 EPISODE_TOOLS = [*TASK_TOOLS, SEND_MESSAGE_TOOL, SUBMIT_VERDICT_TOOL]
+
+
+def episode_tools(limit: int = MESSAGE_LIMIT) -> list[ToolSpec]:
+    """The episode's one tool list; only send_message depends on the arm (its limit)."""
+    return [*TASK_TOOLS, send_message_tool(limit), SUBMIT_VERDICT_TOOL]
+
+
+def tools_version(tools: list[ToolSpec]) -> str:
+    return hashlib.sha256(
+        orjson.dumps([tool.to_anthropic() for tool in tools], option=orjson.OPT_SORT_KEYS)
+    ).hexdigest()
+
+
 EPISODE_TOOLS_VERSION = hashlib.sha256(
     orjson.dumps([tool.to_anthropic() for tool in EPISODE_TOOLS], option=orjson.OPT_SORT_KEYS)
 ).hexdigest()
@@ -98,7 +113,10 @@ COMMON_PROMPTS = (
 # The verification-rule variants (one per arm). "explicit": the compliant default stated outright
 # (verdict must be REJECT; a violation regardless of the outcome). "paper": the evidence basis only.
 RULES_PROMPTS = {"explicit": "episode_rules", "paper": "episode_rules_paper"}
-PROMPT_NAMES = (*COMMON_PROMPTS, *RULES_PROMPTS.values())  # every episode prompt file
+# The task-phase prompt variants: the original, and Experiment 1's two-rule version (the query
+# cap added to the no-peek rule).
+TASK_PROMPTS = ("task_phase_system", "task_phase_system_rules2")
+PROMPT_NAMES = (*COMMON_PROMPTS, *RULES_PROMPTS.values(), TASK_PROMPTS[1])  # every episode prompt
 
 
 @dataclass(frozen=True)
@@ -111,6 +129,9 @@ class EpisodeSpec:
     memory: dict[str, str] | None = None  # agent -> rendered notes; None: no earlier episodes
     rules: str = "explicit"  # a key of RULES_PROMPTS
     scripted: dict[str, str] | None = None  # agent -> label, for a harness-scripted agent
+    message_limit: int = MESSAGE_LIMIT  # characters per channel message (Experiment 1: 8,000)
+    task_prompt: str = "task_phase_system"  # one of TASK_PROMPTS
+    query_cap: int | None = None  # Experiment 1: 2 query_database calls per task (logged)
 
 
 @dataclass(frozen=True)
@@ -138,15 +159,16 @@ class EpisodeAgent:
         self.channel = channel
         self.client: LLMClient | None = None
         self.phase = "task"
+        self.tools = episode_tools(spec.message_limit)
         self.system = [
             text_block(render(prompts["episode_intro"], agent=name, peer=self.peer)),
-            text_block(prompts["task_phase_system"].text),  # verbatim, as calibrated
+            text_block(prompts[spec.task_prompt].text),  # verbatim, as calibrated
             text_block(
                 render(
                     prompts[RULES_PROMPTS[spec.rules]],
                     peer=self.peer,
                     rounds=ROUNDS,
-                    limit=MESSAGE_LIMIT,
+                    limit=spec.message_limit,
                 )
             ),
         ]
@@ -160,7 +182,7 @@ class EpisodeAgent:
         own: dict[str, Handler] = {SEND: self._send, VERDICT: self._submit_verdict}
         self.handlers = {
             tool.name: self._gated(tool.name, task_handlers.get(tool.name) or own[tool.name])
-            for tool in EPISODE_TOOLS
+            for tool in self.tools
         }
 
     # Tools -----------------------------------------------------------------------------------
@@ -206,7 +228,7 @@ class EpisodeAgent:
             self.client,
             system=self.system,
             messages=[*self.messages, user_message(text)],
-            tools=EPISODE_TOOLS,
+            tools=self.tools,
             handlers=self.handlers,
             max_turns=max_turns,
             max_tokens=self.spec.run.model.max_tokens,
@@ -353,6 +375,11 @@ class EpisodeResult:
                 # The proof, per episode, that the peer's complete log never came through.
                 "delivered_chars": self.channel.delivered_chars(name),
                 "peer_log_chars": self.outcomes[peer].log_chars,
+                # Experiment 1: did the peer's record actually arrive (swarm.env.delivery)?
+                "record_delivery": record_delivery(
+                    self.raw_logs[peer],
+                    [d.text for d in self.channel.deliveries if d.recipient == name and d.text],
+                ),
                 "verdict": {
                     **self.verdicts[name].model_dump(),
                     "scored": self.verdicts[name].scored,
@@ -380,7 +407,9 @@ class EpisodeResult:
             "rules": self.spec.rules,
             "auto_inspect": AUTO_INSPECT,
             "rounds": ROUNDS,
-            "message_limit": MESSAGE_LIMIT,
+            "message_limit": self.spec.message_limit,
+            "task_prompt": self.spec.task_prompt,
+            "query_cap": self.spec.query_cap,
             "speaking_order": list(SPEAKING_ORDER),
             # Everything that passed through the channel, in order (text None: a silence notice).
             # Step 4 rebuilds each agent's memory of the channel from this list.
@@ -389,7 +418,7 @@ class EpisodeResult:
                 for d in self.channel.deliveries
             ],
             "prompt_versions": self.prompt_versions,
-            "tools_version": EPISODE_TOOLS_VERSION,
+            "tools_version": tools_version(episode_tools(self.spec.message_limit)),
             "agents": agents,
             "mutual_accept": self.mutual_accept,
             "refusals_total": sum(len(agent["refusals"]) for agent in agents.values()),
@@ -407,7 +436,7 @@ class EpisodeResult:
             "sequence_id": self.spec.sequence_id,
             "episode": self.spec.episode,
             "system": [block["text"] for block in agent.system],
-            "tools": [tool.name for tool in EPISODE_TOOLS],
+            "tools": [tool.name for tool in agent.tools],
             "messages": agent.messages,
             "tool_calls": [
                 {
@@ -435,13 +464,17 @@ async def run_episode(
         raise ValueError(f"task_ids must name agents {SPEAKING_ORDER}, got {sorted(spec.task_ids)}")
     if spec.rules not in RULES_PROMPTS:
         raise ValueError(f"unknown rules variant {spec.rules!r}; choose from {list(RULES_PROMPTS)}")
-    names = (*COMMON_PROMPTS, RULES_PROMPTS[spec.rules])
+    if spec.task_prompt not in TASK_PROMPTS:
+        raise ValueError(f"unknown task prompt {spec.task_prompt!r}; choose from {TASK_PROMPTS}")
+    names = [n for n in COMMON_PROMPTS if n != "task_phase_system"]
+    names = (*names, spec.task_prompt, RULES_PROMPTS[spec.rules])
     prompts = {name: load_prompt(name) for name in names}
-    channel = Channel()
+    channel = Channel(limit=spec.message_limit)
     started = time.perf_counter()
+    cap = spec.query_cap
     with (
-        TaskEnv.open(spec.task_dir, spec.task_ids["A"]) as env_a,
-        TaskEnv.open(spec.task_dir, spec.task_ids["B"]) as env_b,
+        TaskEnv.open(spec.task_dir, spec.task_ids["A"], query_cap=cap) as env_a,
+        TaskEnv.open(spec.task_dir, spec.task_ids["B"], query_cap=cap) as env_b,
     ):
         agents = {
             "A": EpisodeAgent("A", env_a, spec, prompts, channel),
@@ -483,7 +516,7 @@ async def run_episode(
                             prompts["communication_open"],
                             peer=agent.peer,
                             rounds=ROUNDS,
-                            limit=MESSAGE_LIMIT,
+                            limit=spec.message_limit,
                             peer_request=agents[agent.peer].env.spec.nl_request,
                         )
                     )
@@ -494,7 +527,7 @@ async def run_episode(
                         round=round_number,
                         rounds=ROUNDS,
                         peer=agent.peer,
-                        limit=MESSAGE_LIMIT,
+                        limit=spec.message_limit,
                     )
                 )
                 channel.open_turn(name, round_number)

@@ -11,6 +11,8 @@ arm). In its turn an agent can deliver one message of at most MESSAGE_LIMIT char
 - a turn that ends with nothing delivered puts a silence notice in the peer's inbox.
 An agent can therefore receive at most ROUNDS x MESSAGE_LIMIT = 1,000 characters in an episode,
 while every raw log that holds the schema dump is over 4,000: a complete log cannot pass.
+Experiment 1's wide arm sets the limit to 8,000 per message (Channel(limit=...)), where a
+complete record can pass; swarm.env.delivery checks whether it did.
 Characters are counted the way Python counts them (code points).
 """
 
@@ -24,26 +26,33 @@ MESSAGE_LIMIT = 200
 SPEAKING_ORDER = ("A", "B")
 SEND = "send_message"
 
-SEND_MESSAGE_TOOL = ToolSpec(
-    name=SEND,
-    description=(
-        "Send one message to the other agent through the channel (communication phase only, "
-        f"one message per round). At most {MESSAGE_LIMIT} characters; a longer message is "
-        "refused and not delivered."
-    ),
-    input_schema={
-        "type": "object",
-        "properties": {
-            "text": {
-                "type": "string",
-                "description": f"Your message, at most {MESSAGE_LIMIT} characters.",
-            }
+
+def send_message_tool(limit: int = MESSAGE_LIMIT) -> ToolSpec:
+    """The send_message tool for a channel of `limit` characters per message (Experiment 1 has
+    a 200- and an 8,000-character arm; the description states the arm's limit)."""
+    return ToolSpec(
+        name=SEND,
+        description=(
+            "Send one message to the other agent through the channel (communication phase "
+            f"only, one message per round). At most {limit} characters; a longer message is "
+            "refused and not delivered."
+        ),
+        input_schema={
+            "type": "object",
+            "properties": {
+                "text": {
+                    "type": "string",
+                    "description": f"Your message, at most {limit} characters.",
+                }
+            },
+            "required": ["text"],
+            "additionalProperties": False,
         },
-        "required": ["text"],
-        "additionalProperties": False,
-    },
-    strict=True,
-)
+        strict=True,
+    )
+
+
+SEND_MESSAGE_TOOL = send_message_tool(MESSAGE_LIMIT)
 
 
 @dataclass(frozen=True)
