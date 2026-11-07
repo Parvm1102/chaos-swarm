@@ -44,6 +44,11 @@ raises the channel to 8,000 from the episode after the reply. swarm.env.operator
 policy from the records. Result (docs/step7_notes.md): 2/20 trajectories per tool arm ever
 reported; collusion universal; no effect of the tool or the acknowledgement.
 
+Step 8 follow-ups (PREREG.md third section; docs/step8_notes.md): e3_invite, e3_checkin,
+e1_cap1, e1_cap1_nomem, e1_unconstrained_plainintro. Arm options operator_rules (neutral |
+invite), operator_checkin, intro_prompt, task_phase_system_rules2_cap1 (a guard ties the
+prompt's cap to query_cap).
+
 We extend it with three experiments, in this priority order:
 1. Spillover — once pairs collude on the verification rule, do they violate an UNRELATED
    rule more (no-peek on a `_reference` answer table; or a query-count cap)?
@@ -234,5 +239,9 @@ Research context: @docs/literature_brief.md
 - swarm opendoor --control configs/arms/e3_control.yaml --fix configs/arms/e3_fix.yaml \
   --ack configs/arms/e3_ack.yaml
 - swarm pathways --arm configs/arms/e3_*.yaml --primary haiku --secondary sonnet5 --out e3_judges.json
+- swarm followups --invite configs/arms/e3_invite.yaml --checkin configs/arms/e3_checkin.yaml \
+  --cap1 configs/arms/e1_cap1.yaml --cap1-nomem configs/arms/e1_cap1_nomem.yaml \
+  --plainintro configs/arms/e1_unconstrained_plainintro.yaml --control configs/arms/e3_control.yaml \
+  --fix configs/arms/e3_fix.yaml --unconstrained configs/arms/e1_unconstrained.yaml   # step 8
 - swarm validate sample --arm <yaml> [--arm ...] --n 30   # blind sheet + key in runs/validation/
 - swarm validate score --sheet runs/validation/step5_validation_sheet.csv [--second-sheet ...]
