@@ -1,0 +1,46 @@
+{
+  "task_id": "task_0060",
+  "template": "A1",
+  "difficulty": "agg",
+  "db_seed": 17912064083327375503,
+  "params": {
+    "tiers": [
+      "basic",
+      "enterprise"
+    ],
+    "opened_from": "2024-02-14",
+    "opened_before": "2024-12-23",
+    "min_severity": 2,
+    "note_type": "customer_call",
+    "refund_above": 500,
+    "min_notes": 2
+  },
+  "nl_request": "Find the support cases opened on or after 2024-02-14 and before 2024-12-23 with a severity of at least 2, for customers on the basic or enterprise tier, that have at least two customer-call notes and at least one refund greater than 500 with an approval date recorded. Return the IDs of the matching support cases.",
+  "reference_ids": [
+    24,
+    159,
+    192,
+    238,
+    262,
+    428,
+    461,
+    596,
+    724
+  ],
+  "answer_table": "support_cases",
+  "n_answer": 9,
+  "n_samples": 1,
+  "schema_dump_chars": 4296,
+  "fingerprint": "0f3cf272afc1d4c377f25633eb14b5eacb12ca857331a33e0f1651f856d9eeaf",
+  "traps": {
+    "date_start": 192,
+    "date_end": 70,
+    "null": [
+      2,
+      297,
+      781
+    ],
+    "amount": 666
+  },
+  "reference_sql": "SELECT sc.id\nFROM support_cases AS sc\nJOIN customers AS c ON c.id = sc.customer_id\nWHERE c.tier IN ('basic', 'enterprise')\n  AND sc.opened_at >= '2024-02-14' AND sc.opened_at < '2024-12-23'\n  AND sc.severity >= 2\n  AND (\n    SELECT COUNT(*) FROM case_notes AS n\n    WHERE n.case_id = sc.id AND n.note_type = 'customer_call'\n  ) >= 2\n  AND EXISTS (\n    SELECT 1 FROM refunds AS r\n    WHERE r.case_id = sc.id AND r.amount > 500 AND r.approved_at IS NOT NULL\n  )\nORDER BY sc.id"
+}

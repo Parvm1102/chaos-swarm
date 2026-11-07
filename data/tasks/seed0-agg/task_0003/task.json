@@ -1,0 +1,38 @@
+{
+  "task_id": "task_0003",
+  "template": "T4",
+  "difficulty": "agg",
+  "db_seed": 8562401648298655379,
+  "params": {
+    "city": "Marrowick",
+    "opened_from": "2025-08-09",
+    "opened_before": "2025-12-31",
+    "min_priority": 2
+  },
+  "nl_request": "Find the facility tickets for buildings located in Marrowick, opened on or after 2025-08-09 and before 2025-12-31, with a priority of at least 2 and with no resolution date recorded. Return the IDs of the matching facility tickets.",
+  "reference_ids": [
+    102,
+    116,
+    127,
+    185,
+    366,
+    431,
+    432,
+    453
+  ],
+  "answer_table": "facility_tickets",
+  "n_answer": 8,
+  "n_samples": 4,
+  "schema_dump_chars": 4296,
+  "fingerprint": "e2d7e1bb0016b33cdfc782f0e3446bf3a8354d86c4158c5d3bd1fd3416910b69",
+  "traps": {
+    "date_start": 366,
+    "date_end": 301,
+    "null": [
+      12,
+      129,
+      288
+    ]
+  },
+  "reference_sql": "SELECT t.id\nFROM facility_tickets AS t\nJOIN buildings AS b ON b.id = t.building_id\nWHERE b.city = 'Marrowick'\n  AND t.opened_at >= '2025-08-09' AND t.opened_at < '2025-12-31'\n  AND t.priority >= 2\n  AND t.resolved_at IS NULL\nORDER BY t.id"
+}

@@ -1,0 +1,42 @@
+{
+  "task_id": "task_0004",
+  "template": "A1",
+  "difficulty": "agg",
+  "db_seed": 5255766500716653352,
+  "params": {
+    "tiers": [
+      "basic",
+      "enterprise"
+    ],
+    "opened_from": "2025-04-20",
+    "opened_before": "2025-08-09",
+    "min_severity": 3,
+    "note_type": "refund_request",
+    "refund_above": 500,
+    "min_notes": 2
+  },
+  "nl_request": "Find the support cases opened on or after 2025-04-20 and before 2025-08-09 with a severity of at least 3, for customers on the basic or enterprise tier, that have at least two refund-request notes and at least one refund greater than 500 with an approval date recorded. Return the IDs of the matching support cases.",
+  "reference_ids": [
+    139,
+    150,
+    230,
+    655,
+    733
+  ],
+  "answer_table": "support_cases",
+  "n_answer": 5,
+  "n_samples": 1,
+  "schema_dump_chars": 4296,
+  "fingerprint": "12bc6c2c841893a51775e02d701dae2338ebff4e7dad6a5db3441ba7802e9057",
+  "traps": {
+    "date_start": 655,
+    "date_end": 177,
+    "null": [
+      22,
+      277,
+      454
+    ],
+    "amount": 89
+  },
+  "reference_sql": "SELECT sc.id\nFROM support_cases AS sc\nJOIN customers AS c ON c.id = sc.customer_id\nWHERE c.tier IN ('basic', 'enterprise')\n  AND sc.opened_at >= '2025-04-20' AND sc.opened_at < '2025-08-09'\n  AND sc.severity >= 3\n  AND (\n    SELECT COUNT(*) FROM case_notes AS n\n    WHERE n.case_id = sc.id AND n.note_type = 'refund_request'\n  ) >= 2\n  AND EXISTS (\n    SELECT 1 FROM refunds AS r\n    WHERE r.case_id = sc.id AND r.amount > 500 AND r.approved_at IS NOT NULL\n  )\nORDER BY sc.id"
+}

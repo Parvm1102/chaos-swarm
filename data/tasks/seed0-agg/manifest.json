@@ -1,0 +1,4186 @@
+{
+  "generator": "swarm.tasks/1",
+  "base_seed": 0,
+  "n_tasks": 100,
+  "row_counts": {
+    "customers": 240,
+    "support_cases": 800,
+    "case_notes": 5400,
+    "refunds": 300,
+    "employees": 120,
+    "departments": 8,
+    "buildings": 6,
+    "vendors": 50,
+    "procurement_requests": 400,
+    "facility_tickets": 500
+  },
+  "tasks": [
+    {
+      "task_id": "task_0000",
+      "template": "A1",
+      "difficulty": "agg",
+      "db_seed": 12426054289685354689,
+      "params": {
+        "tiers": [
+          "pro",
+          "enterprise"
+        ],
+        "opened_from": "2024-12-05",
+        "opened_before": "2025-05-17",
+        "min_severity": 2,
+        "note_type": "customer_call",
+        "refund_above": 250,
+        "min_notes": 2
+      },
+      "nl_request": "Find the support cases opened on or after 2024-12-05 and before 2025-05-17 with a severity of at least 2, for customers on the pro or enterprise tier, that have at least two customer-call notes and at least one refund greater than 250 with an approval date recorded. Return the IDs of the matching support cases.",
+      "reference_ids": [
+        228,
+        243,
+        308,
+        313,
+        382,
+        425,
+        469,
+        502,
+        523,
+        657,
+        687,
+        690,
+        712,
+        790
+      ],
+      "answer_table": "support_cases",
+      "n_answer": 14,
+      "n_samples": 3,
+      "schema_dump_chars": 4296,
+      "fingerprint": "a2f9ff3d8b02ccad547eb522037a6647bc8522360d0e9d54adcae97b50670b46",
+      "traps": {
+        "date_start": 502,
+        "date_end": 157,
+        "null": [
+          34,
+          319,
+          535
+        ],
+        "amount": 515
+      }
+    },
+    {
+      "task_id": "task_0001",
+      "template": "A2",
+      "difficulty": "agg",
+      "db_seed": 17227200041832915037,
+      "params": {
+        "hired_from": "2024-10-23",
+        "hired_before": "2025-12-31",
+        "note_type": "refund_request",
+        "min_severity": 2,
+        "region": "north",
+        "min_cases": 2
+      },
+      "nl_request": "Find the employees hired on or after 2024-10-23 and before 2025-12-31 who wrote refund-request notes on at least two different support cases that each have a severity of at least 2, have no closed date recorded, and belong to a customer in the north region. Return the IDs of the matching employees.",
+      "reference_ids": [
+        3,
+        11,
+        15,
+        33,
+        35,
+        51,
+        55,
+        100,
+        114,
+        116
+      ],
+      "answer_table": "employees",
+      "n_answer": 10,
+      "n_samples": 1,
+      "schema_dump_chars": 4296,
+      "fingerprint": "8db8665aabb1a38231a15514182960f10bf3f42d2ea1d53c0f60acaf5c180dff",
+      "traps": {
+        "date_start": 3,
+        "date_end": 87,
+        "null": [
+          36,
+          84,
+          103
+        ]
+      }
+    },
+    {
+      "task_id": "task_0002",
+      "template": "A3",
+      "difficulty": "agg",
+      "db_seed": 10603912086726310123,
+      "params": {
+        "requested_from": "2024-05-23",
+        "requested_before": "2025-06-08",
+        "min_amount": 10000,
+        "min_risk": 3,
+        "departments": [
+          "Procurement",
+          "Engineering"
+        ],
+        "min_total": 30000
+      },
+      "nl_request": "Find the procurement requests with a request date on or after 2024-05-23 and before 2025-06-08, for an amount of at least 10000, from vendors with a risk rating of at least 3, requested by an employee in the Procurement or Engineering department, with no need-by date recorded, and requested by an employee whose procurement requests with a request date in that same window add up to at least 30000 in total (counting all of that employee's requests in the window, whatever their vendor, need-by date or status). Return the IDs of the matching procurement requests.",
+      "reference_ids": [
+        1,
+        70,
+        127,
+        161,
+        215,
+        217,
+        246,
+        255,
+        317,
+        323,
+        378,
+        390
+      ],
+      "answer_table": "procurement_requests",
+      "n_answer": 12,
+      "n_samples": 4,
+      "schema_dump_chars": 4296,
+      "fingerprint": "148bb3eb0947a666940feb66dd2030667db0e9041c56cadfa5c9526106b4cff9",
+      "traps": {}
+    },
+    {
+      "task_id": "task_0003",
+      "template": "T4",
+      "difficulty": "agg",
+      "db_seed": 8562401648298655379,
+      "params": {
+        "city": "Marrowick",
+        "opened_from": "2025-08-09",
+        "opened_before": "2025-12-31",
+        "min_priority": 2
+      },
+      "nl_request": "Find the facility tickets for buildings located in Marrowick, opened on or after 2025-08-09 and before 2025-12-31, with a priority of at least 2 and with no resolution date recorded. Return the IDs of the matching facility tickets.",
+      "reference_ids": [
+        102,
+        116,
+        127,
+        185,
+        366,
+        431,
+        432,
+        453
+      ],
+      "answer_table": "facility_tickets",
+      "n_answer": 8,
+      "n_samples": 4,
+      "schema_dump_chars": 4296,
+      "fingerprint": "e2d7e1bb0016b33cdfc782f0e3446bf3a8354d86c4158c5d3bd1fd3416910b69",
+      "traps": {
+        "date_start": 366,
+        "date_end": 301,
+        "null": [
+          12,
+          129,
+          288
+        ]
+      }
+    },
+    {
+      "task_id": "task_0004",
+      "template": "A1",
+      "difficulty": "agg",
+      "db_seed": 5255766500716653352,
+      "params": {
+        "tiers": [
+          "basic",
+          "enterprise"
+        ],
+        "opened_from": "2025-04-20",
+        "opened_before": "2025-08-09",
+        "min_severity": 3,
+        "note_type": "refund_request",
+        "refund_above": 500,
+        "min_notes": 2
+      },
+      "nl_request": "Find the support cases opened on or after 2025-04-20 and before 2025-08-09 with a severity of at least 3, for customers on the basic or enterprise tier, that have at least two refund-request notes and at least one refund greater than 500 with an approval date recorded. Return the IDs of the matching support cases.",
+      "reference_ids": [
+        139,
+        150,
+        230,
+        655,
+        733
+      ],
+      "answer_table": "support_cases",
+      "n_answer": 5,
+      "n_samples": 1,
+      "schema_dump_chars": 4296,
+      "fingerprint": "12bc6c2c841893a51775e02d701dae2338ebff4e7dad6a5db3441ba7802e9057",
+      "traps": {
+        "date_start": 655,
+        "date_end": 177,
+        "null": [
+          22,
+          277,
+          454
+        ],
+        "amount": 89
+      }
+    },
+    {
+      "task_id": "task_0005",
+      "template": "A2",
+      "difficulty": "agg",
+      "db_seed": 14703135297931612540,
+      "params": {
+        "hired_from": "2024-08-20",
+        "hired_before": "2025-12-22",
+        "note_type": "customer_call",
+        "min_severity": 2,
+        "region": "east",
+        "min_cases": 2
+      },
+      "nl_request": "Find the employees hired on or after 2024-08-20 and before 2025-12-22 who wrote customer-call notes on at least two different support cases that each have a severity of at least 2, have no closed date recorded, and belong to a customer in the east region. Return the IDs of the matching employees.",
+      "reference_ids": [
+        3,
+        16,
+        18,
+        22,
+        26,
+        28,
+        31,
+        42,
+        47,
+        54,
+        57,
+        65,
+        66,
+        76,
+        81,
+        83,
+        88,
+        105,
+        109,
+        110,
+        113
+      ],
+      "answer_table": "employees",
+      "n_answer": 21,
+      "n_samples": 1,
+      "schema_dump_chars": 4296,
+      "fingerprint": "7b078b5d520da01c93e1bd027bea6183a968e54af0d1a15baa803de9ae88cee8",
+      "traps": {
+        "date_start": 88,
+        "date_end": 80,
+        "null": [
+          53,
+          84,
+          98
+        ]
+      }
+    },
+    {
+      "task_id": "task_0006",
+      "template": "A3",
+      "difficulty": "agg",
+      "db_seed": 12077041006076215707,
+      "params": {
+        "requested_from": "2024-02-20",
+        "requested_before": "2025-05-11",
+        "min_amount": 5000,
+        "min_risk": 3,
+        "departments": [
+          "Legal",
+          "Facilities"
+        ],
+        "min_total": 15000
+      },
+      "nl_request": "Find the procurement requests with a request date on or after 2024-02-20 and before 2025-05-11, for an amount of at least 5000, from vendors with a risk rating of at least 3, requested by an employee in the Legal or Facilities department, with no need-by date recorded, and requested by an employee whose procurement requests with a request date in that same window add up to at least 15000 in total (counting all of that employee's requests in the window, whatever their vendor, need-by date or status). Return the IDs of the matching procurement requests.",
+      "reference_ids": [
+        47,
+        56,
+        132,
+        231,
+        246,
+        247,
+        283,
+        295,
+        340,
+        349,
+        388
+      ],
+      "answer_table": "procurement_requests",
+      "n_answer": 11,
+      "n_samples": 2,
+      "schema_dump_chars": 4296,
+      "fingerprint": "78e79cdd1d2f7c3ac1cba3cc5b518d9a94ff40ac999dbbdebd731ad9f04e1542",
+      "traps": {}
+    },
+    {
+      "task_id": "task_0007",
+      "template": "T4",
+      "difficulty": "agg",
+      "db_seed": 3165907373608942819,
+      "params": {
+        "city": "Ironvale",
+        "opened_from": "2024-03-14",
+        "opened_before": "2025-06-18",
+        "min_priority": 2
+      },
+      "nl_request": "Find the facility tickets for buildings located in Ironvale, opened on or after 2024-03-14 and before 2025-06-18, with a priority of at least 2 and with no resolution date recorded. Return the IDs of the matching facility tickets.",
+      "reference_ids": [
+        29,
+        46,
+        116,
+        118,
+        137,
+        159,
+        196,
+        218,
+        244,
+        315,
+        344,
+        391,
+        406,
+        410,
+        481,
+        488,
+        490
+      ],
+      "answer_table": "facility_tickets",
+      "n_answer": 17,
+      "n_samples": 2,
+      "schema_dump_chars": 4296,
+      "fingerprint": "0ff83e946071da551aaf2c0472a1cd5f23e5992dca7886f44a32d5e261e2a8a7",
+      "traps": {
+        "date_start": 218,
+        "date_end": 125,
+        "null": [
+          296,
+          440,
+          478
+        ]
+      }
+    },
+    {
+      "task_id": "task_0008",
+      "template": "A1",
+      "difficulty": "agg",
+      "db_seed": 10506355043814285263,
+      "params": {
+        "tiers": [
+          "pro",
+          "enterprise"
+        ],
+        "opened_from": "2024-04-21",
+        "opened_before": "2025-01-22",
+        "min_severity": 2,
+        "note_type": "refund_request",
+        "refund_above": 1000,
+        "min_notes": 2
+      },
+      "nl_request": "Find the support cases opened on or after 2024-04-21 and before 2025-01-22 with a severity of at least 2, for customers on the pro or enterprise tier, that have at least two refund-request notes and at least one refund greater than 1000 with an approval date recorded. Return the IDs of the matching support cases.",
+      "reference_ids": [
+        12,
+        178,
+        265,
+        299,
+        339,
+        451,
+        463,
+        676,
+        764
+      ],
+      "answer_table": "support_cases",
+      "n_answer": 9,
+      "n_samples": 2,
+      "schema_dump_chars": 4296,
+      "fingerprint": "a60329a8c75b4c2d657c9642cec640a326d082e6ae66bbabc0aaeece64374966",
+      "traps": {
+        "date_start": 299,
+        "date_end": 110,
+        "null": [
+          77,
+          538,
+          624
+        ],
+        "amount": 365
+      }
+    },
+    {
+      "task_id": "task_0009",
+      "template": "A2",
+      "difficulty": "agg",
+      "db_seed": 5774022379642067681,
+      "params": {
+        "hired_from": "2024-09-19",
+        "hired_before": "2025-11-13",
+        "note_type": "customer_call",
+        "min_severity": 2,
+        "region": "east",
+        "min_cases": 2
+      },
+      "nl_request": "Find the employees hired on or after 2024-09-19 and before 2025-11-13 who wrote customer-call notes on at least two different support cases that each have a severity of at least 2, have no closed date recorded, and belong to a customer in the east region. Return the IDs of the matching employees.",
+      "reference_ids": [
+        2,
+        13,
+        23,
+        54,
+        116
+      ],
+      "answer_table": "employees",
+      "n_answer": 5,
+      "n_samples": 8,
+      "schema_dump_chars": 4296,
+      "fingerprint": "6e7d461e996d1b3d4bacbf769fc287b9934829cc545a10b1b6901fc32553eb70",
+      "traps": {
+        "date_start": 116,
+        "date_end": 81,
+        "null": [
+          12,
+          24,
+          45
+        ]
+      }
+    },
+    {
+      "task_id": "task_0010",
+      "template": "A3",
+      "difficulty": "agg",
+      "db_seed": 7693602730230535853,
+      "params": {
+        "requested_from": "2024-05-19",
+        "requested_before": "2025-07-12",
+        "min_amount": 10000,
+        "min_risk": 3,
+        "departments": [
+          "Legal",
+          "Operations"
+        ],
+        "min_total": 20000
+      },
+      "nl_request": "Find the procurement requests with a request date on or after 2024-05-19 and before 2025-07-12, for an amount of at least 10000, from vendors with a risk rating of at least 3, requested by an employee in the Legal or Operations department, with no need-by date recorded, and requested by an employee whose procurement requests with a request date in that same window add up to at least 20000 in total (counting all of that employee's requests in the window, whatever their vendor, need-by date or status). Return the IDs of the matching procurement requests.",
+      "reference_ids": [
+        23,
+        35,
+        38,
+        43,
+        69,
+        77,
+        82,
+        134,
+        154,
+        243,
+        244,
+        252,
+        266,
+        276,
+        292,
+        295,
+        326
+      ],
+      "answer_table": "procurement_requests",
+      "n_answer": 17,
+      "n_samples": 9,
+      "schema_dump_chars": 4296,
+      "fingerprint": "62faaea34eb781600147a819de6aa8cfa845f71fb16e96cffdff2a3175bfc66d",
+      "traps": {}
+    },
+    {
+      "task_id": "task_0011",
+      "template": "T4",
+      "difficulty": "agg",
+      "db_seed": 15147267836048039405,
+      "params": {
+        "city": "Ironvale",
+        "opened_from": "2024-02-05",
+        "opened_before": "2025-02-09",
+        "min_priority": 2
+      },
+      "nl_request": "Find the facility tickets for buildings located in Ironvale, opened on or after 2024-02-05 and before 2025-02-09, with a priority of at least 2 and with no resolution date recorded. Return the IDs of the matching facility tickets.",
+      "reference_ids": [
+        23,
+        26,
+        32,
+        54,
+        62,
+        87,
+        133,
+        143,
+        161,
+        173,
+        180,
+        194,
+        201,
+        219,
+        232,
+        294,
+        367,
+        370,
+        417,
+        423,
+        435,
+        440,
+        441,
+        444,
+        491,
+        498
+      ],
+      "answer_table": "facility_tickets",
+      "n_answer": 26,
+      "n_samples": 1,
+      "schema_dump_chars": 4296,
+      "fingerprint": "021ba430b05d6daa4c57351f18269bb4af8d2a45a47190e479f97bcbf6040fca",
+      "traps": {
+        "date_start": 23,
+        "date_end": 241,
+        "null": [
+          41,
+          186,
+          400
+        ]
+      }
+    },
+    {
+      "task_id": "task_0012",
+      "template": "A1",
+      "difficulty": "agg",
+      "db_seed": 11564803173680567868,
+      "params": {
+        "tiers": [
+          "pro",
+          "enterprise"
+        ],
+        "opened_from": "2024-03-17",
+        "opened_before": "2025-09-11",
+        "min_severity": 2,
+        "note_type": "legal_review",
+        "refund_above": 250,
+        "min_notes": 2
+      },
+      "nl_request": "Find the support cases opened on or after 2024-03-17 and before 2025-09-11 with a severity of at least 2, for customers on the pro or enterprise tier, that have at least two legal-review notes and at least one refund greater than 250 with an approval date recorded. Return the IDs of the matching support cases.",
+      "reference_ids": [
+        33,
+        72,
+        157,
+        177,
+        211,
+        248,
+        281,
+        282,
+        290,
+        310,
+        364,
+        370,
+        373,
+        389,
+        392,
+        397,
+        448,
+        464,
+        518,
+        545,
+        688,
+        710,
+        756,
+        774,
+        775
+      ],
+      "answer_table": "support_cases",
+      "n_answer": 25,
+      "n_samples": 1,
+      "schema_dump_chars": 4296,
+      "fingerprint": "465207be21e6b856471447d72f87a693c59c1bc3d5b3dfe84b02ef17d226e888",
+      "traps": {
+        "date_start": 290,
+        "date_end": 680,
+        "null": [
+          232,
+          531,
+          704
+        ],
+        "amount": 111
+      }
+    },
+    {
+      "task_id": "task_0013",
+      "template": "A2",
+      "difficulty": "agg",
+      "db_seed": 15587859488532442286,
+      "params": {
+        "hired_from": "2024-04-04",
+        "hired_before": "2025-03-23",
+        "note_type": "refund_request",
+        "min_severity": 3,
+        "region": "west",
+        "min_cases": 2
+      },
+      "nl_request": "Find the employees hired on or after 2024-04-04 and before 2025-03-23 who wrote refund-request notes on at least two different support cases that each have a severity of at least 3, have no closed date recorded, and belong to a customer in the west region. Return the IDs of the matching employees.",
+      "reference_ids": [
+        26,
+        43,
+        57,
+        65,
+        70,
+        89,
+        91
+      ],
+      "answer_table": "employees",
+      "n_answer": 7,
+      "n_samples": 4,
+      "schema_dump_chars": 4296,
+      "fingerprint": "9558efa586072ef63aff8f6d324a6a68133d27a252643e5a6fd058c1184179c9",
+      "traps": {
+        "date_start": 43,
+        "date_end": 88,
+        "null": [
+          19,
+          21,
+          112
+        ]
+      }
+    },
+    {
+      "task_id": "task_0014",
+      "template": "A3",
+      "difficulty": "agg",
+      "db_seed": 8294404376080680957,
+      "params": {
+        "requested_from": "2024-02-10",
+        "requested_before": "2025-03-05",
+        "min_amount": 20000,
+        "min_risk": 2,
+        "departments": [
+          "Legal",
+          "Quality Assurance"
+        ],
+        "min_total": 40000
+      },
+      "nl_request": "Find the procurement requests with a request date on or after 2024-02-10 and before 2025-03-05, for an amount of at least 20000, from vendors with a risk rating of at least 2, requested by an employee in the Legal or Quality Assurance department, with no need-by date recorded, and requested by an employee whose procurement requests with a request date in that same window add up to at least 40000 in total (counting all of that employee's requests in the window, whatever their vendor, need-by date or status). Return the IDs of the matching procurement requests.",
+      "reference_ids": [
+        9,
+        10,
+        55,
+        61,
+        77,
+        165,
+        184,
+        352,
+        380
+      ],
+      "answer_table": "procurement_requests",
+      "n_answer": 9,
+      "n_samples": 3,
+      "schema_dump_chars": 4296,
+      "fingerprint": "120e6ba192f0db6c2ac77d7d7a5322ff14b833160fee507f78f3ba304f7b6851",
+      "traps": {}
+    },
+    {
+      "task_id": "task_0015",
+      "template": "T4",
+      "difficulty": "agg",
+      "db_seed": 293050400353154017,
+      "params": {
+        "city": "Vellmoor",
+        "opened_from": "2024-04-20",
+        "opened_before": "2025-09-18",
+        "min_priority": 3
+      },
+      "nl_request": "Find the facility tickets for buildings located in Vellmoor, opened on or after 2024-04-20 and before 2025-09-18, with a priority of at least 3 and with no resolution date recorded. Return the IDs of the matching facility tickets.",
+      "reference_ids": [
+        59,
+        178,
+        196,
+        228,
+        253,
+        264,
+        309,
+        356,
+        415
+      ],
+      "answer_table": "facility_tickets",
+      "n_answer": 9,
+      "n_samples": 1,
+      "schema_dump_chars": 4296,
+      "fingerprint": "cf5ea988fc01ee3a0dc514b6c30414e5bb39aae8b0c38e7c4ad4108f87c84165",
+      "traps": {
+        "date_start": 228,
+        "date_end": 120,
+        "null": [
+          31,
+          168,
+          274
+        ]
+      }
+    },
+    {
+      "task_id": "task_0016",
+      "template": "A1",
+      "difficulty": "agg",
+      "db_seed": 14232738537100303277,
+      "params": {
+        "tiers": [
+          "enterprise"
+        ],
+        "opened_from": "2024-07-16",
+        "opened_before": "2025-10-19",
+        "min_severity": 3,
+        "note_type": "update",
+        "refund_above": 100,
+        "min_notes": 2
+      },
+      "nl_request": "Find the support cases opened on or after 2024-07-16 and before 2025-10-19 with a severity of at least 3, for customers on the enterprise tier, that have at least two update notes and at least one refund greater than 100 with an approval date recorded. Return the IDs of the matching support cases.",
+      "reference_ids": [
+        275,
+        332,
+        471,
+        527,
+        589,
+        594,
+        611,
+        674,
+        754
+      ],
+      "answer_table": "support_cases",
+      "n_answer": 9,
+      "n_samples": 1,
+      "schema_dump_chars": 4296,
+      "fingerprint": "30d6f05a2e0e320a0363b921d910b010c7cc7024de843f7286cf12f0e89cb40f",
+      "traps": {
+        "date_start": 589,
+        "date_end": 514,
+        "null": [
+          107,
+          196,
+          764
+        ],
+        "amount": 722
+      }
+    },
+    {
+      "task_id": "task_0017",
+      "template": "A2",
+      "difficulty": "agg",
+      "db_seed": 7880669642582761694,
+      "params": {
+        "hired_from": "2024-05-28",
+        "hired_before": "2025-05-23",
+        "note_type": "update",
+        "min_severity": 2,
+        "region": "west",
+        "min_cases": 2
+      },
+      "nl_request": "Find the employees hired on or after 2024-05-28 and before 2025-05-23 who wrote update notes on at least two different support cases that each have a severity of at least 2, have no closed date recorded, and belong to a customer in the west region. Return the IDs of the matching employees.",
+      "reference_ids": [
+        44,
+        65,
+        89,
+        93,
+        96,
+        102,
+        111,
+        116
+      ],
+      "answer_table": "employees",
+      "n_answer": 8,
+      "n_samples": 1,
+      "schema_dump_chars": 4296,
+      "fingerprint": "2c56094f47d17c7eb4a424a65d0e86c9babcb3e945b82e63a5be62ca8c815dd9",
+      "traps": {
+        "date_start": 111,
+        "date_end": 25,
+        "null": [
+          14,
+          31,
+          81
+        ]
+      }
+    },
+    {
+      "task_id": "task_0018",
+      "template": "A3",
+      "difficulty": "agg",
+      "db_seed": 2546448540627337335,
+      "params": {
+        "requested_from": "2024-06-02",
+        "requested_before": "2025-07-27",
+        "min_amount": 20000,
+        "min_risk": 3,
+        "departments": [
+          "Procurement",
+          "Engineering"
+        ],
+        "min_total": 40000
+      },
+      "nl_request": "Find the procurement requests with a request date on or after 2024-06-02 and before 2025-07-27, for an amount of at least 20000, from vendors with a risk rating of at least 3, requested by an employee in the Procurement or Engineering department, with no need-by date recorded, and requested by an employee whose procurement requests with a request date in that same window add up to at least 40000 in total (counting all of that employee's requests in the window, whatever their vendor, need-by date or status). Return the IDs of the matching procurement requests.",
+      "reference_ids": [
+        11,
+        25,
+        27,
+        122,
+        143,
+        201,
+        225,
+        266,
+        315
+      ],
+      "answer_table": "procurement_requests",
+      "n_answer": 9,
+      "n_samples": 1,
+      "schema_dump_chars": 4296,
+      "fingerprint": "8b3063dad2c54632afea4df4beb8ee57ff6cb343b162ffda988053ec569cbacd",
+      "traps": {}
+    },
+    {
+      "task_id": "task_0019",
+      "template": "T4",
+      "difficulty": "agg",
+      "db_seed": 9073148265444030031,
+      "params": {
+        "city": "Ironvale",
+        "opened_from": "2024-05-23",
+        "opened_before": "2024-12-13",
+        "min_priority": 2
+      },
+      "nl_request": "Find the facility tickets for buildings located in Ironvale, opened on or after 2024-05-23 and before 2024-12-13, with a priority of at least 2 and with no resolution date recorded. Return the IDs of the matching facility tickets.",
+      "reference_ids": [
+        53,
+        71,
+        85,
+        99,
+        112,
+        127,
+        152,
+        266,
+        338,
+        441,
+        451,
+        471,
+        480,
+        489
+      ],
+      "answer_table": "facility_tickets",
+      "n_answer": 14,
+      "n_samples": 3,
+      "schema_dump_chars": 4296,
+      "fingerprint": "3f5821e7bde5099af4256bc2369c41d715923801b86fe9cd65861bca7ac3c692",
+      "traps": {
+        "date_start": 71,
+        "date_end": 101,
+        "null": [
+          120,
+          183,
+          352
+        ]
+      }
+    },
+    {
+      "task_id": "task_0020",
+      "template": "A1",
+      "difficulty": "agg",
+      "db_seed": 2487576791878408517,
+      "params": {
+        "tiers": [
+          "pro",
+          "enterprise"
+        ],
+        "opened_from": "2025-01-10",
+        "opened_before": "2025-11-14",
+        "min_severity": 3,
+        "note_type": "legal_review",
+        "refund_above": 500,
+        "min_notes": 2
+      },
+      "nl_request": "Find the support cases opened on or after 2025-01-10 and before 2025-11-14 with a severity of at least 3, for customers on the pro or enterprise tier, that have at least two legal-review notes and at least one refund greater than 500 with an approval date recorded. Return the IDs of the matching support cases.",
+      "reference_ids": [
+        378,
+        404,
+        453,
+        454,
+        562,
+        616,
+        648
+      ],
+      "answer_table": "support_cases",
+      "n_answer": 7,
+      "n_samples": 10,
+      "schema_dump_chars": 4296,
+      "fingerprint": "7a76ed207186cd3d597a3582422a8a93df4b18298c3cba1fbfb9fc293ea63f2d",
+      "traps": {
+        "date_start": 404,
+        "date_end": 127,
+        "null": [
+          24,
+          219,
+          496
+        ],
+        "amount": 507
+      }
+    },
+    {
+      "task_id": "task_0021",
+      "template": "A2",
+      "difficulty": "agg",
+      "db_seed": 6615573080476811046,
+      "params": {
+        "hired_from": "2024-09-08",
+        "hired_before": "2025-09-02",
+        "note_type": "update",
+        "min_severity": 2,
+        "region": "south",
+        "min_cases": 2
+      },
+      "nl_request": "Find the employees hired on or after 2024-09-08 and before 2025-09-02 who wrote update notes on at least two different support cases that each have a severity of at least 2, have no closed date recorded, and belong to a customer in the south region. Return the IDs of the matching employees.",
+      "reference_ids": [
+        7,
+        11,
+        36,
+        68,
+        70,
+        83,
+        89,
+        105,
+        106,
+        108
+      ],
+      "answer_table": "employees",
+      "n_answer": 10,
+      "n_samples": 2,
+      "schema_dump_chars": 4296,
+      "fingerprint": "f79c6876e6ea13876f8d38eb8ada5eaab329cadc6a8614b3ee6a99f996aa202b",
+      "traps": {
+        "date_start": 68,
+        "date_end": 40,
+        "null": [
+          82,
+          84,
+          102
+        ]
+      }
+    },
+    {
+      "task_id": "task_0022",
+      "template": "A3",
+      "difficulty": "agg",
+      "db_seed": 13942614643551246207,
+      "params": {
+        "requested_from": "2024-04-18",
+        "requested_before": "2025-08-19",
+        "min_amount": 10000,
+        "min_risk": 4,
+        "departments": [
+          "Customer Support",
+          "Billing"
+        ],
+        "min_total": 30000
+      },
+      "nl_request": "Find the procurement requests with a request date on or after 2024-04-18 and before 2025-08-19, for an amount of at least 10000, from vendors with a risk rating of at least 4, requested by an employee in the Customer Support or Billing department, with no need-by date recorded, and requested by an employee whose procurement requests with a request date in that same window add up to at least 30000 in total (counting all of that employee's requests in the window, whatever their vendor, need-by date or status). Return the IDs of the matching procurement requests.",
+      "reference_ids": [
+        78,
+        106,
+        109,
+        115,
+        157,
+        185,
+        197,
+        228,
+        395
+      ],
+      "answer_table": "procurement_requests",
+      "n_answer": 9,
+      "n_samples": 6,
+      "schema_dump_chars": 4296,
+      "fingerprint": "54f16f1f50a88efa08fa95239a14383705b0a7b4eaed8148c18aee79c91d5efd",
+      "traps": {}
+    },
+    {
+      "task_id": "task_0023",
+      "template": "T4",
+      "difficulty": "agg",
+      "db_seed": 6964584540131965453,
+      "params": {
+        "city": "Marrowick",
+        "opened_from": "2024-05-09",
+        "opened_before": "2025-01-13",
+        "min_priority": 2
+      },
+      "nl_request": "Find the facility tickets for buildings located in Marrowick, opened on or after 2024-05-09 and before 2025-01-13, with a priority of at least 2 and with no resolution date recorded. Return the IDs of the matching facility tickets.",
+      "reference_ids": [
+        4,
+        29,
+        37,
+        193,
+        209,
+        217,
+        281,
+        383,
+        449,
+        476
+      ],
+      "answer_table": "facility_tickets",
+      "n_answer": 10,
+      "n_samples": 3,
+      "schema_dump_chars": 4296,
+      "fingerprint": "8ba7b1ca12e22cfd3b1aca2310ab9d75becdd5383b672302098d4020062ee2b6",
+      "traps": {
+        "date_start": 4,
+        "date_end": 405,
+        "null": [
+          183,
+          304,
+          459
+        ]
+      }
+    },
+    {
+      "task_id": "task_0024",
+      "template": "A1",
+      "difficulty": "agg",
+      "db_seed": 10177733646916502342,
+      "params": {
+        "tiers": [
+          "pro",
+          "enterprise"
+        ],
+        "opened_from": "2024-01-13",
+        "opened_before": "2025-06-22",
+        "min_severity": 2,
+        "note_type": "refund_request",
+        "refund_above": 750,
+        "min_notes": 2
+      },
+      "nl_request": "Find the support cases opened on or after 2024-01-13 and before 2025-06-22 with a severity of at least 2, for customers on the pro or enterprise tier, that have at least two refund-request notes and at least one refund greater than 750 with an approval date recorded. Return the IDs of the matching support cases.",
+      "reference_ids": [
+        4,
+        6,
+        65,
+        127,
+        157,
+        158,
+        238,
+        264,
+        281,
+        305,
+        319,
+        336,
+        351,
+        392,
+        397,
+        473,
+        519,
+        527,
+        542,
+        545,
+        550,
+        630,
+        652,
+        686,
+        696,
+        763,
+        769,
+        776
+      ],
+      "answer_table": "support_cases",
+      "n_answer": 28,
+      "n_samples": 2,
+      "schema_dump_chars": 4296,
+      "fingerprint": "69d3eff4c337e9c12eb772f37133a7c42e7c7d2be33d338a37fbfb83c1ae0cc7",
+      "traps": {
+        "date_start": 630,
+        "date_end": 412,
+        "null": [
+          287,
+          483,
+          489
+        ],
+        "amount": 513
+      }
+    },
+    {
+      "task_id": "task_0025",
+      "template": "A2",
+      "difficulty": "agg",
+      "db_seed": 2517012872524683400,
+      "params": {
+        "hired_from": "2024-08-07",
+        "hired_before": "2025-02-25",
+        "note_type": "customer_call",
+        "min_severity": 3,
+        "region": "west",
+        "min_cases": 2
+      },
+      "nl_request": "Find the employees hired on or after 2024-08-07 and before 2025-02-25 who wrote customer-call notes on at least two different support cases that each have a severity of at least 3, have no closed date recorded, and belong to a customer in the west region. Return the IDs of the matching employees.",
+      "reference_ids": [
+        2,
+        35,
+        49,
+        56,
+        57,
+        62,
+        92,
+        103,
+        115
+      ],
+      "answer_table": "employees",
+      "n_answer": 9,
+      "n_samples": 4,
+      "schema_dump_chars": 4296,
+      "fingerprint": "eef1ce2f152a8bc4a853f0fdc3048c8880eebb7ede2fca9971c59a7d5564f29d",
+      "traps": {
+        "date_start": 57,
+        "date_end": 116,
+        "null": [
+          52,
+          60,
+          102
+        ]
+      }
+    },
+    {
+      "task_id": "task_0026",
+      "template": "A3",
+      "difficulty": "agg",
+      "db_seed": 8146004700468950673,
+      "params": {
+        "requested_from": "2024-05-12",
+        "requested_before": "2025-07-26",
+        "min_amount": 20000,
+        "min_risk": 3,
+        "departments": [
+          "Billing",
+          "Quality Assurance"
+        ],
+        "min_total": 40000
+      },
+      "nl_request": "Find the procurement requests with a request date on or after 2024-05-12 and before 2025-07-26, for an amount of at least 20000, from vendors with a risk rating of at least 3, requested by an employee in the Billing or Quality Assurance department, with no need-by date recorded, and requested by an employee whose procurement requests with a request date in that same window add up to at least 40000 in total (counting all of that employee's requests in the window, whatever their vendor, need-by date or status). Return the IDs of the matching procurement requests.",
+      "reference_ids": [
+        40,
+        58,
+        80,
+        82,
+        113,
+        156,
+        181,
+        226,
+        264,
+        272,
+        326,
+        340,
+        383,
+        388
+      ],
+      "answer_table": "procurement_requests",
+      "n_answer": 14,
+      "n_samples": 2,
+      "schema_dump_chars": 4296,
+      "fingerprint": "32b7ab0939e902a936507e630886a8097cc9bb7fb0cfc7e4b337830f0a3012d4",
+      "traps": {}
+    },
+    {
+      "task_id": "task_0027",
+      "template": "T4",
+      "difficulty": "agg",
+      "db_seed": 10945223102550135878,
+      "params": {
+        "city": "Kestrel Falls",
+        "opened_from": "2024-01-11",
+        "opened_before": "2025-03-24",
+        "min_priority": 3
+      },
+      "nl_request": "Find the facility tickets for buildings located in Kestrel Falls, opened on or after 2024-01-11 and before 2025-03-24, with a priority of at least 3 and with no resolution date recorded. Return the IDs of the matching facility tickets.",
+      "reference_ids": [
+        49,
+        78,
+        110,
+        170,
+        200,
+        208,
+        221,
+        257,
+        309,
+        317,
+        318,
+        357,
+        425
+      ],
+      "answer_table": "facility_tickets",
+      "n_answer": 13,
+      "n_samples": 2,
+      "schema_dump_chars": 4296,
+      "fingerprint": "7493da7f9272d9834684b425211a5d6211f51975eea3ccf60a797eb3c08d8f0c",
+      "traps": {
+        "date_start": 110,
+        "date_end": 453,
+        "null": [
+          197,
+          266,
+          354
+        ]
+      }
+    },
+    {
+      "task_id": "task_0028",
+      "template": "A1",
+      "difficulty": "agg",
+      "db_seed": 12087017676860782068,
+      "params": {
+        "tiers": [
+          "pro",
+          "enterprise"
+        ],
+        "opened_from": "2024-09-16",
+        "opened_before": "2025-11-27",
+        "min_severity": 3,
+        "note_type": "update",
+        "refund_above": 1000,
+        "min_notes": 2
+      },
+      "nl_request": "Find the support cases opened on or after 2024-09-16 and before 2025-11-27 with a severity of at least 3, for customers on the pro or enterprise tier, that have at least two update notes and at least one refund greater than 1000 with an approval date recorded. Return the IDs of the matching support cases.",
+      "reference_ids": [
+        67,
+        80,
+        122,
+        153,
+        180,
+        247,
+        325,
+        331,
+        339,
+        457,
+        677,
+        737,
+        789
+      ],
+      "answer_table": "support_cases",
+      "n_answer": 13,
+      "n_samples": 5,
+      "schema_dump_chars": 4296,
+      "fingerprint": "198299b423f2d0cff59ca429b84b9bf50f131a4fc738c4b1ef84f7d1cccdc3a4",
+      "traps": {
+        "date_start": 331,
+        "date_end": 567,
+        "null": [
+          70,
+          109,
+          706
+        ],
+        "amount": 70
+      }
+    },
+    {
+      "task_id": "task_0029",
+      "template": "A2",
+      "difficulty": "agg",
+      "db_seed": 8397705664345992861,
+      "params": {
+        "hired_from": "2024-03-18",
+        "hired_before": "2025-03-20",
+        "note_type": "customer_call",
+        "min_severity": 2,
+        "region": "north",
+        "min_cases": 2
+      },
+      "nl_request": "Find the employees hired on or after 2024-03-18 and before 2025-03-20 who wrote customer-call notes on at least two different support cases that each have a severity of at least 2, have no closed date recorded, and belong to a customer in the north region. Return the IDs of the matching employees.",
+      "reference_ids": [
+        2,
+        4,
+        17,
+        28,
+        60,
+        68,
+        108,
+        117
+      ],
+      "answer_table": "employees",
+      "n_answer": 8,
+      "n_samples": 2,
+      "schema_dump_chars": 4296,
+      "fingerprint": "07b698463a3a934b22646aeb9eab24ce36d7ed4466163aa6ca32a722a83a110a",
+      "traps": {
+        "date_start": 60,
+        "date_end": 8,
+        "null": [
+          37,
+          57,
+          66
+        ]
+      }
+    },
+    {
+      "task_id": "task_0030",
+      "template": "A3",
+      "difficulty": "agg",
+      "db_seed": 18300477530889845672,
+      "params": {
+        "requested_from": "2024-05-05",
+        "requested_before": "2025-09-09",
+        "min_amount": 20000,
+        "min_risk": 2,
+        "departments": [
+          "Billing",
+          "Facilities"
+        ],
+        "min_total": 60000
+      },
+      "nl_request": "Find the procurement requests with a request date on or after 2024-05-05 and before 2025-09-09, for an amount of at least 20000, from vendors with a risk rating of at least 2, requested by an employee in the Billing or Facilities department, with no need-by date recorded, and requested by an employee whose procurement requests with a request date in that same window add up to at least 60000 in total (counting all of that employee's requests in the window, whatever their vendor, need-by date or status). Return the IDs of the matching procurement requests.",
+      "reference_ids": [
+        38,
+        125,
+        214,
+        220,
+        225,
+        262,
+        275,
+        358,
+        372
+      ],
+      "answer_table": "procurement_requests",
+      "n_answer": 9,
+      "n_samples": 29,
+      "schema_dump_chars": 4296,
+      "fingerprint": "a85bb5b2f632c1b38b85f8cbea2e3fb175f1da35223835bae03caa9e915e0474",
+      "traps": {}
+    },
+    {
+      "task_id": "task_0031",
+      "template": "T4",
+      "difficulty": "agg",
+      "db_seed": 11205667792089004939,
+      "params": {
+        "city": "Duskwater",
+        "opened_from": "2025-07-16",
+        "opened_before": "2025-12-31",
+        "min_priority": 2
+      },
+      "nl_request": "Find the facility tickets for buildings located in Duskwater, opened on or after 2025-07-16 and before 2025-12-31, with a priority of at least 2 and with no resolution date recorded. Return the IDs of the matching facility tickets.",
+      "reference_ids": [
+        120,
+        163,
+        165,
+        199,
+        401
+      ],
+      "answer_table": "facility_tickets",
+      "n_answer": 5,
+      "n_samples": 1,
+      "schema_dump_chars": 4296,
+      "fingerprint": "46fa51a9a374bf3233c1eeb0e1aae99e1031cf557659223efb1bb5e5f28b4348",
+      "traps": {
+        "date_start": 401,
+        "date_end": 168,
+        "null": [
+          219,
+          225,
+          229
+        ]
+      }
+    },
+    {
+      "task_id": "task_0032",
+      "template": "A1",
+      "difficulty": "agg",
+      "db_seed": 16199908825138857889,
+      "params": {
+        "tiers": [
+          "enterprise"
+        ],
+        "opened_from": "2024-11-18",
+        "opened_before": "2025-09-06",
+        "min_severity": 2,
+        "note_type": "customer_call",
+        "refund_above": 750,
+        "min_notes": 2
+      },
+      "nl_request": "Find the support cases opened on or after 2024-11-18 and before 2025-09-06 with a severity of at least 2, for customers on the enterprise tier, that have at least two customer-call notes and at least one refund greater than 750 with an approval date recorded. Return the IDs of the matching support cases.",
+      "reference_ids": [
+        150,
+        361,
+        371,
+        490,
+        525,
+        631,
+        680
+      ],
+      "answer_table": "support_cases",
+      "n_answer": 7,
+      "n_samples": 6,
+      "schema_dump_chars": 4296,
+      "fingerprint": "a12c08e7258c4165b5584f2cd8d752fc31a2ceb661571301c66da8b5170e2d53",
+      "traps": {
+        "date_start": 150,
+        "date_end": 481,
+        "null": [
+          184,
+          719,
+          723
+        ],
+        "amount": 793
+      }
+    },
+    {
+      "task_id": "task_0033",
+      "template": "A2",
+      "difficulty": "agg",
+      "db_seed": 4653593075385243864,
+      "params": {
+        "hired_from": "2024-01-19",
+        "hired_before": "2024-10-28",
+        "note_type": "update",
+        "min_severity": 2,
+        "region": "east",
+        "min_cases": 2
+      },
+      "nl_request": "Find the employees hired on or after 2024-01-19 and before 2024-10-28 who wrote update notes on at least two different support cases that each have a severity of at least 2, have no closed date recorded, and belong to a customer in the east region. Return the IDs of the matching employees.",
+      "reference_ids": [
+        14,
+        15,
+        16,
+        52,
+        68,
+        70,
+        87,
+        90
+      ],
+      "answer_table": "employees",
+      "n_answer": 8,
+      "n_samples": 2,
+      "schema_dump_chars": 4296,
+      "fingerprint": "31559b06d2b7a16930af048ea16d0117bbf6e77a564ee0bdf1897309d55d5844",
+      "traps": {
+        "date_start": 70,
+        "date_end": 4,
+        "null": [
+          11,
+          55,
+          84
+        ]
+      }
+    },
+    {
+      "task_id": "task_0034",
+      "template": "A3",
+      "difficulty": "agg",
+      "db_seed": 9486971965447823239,
+      "params": {
+        "requested_from": "2024-05-19",
+        "requested_before": "2025-11-08",
+        "min_amount": 20000,
+        "min_risk": 3,
+        "departments": [
+          "Legal",
+          "Quality Assurance"
+        ],
+        "min_total": 40000
+      },
+      "nl_request": "Find the procurement requests with a request date on or after 2024-05-19 and before 2025-11-08, for an amount of at least 20000, from vendors with a risk rating of at least 3, requested by an employee in the Legal or Quality Assurance department, with no need-by date recorded, and requested by an employee whose procurement requests with a request date in that same window add up to at least 40000 in total (counting all of that employee's requests in the window, whatever their vendor, need-by date or status). Return the IDs of the matching procurement requests.",
+      "reference_ids": [
+        6,
+        45,
+        146,
+        163,
+        211,
+        224,
+        235,
+        271,
+        278,
+        280
+      ],
+      "answer_table": "procurement_requests",
+      "n_answer": 10,
+      "n_samples": 3,
+      "schema_dump_chars": 4296,
+      "fingerprint": "b1e447b2e7c5bf7c7eff0f2aee3e7660d98c64076978c9f6eee78d43ae58d881",
+      "traps": {}
+    },
+    {
+      "task_id": "task_0035",
+      "template": "T4",
+      "difficulty": "agg",
+      "db_seed": 8375796364769107579,
+      "params": {
+        "city": "Vellmoor",
+        "opened_from": "2024-06-25",
+        "opened_before": "2025-09-05",
+        "min_priority": 2
+      },
+      "nl_request": "Find the facility tickets for buildings located in Vellmoor, opened on or after 2024-06-25 and before 2025-09-05, with a priority of at least 2 and with no resolution date recorded. Return the IDs of the matching facility tickets.",
+      "reference_ids": [
+        46,
+        55,
+        67,
+        97,
+        130,
+        132,
+        154,
+        168,
+        199,
+        213,
+        234,
+        235,
+        245,
+        303,
+        314,
+        347,
+        405,
+        422,
+        430,
+        433,
+        453,
+        456,
+        468
+      ],
+      "answer_table": "facility_tickets",
+      "n_answer": 23,
+      "n_samples": 2,
+      "schema_dump_chars": 4296,
+      "fingerprint": "941f4a1294bdfcd0a6e0923ee34137f095d7ef291e96c539fc67673d4021b736",
+      "traps": {
+        "date_start": 97,
+        "date_end": 123,
+        "null": [
+          32,
+          288,
+          329
+        ]
+      }
+    },
+    {
+      "task_id": "task_0036",
+      "template": "A1",
+      "difficulty": "agg",
+      "db_seed": 1848603934167276512,
+      "params": {
+        "tiers": [
+          "basic",
+          "enterprise"
+        ],
+        "opened_from": "2024-01-23",
+        "opened_before": "2024-12-25",
+        "min_severity": 3,
+        "note_type": "refund_request",
+        "refund_above": 750,
+        "min_notes": 2
+      },
+      "nl_request": "Find the support cases opened on or after 2024-01-23 and before 2024-12-25 with a severity of at least 3, for customers on the basic or enterprise tier, that have at least two refund-request notes and at least one refund greater than 750 with an approval date recorded. Return the IDs of the matching support cases.",
+      "reference_ids": [
+        211,
+        250,
+        415,
+        431,
+        476,
+        680,
+        749
+      ],
+      "answer_table": "support_cases",
+      "n_answer": 7,
+      "n_samples": 5,
+      "schema_dump_chars": 4296,
+      "fingerprint": "b0652ea63d4cd00f044f40be3712a32eaf2dbc8ed96739c9f163058483b837fe",
+      "traps": {
+        "date_start": 476,
+        "date_end": 401,
+        "null": [
+          308,
+          318,
+          389
+        ],
+        "amount": 412
+      }
+    },
+    {
+      "task_id": "task_0037",
+      "template": "A2",
+      "difficulty": "agg",
+      "db_seed": 4925179395033382081,
+      "params": {
+        "hired_from": "2024-07-19",
+        "hired_before": "2025-08-07",
+        "note_type": "legal_review",
+        "min_severity": 3,
+        "region": "west",
+        "min_cases": 2
+      },
+      "nl_request": "Find the employees hired on or after 2024-07-19 and before 2025-08-07 who wrote legal-review notes on at least two different support cases that each have a severity of at least 3, have no closed date recorded, and belong to a customer in the west region. Return the IDs of the matching employees.",
+      "reference_ids": [
+        10,
+        32,
+        35,
+        72,
+        90
+      ],
+      "answer_table": "employees",
+      "n_answer": 5,
+      "n_samples": 5,
+      "schema_dump_chars": 4296,
+      "fingerprint": "29074e124eac2cb8c7fdc0e260f4221dcc6dd4abd4dfddbc0e977229c3d77f7d",
+      "traps": {
+        "date_start": 32,
+        "date_end": 98,
+        "null": [
+          8,
+          67,
+          120
+        ]
+      }
+    },
+    {
+      "task_id": "task_0038",
+      "template": "A3",
+      "difficulty": "agg",
+      "db_seed": 15271456481998139938,
+      "params": {
+        "requested_from": "2024-09-20",
+        "requested_before": "2025-11-06",
+        "min_amount": 20000,
+        "min_risk": 2,
+        "departments": [
+          "Operations",
+          "Quality Assurance"
+        ],
+        "min_total": 40000
+      },
+      "nl_request": "Find the procurement requests with a request date on or after 2024-09-20 and before 2025-11-06, for an amount of at least 20000, from vendors with a risk rating of at least 2, requested by an employee in the Operations or Quality Assurance department, with no need-by date recorded, and requested by an employee whose procurement requests with a request date in that same window add up to at least 40000 in total (counting all of that employee's requests in the window, whatever their vendor, need-by date or status). Return the IDs of the matching procurement requests.",
+      "reference_ids": [
+        59,
+        123,
+        143,
+        145,
+        176,
+        295,
+        348
+      ],
+      "answer_table": "procurement_requests",
+      "n_answer": 7,
+      "n_samples": 5,
+      "schema_dump_chars": 4296,
+      "fingerprint": "4b4c88a5d914b3e0ff9e11c212b59d72829b04ee08ccae350ca561d840e626e4",
+      "traps": {}
+    },
+    {
+      "task_id": "task_0039",
+      "template": "T4",
+      "difficulty": "agg",
+      "db_seed": 16413474785592324046,
+      "params": {
+        "city": "Port Alder",
+        "opened_from": "2024-11-16",
+        "opened_before": "2025-12-16",
+        "min_priority": 3
+      },
+      "nl_request": "Find the facility tickets for buildings located in Port Alder, opened on or after 2024-11-16 and before 2025-12-16, with a priority of at least 3 and with no resolution date recorded. Return the IDs of the matching facility tickets.",
+      "reference_ids": [
+        60,
+        73,
+        201,
+        369,
+        407,
+        474
+      ],
+      "answer_table": "facility_tickets",
+      "n_answer": 6,
+      "n_samples": 1,
+      "schema_dump_chars": 4296,
+      "fingerprint": "4a9dbb7f02fd1f638047d7c96b5354cba82c79e2a548bc67b747971f39a8cb6a",
+      "traps": {
+        "date_start": 474,
+        "date_end": 284,
+        "null": [
+          90,
+          414,
+          445
+        ]
+      }
+    },
+    {
+      "task_id": "task_0040",
+      "template": "A1",
+      "difficulty": "agg",
+      "db_seed": 10881480448134139767,
+      "params": {
+        "tiers": [
+          "pro",
+          "enterprise"
+        ],
+        "opened_from": "2024-11-17",
+        "opened_before": "2025-09-08",
+        "min_severity": 2,
+        "note_type": "refund_request",
+        "refund_above": 750,
+        "min_notes": 2
+      },
+      "nl_request": "Find the support cases opened on or after 2024-11-17 and before 2025-09-08 with a severity of at least 2, for customers on the pro or enterprise tier, that have at least two refund-request notes and at least one refund greater than 750 with an approval date recorded. Return the IDs of the matching support cases.",
+      "reference_ids": [
+        6,
+        11,
+        196,
+        222,
+        233,
+        258,
+        329,
+        367,
+        422,
+        431,
+        477,
+        539,
+        745
+      ],
+      "answer_table": "support_cases",
+      "n_answer": 13,
+      "n_samples": 5,
+      "schema_dump_chars": 4296,
+      "fingerprint": "2d4358715dc3e07a5074eff10c197612a4f8e2736980b267ceafd99079f724ce",
+      "traps": {
+        "date_start": 367,
+        "date_end": 316,
+        "null": [
+          22,
+          319,
+          454
+        ],
+        "amount": 759
+      }
+    },
+    {
+      "task_id": "task_0041",
+      "template": "A2",
+      "difficulty": "agg",
+      "db_seed": 16846488996884946331,
+      "params": {
+        "hired_from": "2024-10-02",
+        "hired_before": "2025-11-08",
+        "note_type": "customer_call",
+        "min_severity": 2,
+        "region": "north",
+        "min_cases": 2
+      },
+      "nl_request": "Find the employees hired on or after 2024-10-02 and before 2025-11-08 who wrote customer-call notes on at least two different support cases that each have a severity of at least 2, have no closed date recorded, and belong to a customer in the north region. Return the IDs of the matching employees.",
+      "reference_ids": [
+        2,
+        11,
+        17,
+        22,
+        26,
+        30,
+        40,
+        49,
+        65,
+        69,
+        70,
+        94,
+        106
+      ],
+      "answer_table": "employees",
+      "n_answer": 13,
+      "n_samples": 4,
+      "schema_dump_chars": 4296,
+      "fingerprint": "be30e5290793bd126a3d9c1942246f839900df7689cb40b48e0512eab1a974c5",
+      "traps": {
+        "date_start": 17,
+        "date_end": 89,
+        "null": [
+          37,
+          51,
+          58
+        ]
+      }
+    },
+    {
+      "task_id": "task_0042",
+      "template": "A3",
+      "difficulty": "agg",
+      "db_seed": 13603186043146378290,
+      "params": {
+        "requested_from": "2024-06-16",
+        "requested_before": "2025-11-02",
+        "min_amount": 20000,
+        "min_risk": 4,
+        "departments": [
+          "Engineering",
+          "Operations"
+        ],
+        "min_total": 40000
+      },
+      "nl_request": "Find the procurement requests with a request date on or after 2024-06-16 and before 2025-11-02, for an amount of at least 20000, from vendors with a risk rating of at least 4, requested by an employee in the Engineering or Operations department, with no need-by date recorded, and requested by an employee whose procurement requests with a request date in that same window add up to at least 40000 in total (counting all of that employee's requests in the window, whatever their vendor, need-by date or status). Return the IDs of the matching procurement requests.",
+      "reference_ids": [
+        16,
+        40,
+        43,
+        48,
+        89,
+        92,
+        108,
+        131,
+        375,
+        399
+      ],
+      "answer_table": "procurement_requests",
+      "n_answer": 10,
+      "n_samples": 6,
+      "schema_dump_chars": 4296,
+      "fingerprint": "7c9f5b0cb07095e2cbbaad6d053ab94331e47bffa16a465e5adbc1c124f0c686",
+      "traps": {}
+    },
+    {
+      "task_id": "task_0043",
+      "template": "T4",
+      "difficulty": "agg",
+      "db_seed": 18376367560868920430,
+      "params": {
+        "city": "Duskwater",
+        "opened_from": "2024-07-12",
+        "opened_before": "2025-12-22",
+        "min_priority": 2
+      },
+      "nl_request": "Find the facility tickets for buildings located in Duskwater, opened on or after 2024-07-12 and before 2025-12-22, with a priority of at least 2 and with no resolution date recorded. Return the IDs of the matching facility tickets.",
+      "reference_ids": [
+        33,
+        68,
+        168,
+        172,
+        177,
+        207,
+        218,
+        254,
+        266,
+        291,
+        376,
+        429,
+        433,
+        478,
+        487
+      ],
+      "answer_table": "facility_tickets",
+      "n_answer": 15,
+      "n_samples": 3,
+      "schema_dump_chars": 4296,
+      "fingerprint": "f3d76e6a239e17ae5c7dc252e9b331a17f6bbeae1f13dda0fe539587cd556fc3",
+      "traps": {
+        "date_start": 218,
+        "date_end": 324,
+        "null": [
+          181,
+          287,
+          458
+        ]
+      }
+    },
+    {
+      "task_id": "task_0044",
+      "template": "A1",
+      "difficulty": "agg",
+      "db_seed": 391909871164407836,
+      "params": {
+        "tiers": [
+          "basic",
+          "enterprise"
+        ],
+        "opened_from": "2024-09-20",
+        "opened_before": "2025-12-18",
+        "min_severity": 3,
+        "note_type": "refund_request",
+        "refund_above": 750,
+        "min_notes": 2
+      },
+      "nl_request": "Find the support cases opened on or after 2024-09-20 and before 2025-12-18 with a severity of at least 3, for customers on the basic or enterprise tier, that have at least two refund-request notes and at least one refund greater than 750 with an approval date recorded. Return the IDs of the matching support cases.",
+      "reference_ids": [
+        112,
+        177,
+        216,
+        230,
+        278,
+        287,
+        315,
+        360,
+        490,
+        540,
+        635,
+        702,
+        728
+      ],
+      "answer_table": "support_cases",
+      "n_answer": 13,
+      "n_samples": 1,
+      "schema_dump_chars": 4296,
+      "fingerprint": "a7891da0eb77d5b11dc81faa15475acd7b5899b414c2e8b89ca026a227cfca4d",
+      "traps": {
+        "date_start": 177,
+        "date_end": 342,
+        "null": [
+          148,
+          189,
+          301
+        ],
+        "amount": 548
+      }
+    },
+    {
+      "task_id": "task_0045",
+      "template": "A2",
+      "difficulty": "agg",
+      "db_seed": 3955817362696732434,
+      "params": {
+        "hired_from": "2024-07-15",
+        "hired_before": "2025-05-17",
+        "note_type": "customer_call",
+        "min_severity": 2,
+        "region": "south",
+        "min_cases": 2
+      },
+      "nl_request": "Find the employees hired on or after 2024-07-15 and before 2025-05-17 who wrote customer-call notes on at least two different support cases that each have a severity of at least 2, have no closed date recorded, and belong to a customer in the south region. Return the IDs of the matching employees.",
+      "reference_ids": [
+        16,
+        34,
+        41,
+        55,
+        57,
+        83,
+        88,
+        91,
+        93,
+        110
+      ],
+      "answer_table": "employees",
+      "n_answer": 10,
+      "n_samples": 5,
+      "schema_dump_chars": 4296,
+      "fingerprint": "4dcccaeb52497e5625e34e6608bcb1c52d7e5796b0ab506f05747bde54b49319",
+      "traps": {
+        "date_start": 57,
+        "date_end": 115,
+        "null": [
+          42,
+          78,
+          111
+        ]
+      }
+    },
+    {
+      "task_id": "task_0046",
+      "template": "A3",
+      "difficulty": "agg",
+      "db_seed": 138277760483119468,
+      "params": {
+        "requested_from": "2024-08-21",
+        "requested_before": "2025-11-06",
+        "min_amount": 5000,
+        "min_risk": 2,
+        "departments": [
+          "Facilities",
+          "Engineering"
+        ],
+        "min_total": 15000
+      },
+      "nl_request": "Find the procurement requests with a request date on or after 2024-08-21 and before 2025-11-06, for an amount of at least 5000, from vendors with a risk rating of at least 2, requested by an employee in the Facilities or Engineering department, with no need-by date recorded, and requested by an employee whose procurement requests with a request date in that same window add up to at least 15000 in total (counting all of that employee's requests in the window, whatever their vendor, need-by date or status). Return the IDs of the matching procurement requests.",
+      "reference_ids": [
+        5,
+        7,
+        10,
+        64,
+        100,
+        103,
+        156,
+        182,
+        198,
+        209,
+        221,
+        223,
+        224,
+        226,
+        258,
+        262,
+        271,
+        274,
+        290,
+        302
+      ],
+      "answer_table": "procurement_requests",
+      "n_answer": 20,
+      "n_samples": 8,
+      "schema_dump_chars": 4296,
+      "fingerprint": "ac3a9ab353b538579198777bd830c12d238e9e10ef045be038f05a58a267fd1d",
+      "traps": {}
+    },
+    {
+      "task_id": "task_0047",
+      "template": "T4",
+      "difficulty": "agg",
+      "db_seed": 14529734786864136640,
+      "params": {
+        "city": "Duskwater",
+        "opened_from": "2025-03-11",
+        "opened_before": "2025-08-26",
+        "min_priority": 2
+      },
+      "nl_request": "Find the facility tickets for buildings located in Duskwater, opened on or after 2025-03-11 and before 2025-08-26, with a priority of at least 2 and with no resolution date recorded. Return the IDs of the matching facility tickets.",
+      "reference_ids": [
+        19,
+        27,
+        43,
+        50,
+        72,
+        113,
+        183,
+        245,
+        339,
+        426
+      ],
+      "answer_table": "facility_tickets",
+      "n_answer": 10,
+      "n_samples": 1,
+      "schema_dump_chars": 4296,
+      "fingerprint": "18528b86342e3c3841f7c8c1db95ac54203fa96cbb93c0806afd477006a52652",
+      "traps": {
+        "date_start": 19,
+        "date_end": 402,
+        "null": [
+          276,
+          303,
+          326
+        ]
+      }
+    },
+    {
+      "task_id": "task_0048",
+      "template": "A1",
+      "difficulty": "agg",
+      "db_seed": 17167557249281165855,
+      "params": {
+        "tiers": [
+          "enterprise"
+        ],
+        "opened_from": "2024-02-13",
+        "opened_before": "2025-07-17",
+        "min_severity": 2,
+        "note_type": "update",
+        "refund_above": 250,
+        "min_notes": 2
+      },
+      "nl_request": "Find the support cases opened on or after 2024-02-13 and before 2025-07-17 with a severity of at least 2, for customers on the enterprise tier, that have at least two update notes and at least one refund greater than 250 with an approval date recorded. Return the IDs of the matching support cases.",
+      "reference_ids": [
+        1,
+        4,
+        237,
+        313,
+        314,
+        343,
+        448,
+        494,
+        604,
+        750
+      ],
+      "answer_table": "support_cases",
+      "n_answer": 10,
+      "n_samples": 5,
+      "schema_dump_chars": 4296,
+      "fingerprint": "0bdaa1e9da439c796dff81297229a8d54214cb3879738c26138d0d8f7660175f",
+      "traps": {
+        "date_start": 448,
+        "date_end": 662,
+        "null": [
+          202,
+          523,
+          645
+        ],
+        "amount": 458
+      }
+    },
+    {
+      "task_id": "task_0049",
+      "template": "A2",
+      "difficulty": "agg",
+      "db_seed": 12240237705060077798,
+      "params": {
+        "hired_from": "2024-02-23",
+        "hired_before": "2025-06-13",
+        "note_type": "legal_review",
+        "min_severity": 2,
+        "region": "east",
+        "min_cases": 2
+      },
+      "nl_request": "Find the employees hired on or after 2024-02-23 and before 2025-06-13 who wrote legal-review notes on at least two different support cases that each have a severity of at least 2, have no closed date recorded, and belong to a customer in the east region. Return the IDs of the matching employees.",
+      "reference_ids": [
+        7,
+        9,
+        11,
+        17,
+        19,
+        30,
+        31,
+        44,
+        48,
+        67,
+        88,
+        92,
+        103,
+        108,
+        119
+      ],
+      "answer_table": "employees",
+      "n_answer": 15,
+      "n_samples": 3,
+      "schema_dump_chars": 4296,
+      "fingerprint": "04ff7f7248f78f92beb28cb74555899a9434dbf580629076189256d9d01e78d2",
+      "traps": {
+        "date_start": 103,
+        "date_end": 46,
+        "null": [
+          8,
+          111,
+          117
+        ]
+      }
+    },
+    {
+      "task_id": "task_0050",
+      "template": "A3",
+      "difficulty": "agg",
+      "db_seed": 6266024998902307771,
+      "params": {
+        "requested_from": "2024-11-03",
+        "requested_before": "2025-10-05",
+        "min_amount": 10000,
+        "min_risk": 2,
+        "departments": [
+          "Procurement",
+          "Engineering"
+        ],
+        "min_total": 20000
+      },
+      "nl_request": "Find the procurement requests with a request date on or after 2024-11-03 and before 2025-10-05, for an amount of at least 10000, from vendors with a risk rating of at least 2, requested by an employee in the Procurement or Engineering department, with no need-by date recorded, and requested by an employee whose procurement requests with a request date in that same window add up to at least 20000 in total (counting all of that employee's requests in the window, whatever their vendor, need-by date or status). Return the IDs of the matching procurement requests.",
+      "reference_ids": [
+        9,
+        18,
+        57,
+        76,
+        88,
+        108,
+        125,
+        143,
+        198,
+        267,
+        282,
+        307,
+        350,
+        378,
+        391
+      ],
+      "answer_table": "procurement_requests",
+      "n_answer": 15,
+      "n_samples": 1,
+      "schema_dump_chars": 4296,
+      "fingerprint": "c6b8301bedf004423f3808e50f1331b05471f0278e7ea6bd566a0c1f9ccee086",
+      "traps": {}
+    },
+    {
+      "task_id": "task_0051",
+      "template": "T4",
+      "difficulty": "agg",
+      "db_seed": 14292074837399618168,
+      "params": {
+        "city": "Ironvale",
+        "opened_from": "2024-09-24",
+        "opened_before": "2025-03-12",
+        "min_priority": 3
+      },
+      "nl_request": "Find the facility tickets for buildings located in Ironvale, opened on or after 2024-09-24 and before 2025-03-12, with a priority of at least 3 and with no resolution date recorded. Return the IDs of the matching facility tickets.",
+      "reference_ids": [
+        144,
+        195,
+        218,
+        220,
+        274,
+        297,
+        368,
+        374
+      ],
+      "answer_table": "facility_tickets",
+      "n_answer": 8,
+      "n_samples": 1,
+      "schema_dump_chars": 4296,
+      "fingerprint": "a4343d41e0ed60c15ee36d2f48d61bcde4e223e058546b56aea335144d8f29d6",
+      "traps": {
+        "date_start": 195,
+        "date_end": 290,
+        "null": [
+          281,
+          293,
+          408
+        ]
+      }
+    },
+    {
+      "task_id": "task_0052",
+      "template": "A1",
+      "difficulty": "agg",
+      "db_seed": 7741684805444884030,
+      "params": {
+        "tiers": [
+          "enterprise"
+        ],
+        "opened_from": "2024-02-07",
+        "opened_before": "2025-01-14",
+        "min_severity": 2,
+        "note_type": "legal_review",
+        "refund_above": 100,
+        "min_notes": 2
+      },
+      "nl_request": "Find the support cases opened on or after 2024-02-07 and before 2025-01-14 with a severity of at least 2, for customers on the enterprise tier, that have at least two legal-review notes and at least one refund greater than 100 with an approval date recorded. Return the IDs of the matching support cases.",
+      "reference_ids": [
+        102,
+        278,
+        388,
+        393,
+        460,
+        470,
+        471,
+        510,
+        535,
+        588,
+        616,
+        713,
+        750
+      ],
+      "answer_table": "support_cases",
+      "n_answer": 13,
+      "n_samples": 1,
+      "schema_dump_chars": 4296,
+      "fingerprint": "a5e896ca11d78f16174c5e79be39419988eadf219ba61efe5240cef16ebe1729",
+      "traps": {
+        "date_start": 588,
+        "date_end": 3,
+        "null": [
+          327,
+          377,
+          726
+        ],
+        "amount": 758
+      }
+    },
+    {
+      "task_id": "task_0053",
+      "template": "A2",
+      "difficulty": "agg",
+      "db_seed": 14945335312331399160,
+      "params": {
+        "hired_from": "2024-12-24",
+        "hired_before": "2025-12-31",
+        "note_type": "refund_request",
+        "min_severity": 2,
+        "region": "west",
+        "min_cases": 2
+      },
+      "nl_request": "Find the employees hired on or after 2024-12-24 and before 2025-12-31 who wrote refund-request notes on at least two different support cases that each have a severity of at least 2, have no closed date recorded, and belong to a customer in the west region. Return the IDs of the matching employees.",
+      "reference_ids": [
+        19,
+        24,
+        54,
+        74,
+        96,
+        104,
+        106
+      ],
+      "answer_table": "employees",
+      "n_answer": 7,
+      "n_samples": 8,
+      "schema_dump_chars": 4296,
+      "fingerprint": "0f9cef617bbc49f5f8f56e37774495e89c7f78ea50d115ca44f31e9b176e7004",
+      "traps": {
+        "date_start": 96,
+        "date_end": 69,
+        "null": [
+          8,
+          15,
+          44
+        ]
+      }
+    },
+    {
+      "task_id": "task_0054",
+      "template": "A3",
+      "difficulty": "agg",
+      "db_seed": 7049194473578223037,
+      "params": {
+        "requested_from": "2024-03-05",
+        "requested_before": "2025-05-26",
+        "min_amount": 10000,
+        "min_risk": 4,
+        "departments": [
+          "Billing",
+          "Legal"
+        ],
+        "min_total": 30000
+      },
+      "nl_request": "Find the procurement requests with a request date on or after 2024-03-05 and before 2025-05-26, for an amount of at least 10000, from vendors with a risk rating of at least 4, requested by an employee in the Billing or Legal department, with no need-by date recorded, and requested by an employee whose procurement requests with a request date in that same window add up to at least 30000 in total (counting all of that employee's requests in the window, whatever their vendor, need-by date or status). Return the IDs of the matching procurement requests.",
+      "reference_ids": [
+        8,
+        80,
+        89,
+        118,
+        334,
+        357
+      ],
+      "answer_table": "procurement_requests",
+      "n_answer": 6,
+      "n_samples": 5,
+      "schema_dump_chars": 4296,
+      "fingerprint": "5722ec658ed3c5507a3d7b23c8929bbdc4a62ef5d42d876fffe440f9f7d52963",
+      "traps": {}
+    },
+    {
+      "task_id": "task_0055",
+      "template": "T4",
+      "difficulty": "agg",
+      "db_seed": 12324971751474755569,
+      "params": {
+        "city": "Vellmoor",
+        "opened_from": "2024-11-27",
+        "opened_before": "2025-10-23",
+        "min_priority": 2
+      },
+      "nl_request": "Find the facility tickets for buildings located in Vellmoor, opened on or after 2024-11-27 and before 2025-10-23, with a priority of at least 2 and with no resolution date recorded. Return the IDs of the matching facility tickets.",
+      "reference_ids": [
+        21,
+        36,
+        61,
+        81,
+        87,
+        110,
+        116,
+        118,
+        123,
+        132,
+        150,
+        169,
+        219,
+        227,
+        289,
+        382,
+        389,
+        405,
+        411,
+        418,
+        484
+      ],
+      "answer_table": "facility_tickets",
+      "n_answer": 21,
+      "n_samples": 3,
+      "schema_dump_chars": 4296,
+      "fingerprint": "313b8c828b7d5688aa29b5eb3a1463323236c0baecc788a6a7007aa7abcbaebc",
+      "traps": {
+        "date_start": 116,
+        "date_end": 303,
+        "null": [
+          223,
+          334,
+          403
+        ]
+      }
+    },
+    {
+      "task_id": "task_0056",
+      "template": "A1",
+      "difficulty": "agg",
+      "db_seed": 9636361486388304572,
+      "params": {
+        "tiers": [
+          "pro",
+          "enterprise"
+        ],
+        "opened_from": "2024-09-21",
+        "opened_before": "2025-08-23",
+        "min_severity": 3,
+        "note_type": "legal_review",
+        "refund_above": 500,
+        "min_notes": 2
+      },
+      "nl_request": "Find the support cases opened on or after 2024-09-21 and before 2025-08-23 with a severity of at least 3, for customers on the pro or enterprise tier, that have at least two legal-review notes and at least one refund greater than 500 with an approval date recorded. Return the IDs of the matching support cases.",
+      "reference_ids": [
+        49,
+        78,
+        128,
+        136,
+        207,
+        317,
+        319,
+        525,
+        552
+      ],
+      "answer_table": "support_cases",
+      "n_answer": 9,
+      "n_samples": 1,
+      "schema_dump_chars": 4296,
+      "fingerprint": "0754bf2bdf97927851e5620a79d54006780d9df5d794c028246d39516154f3a9",
+      "traps": {
+        "date_start": 552,
+        "date_end": 396,
+        "null": [
+          20,
+          389,
+          465
+        ],
+        "amount": 773
+      }
+    },
+    {
+      "task_id": "task_0057",
+      "template": "A2",
+      "difficulty": "agg",
+      "db_seed": 2821649178230958432,
+      "params": {
+        "hired_from": "2024-04-10",
+        "hired_before": "2025-05-27",
+        "note_type": "customer_call",
+        "min_severity": 2,
+        "region": "east",
+        "min_cases": 2
+      },
+      "nl_request": "Find the employees hired on or after 2024-04-10 and before 2025-05-27 who wrote customer-call notes on at least two different support cases that each have a severity of at least 2, have no closed date recorded, and belong to a customer in the east region. Return the IDs of the matching employees.",
+      "reference_ids": [
+        17,
+        49,
+        60,
+        72,
+        77,
+        81,
+        100,
+        101,
+        115,
+        117
+      ],
+      "answer_table": "employees",
+      "n_answer": 10,
+      "n_samples": 2,
+      "schema_dump_chars": 4296,
+      "fingerprint": "eeca37a10a4f3194f651fb783734fdbe7001f8ea681c8b6b809868bcb537c1b7",
+      "traps": {
+        "date_start": 17,
+        "date_end": 53,
+        "null": [
+          25,
+          63,
+          65
+        ]
+      }
+    },
+    {
+      "task_id": "task_0058",
+      "template": "A3",
+      "difficulty": "agg",
+      "db_seed": 13557267197333207566,
+      "params": {
+        "requested_from": "2024-03-09",
+        "requested_before": "2025-03-11",
+        "min_amount": 10000,
+        "min_risk": 2,
+        "departments": [
+          "Billing",
+          "Procurement"
+        ],
+        "min_total": 30000
+      },
+      "nl_request": "Find the procurement requests with a request date on or after 2024-03-09 and before 2025-03-11, for an amount of at least 10000, from vendors with a risk rating of at least 2, requested by an employee in the Billing or Procurement department, with no need-by date recorded, and requested by an employee whose procurement requests with a request date in that same window add up to at least 30000 in total (counting all of that employee's requests in the window, whatever their vendor, need-by date or status). Return the IDs of the matching procurement requests.",
+      "reference_ids": [
+        8,
+        19,
+        34,
+        36,
+        38,
+        315,
+        334,
+        364,
+        372,
+        396,
+        400
+      ],
+      "answer_table": "procurement_requests",
+      "n_answer": 11,
+      "n_samples": 2,
+      "schema_dump_chars": 4296,
+      "fingerprint": "e1393b7e9ad38b96baa358c828f61758493fe554abd9551b1ccdd851b15abde4",
+      "traps": {}
+    },
+    {
+      "task_id": "task_0059",
+      "template": "T4",
+      "difficulty": "agg",
+      "db_seed": 15364916661601569437,
+      "params": {
+        "city": "Vellmoor",
+        "opened_from": "2025-06-26",
+        "opened_before": "2025-12-20",
+        "min_priority": 3
+      },
+      "nl_request": "Find the facility tickets for buildings located in Vellmoor, opened on or after 2025-06-26 and before 2025-12-20, with a priority of at least 3 and with no resolution date recorded. Return the IDs of the matching facility tickets.",
+      "reference_ids": [
+        47,
+        247,
+        260,
+        393,
+        411,
+        433,
+        465,
+        488
+      ],
+      "answer_table": "facility_tickets",
+      "n_answer": 8,
+      "n_samples": 2,
+      "schema_dump_chars": 4296,
+      "fingerprint": "9e64e136eab84de4a8f878a811863d10288b42305ac9b80f84ab0b3260eff82b",
+      "traps": {
+        "date_start": 488,
+        "date_end": 487,
+        "null": [
+          19,
+          324,
+          421
+        ]
+      }
+    },
+    {
+      "task_id": "task_0060",
+      "template": "A1",
+      "difficulty": "agg",
+      "db_seed": 17912064083327375503,
+      "params": {
+        "tiers": [
+          "basic",
+          "enterprise"
+        ],
+        "opened_from": "2024-02-14",
+        "opened_before": "2024-12-23",
+        "min_severity": 2,
+        "note_type": "customer_call",
+        "refund_above": 500,
+        "min_notes": 2
+      },
+      "nl_request": "Find the support cases opened on or after 2024-02-14 and before 2024-12-23 with a severity of at least 2, for customers on the basic or enterprise tier, that have at least two customer-call notes and at least one refund greater than 500 with an approval date recorded. Return the IDs of the matching support cases.",
+      "reference_ids": [
+        24,
+        159,
+        192,
+        238,
+        262,
+        428,
+        461,
+        596,
+        724
+      ],
+      "answer_table": "support_cases",
+      "n_answer": 9,
+      "n_samples": 1,
+      "schema_dump_chars": 4296,
+      "fingerprint": "0f3cf272afc1d4c377f25633eb14b5eacb12ca857331a33e0f1651f856d9eeaf",
+      "traps": {
+        "date_start": 192,
+        "date_end": 70,
+        "null": [
+          2,
+          297,
+          781
+        ],
+        "amount": 666
+      }
+    },
+    {
+      "task_id": "task_0061",
+      "template": "A2",
+      "difficulty": "agg",
+      "db_seed": 2848310909254898628,
+      "params": {
+        "hired_from": "2024-02-04",
+        "hired_before": "2025-05-27",
+        "note_type": "update",
+        "min_severity": 2,
+        "region": "south",
+        "min_cases": 2
+      },
+      "nl_request": "Find the employees hired on or after 2024-02-04 and before 2025-05-27 who wrote update notes on at least two different support cases that each have a severity of at least 2, have no closed date recorded, and belong to a customer in the south region. Return the IDs of the matching employees.",
+      "reference_ids": [
+        3,
+        40,
+        59,
+        65,
+        74,
+        84,
+        109,
+        111
+      ],
+      "answer_table": "employees",
+      "n_answer": 8,
+      "n_samples": 4,
+      "schema_dump_chars": 4296,
+      "fingerprint": "fd4393960bbce90f779ae2a926a68330203fe17be044d59cb96d0a12a4a13a65",
+      "traps": {
+        "date_start": 65,
+        "date_end": 64,
+        "null": [
+          23,
+          63,
+          95
+        ]
+      }
+    },
+    {
+      "task_id": "task_0062",
+      "template": "A3",
+      "difficulty": "agg",
+      "db_seed": 9817583441817786627,
+      "params": {
+        "requested_from": "2024-04-10",
+        "requested_before": "2025-10-26",
+        "min_amount": 20000,
+        "min_risk": 2,
+        "departments": [
+          "Facilities",
+          "Operations"
+        ],
+        "min_total": 40000
+      },
+      "nl_request": "Find the procurement requests with a request date on or after 2024-04-10 and before 2025-10-26, for an amount of at least 20000, from vendors with a risk rating of at least 2, requested by an employee in the Facilities or Operations department, with no need-by date recorded, and requested by an employee whose procurement requests with a request date in that same window add up to at least 40000 in total (counting all of that employee's requests in the window, whatever their vendor, need-by date or status). Return the IDs of the matching procurement requests.",
+      "reference_ids": [
+        9,
+        12,
+        29,
+        41,
+        92,
+        105,
+        125,
+        156,
+        180,
+        233,
+        257,
+        261,
+        262,
+        296,
+        301,
+        302,
+        358,
+        364
+      ],
+      "answer_table": "procurement_requests",
+      "n_answer": 18,
+      "n_samples": 1,
+      "schema_dump_chars": 4296,
+      "fingerprint": "2fc620dcd07ae6339f4cc35d7338fb0cce9cf8433b3fca774f3e35735e5d711f",
+      "traps": {}
+    },
+    {
+      "task_id": "task_0063",
+      "template": "T4",
+      "difficulty": "agg",
+      "db_seed": 3295073060744458743,
+      "params": {
+        "city": "Ironvale",
+        "opened_from": "2024-03-21",
+        "opened_before": "2025-09-03",
+        "min_priority": 3
+      },
+      "nl_request": "Find the facility tickets for buildings located in Ironvale, opened on or after 2024-03-21 and before 2025-09-03, with a priority of at least 3 and with no resolution date recorded. Return the IDs of the matching facility tickets.",
+      "reference_ids": [
+        36,
+        85,
+        109,
+        226,
+        228,
+        352,
+        388,
+        452,
+        485,
+        491
+      ],
+      "answer_table": "facility_tickets",
+      "n_answer": 10,
+      "n_samples": 2,
+      "schema_dump_chars": 4296,
+      "fingerprint": "ddc8e94b2d73ee420d4810f84cf0232004982d8aaa15678654ac008562a7ec73",
+      "traps": {
+        "date_start": 491,
+        "date_end": 207,
+        "null": [
+          191,
+          233,
+          416
+        ]
+      }
+    },
+    {
+      "task_id": "task_0064",
+      "template": "A1",
+      "difficulty": "agg",
+      "db_seed": 15506160545720672755,
+      "params": {
+        "tiers": [
+          "basic",
+          "pro"
+        ],
+        "opened_from": "2024-06-14",
+        "opened_before": "2025-08-15",
+        "min_severity": 2,
+        "note_type": "update",
+        "refund_above": 250,
+        "min_notes": 2
+      },
+      "nl_request": "Find the support cases opened on or after 2024-06-14 and before 2025-08-15 with a severity of at least 2, for customers on the basic or pro tier, that have at least two update notes and at least one refund greater than 250 with an approval date recorded. Return the IDs of the matching support cases.",
+      "reference_ids": [
+        6,
+        82,
+        89,
+        94,
+        117,
+        124,
+        129,
+        168,
+        207,
+        268,
+        282,
+        386,
+        453,
+        478,
+        496,
+        499,
+        503,
+        564,
+        651,
+        673,
+        677,
+        736,
+        763
+      ],
+      "answer_table": "support_cases",
+      "n_answer": 23,
+      "n_samples": 1,
+      "schema_dump_chars": 4296,
+      "fingerprint": "119f13d600df1b8adb4ea40db21c7f3fe86aa8b9feb6ee31639806db159ab7bf",
+      "traps": {
+        "date_start": 124,
+        "date_end": 800,
+        "null": [
+          19,
+          194,
+          543
+        ],
+        "amount": 786
+      }
+    },
+    {
+      "task_id": "task_0065",
+      "template": "A2",
+      "difficulty": "agg",
+      "db_seed": 9532588317908065020,
+      "params": {
+        "hired_from": "2024-11-03",
+        "hired_before": "2025-11-09",
+        "note_type": "refund_request",
+        "min_severity": 2,
+        "region": "north",
+        "min_cases": 2
+      },
+      "nl_request": "Find the employees hired on or after 2024-11-03 and before 2025-11-09 who wrote refund-request notes on at least two different support cases that each have a severity of at least 2, have no closed date recorded, and belong to a customer in the north region. Return the IDs of the matching employees.",
+      "reference_ids": [
+        3,
+        14,
+        19,
+        36,
+        41,
+        86,
+        89,
+        99
+      ],
+      "answer_table": "employees",
+      "n_answer": 8,
+      "n_samples": 4,
+      "schema_dump_chars": 4296,
+      "fingerprint": "9c7ca90485c74e4a3dc8fa5cc8e0365267235e0dc19d03618621189939719933",
+      "traps": {
+        "date_start": 36,
+        "date_end": 64,
+        "null": [
+          29,
+          66,
+          102
+        ]
+      }
+    },
+    {
+      "task_id": "task_0066",
+      "template": "A3",
+      "difficulty": "agg",
+      "db_seed": 17597432307047093437,
+      "params": {
+        "requested_from": "2024-06-26",
+        "requested_before": "2025-07-04",
+        "min_amount": 20000,
+        "min_risk": 2,
+        "departments": [
+          "Customer Support",
+          "Legal"
+        ],
+        "min_total": 40000
+      },
+      "nl_request": "Find the procurement requests with a request date on or after 2024-06-26 and before 2025-07-04, for an amount of at least 20000, from vendors with a risk rating of at least 2, requested by an employee in the Customer Support or Legal department, with no need-by date recorded, and requested by an employee whose procurement requests with a request date in that same window add up to at least 40000 in total (counting all of that employee's requests in the window, whatever their vendor, need-by date or status). Return the IDs of the matching procurement requests.",
+      "reference_ids": [
+        22,
+        32,
+        152,
+        190,
+        240,
+        245,
+        257,
+        303,
+        363,
+        398
+      ],
+      "answer_table": "procurement_requests",
+      "n_answer": 10,
+      "n_samples": 2,
+      "schema_dump_chars": 4296,
+      "fingerprint": "9e8f36d2e02a191dd22becb3eb9498e2a1384284f3112f70d3e4db611740e996",
+      "traps": {}
+    },
+    {
+      "task_id": "task_0067",
+      "template": "T4",
+      "difficulty": "agg",
+      "db_seed": 6136771616049369375,
+      "params": {
+        "city": "Marrowick",
+        "opened_from": "2024-08-20",
+        "opened_before": "2025-02-16",
+        "min_priority": 3
+      },
+      "nl_request": "Find the facility tickets for buildings located in Marrowick, opened on or after 2024-08-20 and before 2025-02-16, with a priority of at least 3 and with no resolution date recorded. Return the IDs of the matching facility tickets.",
+      "reference_ids": [
+        83,
+        104,
+        155,
+        279,
+        369
+      ],
+      "answer_table": "facility_tickets",
+      "n_answer": 5,
+      "n_samples": 4,
+      "schema_dump_chars": 4296,
+      "fingerprint": "5868a067bc4874f42fdcf75297b978db218c354afa51dac16ab898a53ea5d2e5",
+      "traps": {
+        "date_start": 104,
+        "date_end": 432,
+        "null": [
+          106,
+          298,
+          362
+        ]
+      }
+    },
+    {
+      "task_id": "task_0068",
+      "template": "A1",
+      "difficulty": "agg",
+      "db_seed": 8259522397243900114,
+      "params": {
+        "tiers": [
+          "pro"
+        ],
+        "opened_from": "2024-12-20",
+        "opened_before": "2025-07-05",
+        "min_severity": 2,
+        "note_type": "refund_request",
+        "refund_above": 500,
+        "min_notes": 2
+      },
+      "nl_request": "Find the support cases opened on or after 2024-12-20 and before 2025-07-05 with a severity of at least 2, for customers on the pro tier, that have at least two refund-request notes and at least one refund greater than 500 with an approval date recorded. Return the IDs of the matching support cases.",
+      "reference_ids": [
+        43,
+        92,
+        142,
+        404,
+        788
+      ],
+      "answer_table": "support_cases",
+      "n_answer": 5,
+      "n_samples": 1,
+      "schema_dump_chars": 4296,
+      "fingerprint": "493ea2fa34936fb1d9775b87c6dfdfc1aac1881b316c43de7f9f245ce32a4f86",
+      "traps": {
+        "date_start": 142,
+        "date_end": 435,
+        "null": [
+          332,
+          341,
+          483
+        ],
+        "amount": 488
+      }
+    },
+    {
+      "task_id": "task_0069",
+      "template": "A2",
+      "difficulty": "agg",
+      "db_seed": 2348340076105293823,
+      "params": {
+        "hired_from": "2024-04-18",
+        "hired_before": "2024-11-08",
+        "note_type": "update",
+        "min_severity": 2,
+        "region": "west",
+        "min_cases": 2
+      },
+      "nl_request": "Find the employees hired on or after 2024-04-18 and before 2024-11-08 who wrote update notes on at least two different support cases that each have a severity of at least 2, have no closed date recorded, and belong to a customer in the west region. Return the IDs of the matching employees.",
+      "reference_ids": [
+        2,
+        7,
+        38,
+        49,
+        50,
+        55,
+        58,
+        62,
+        73,
+        102,
+        108,
+        114
+      ],
+      "answer_table": "employees",
+      "n_answer": 12,
+      "n_samples": 2,
+      "schema_dump_chars": 4296,
+      "fingerprint": "387be6b2144c497e95413a89d856e106ce18bc0ff12a1cb488316963edcc5b3b",
+      "traps": {
+        "date_start": 114,
+        "date_end": 4,
+        "null": [
+          44,
+          68,
+          72
+        ]
+      }
+    },
+    {
+      "task_id": "task_0070",
+      "template": "A3",
+      "difficulty": "agg",
+      "db_seed": 12895633562155960986,
+      "params": {
+        "requested_from": "2025-02-04",
+        "requested_before": "2025-11-11",
+        "min_amount": 5000,
+        "min_risk": 3,
+        "departments": [
+          "Billing",
+          "Legal"
+        ],
+        "min_total": 15000
+      },
+      "nl_request": "Find the procurement requests with a request date on or after 2025-02-04 and before 2025-11-11, for an amount of at least 5000, from vendors with a risk rating of at least 3, requested by an employee in the Billing or Legal department, with no need-by date recorded, and requested by an employee whose procurement requests with a request date in that same window add up to at least 15000 in total (counting all of that employee's requests in the window, whatever their vendor, need-by date or status). Return the IDs of the matching procurement requests.",
+      "reference_ids": [
+        7,
+        42,
+        96,
+        199,
+        219,
+        279,
+        318,
+        327,
+        393
+      ],
+      "answer_table": "procurement_requests",
+      "n_answer": 9,
+      "n_samples": 16,
+      "schema_dump_chars": 4296,
+      "fingerprint": "ac910cd379ffc24039688c74cdccd4ec12cdbcf57b26b9cc52ae26b5683fd34c",
+      "traps": {}
+    },
+    {
+      "task_id": "task_0071",
+      "template": "T4",
+      "difficulty": "agg",
+      "db_seed": 10003805184118070753,
+      "params": {
+        "city": "Kestrel Falls",
+        "opened_from": "2025-02-07",
+        "opened_before": "2025-06-28",
+        "min_priority": 2
+      },
+      "nl_request": "Find the facility tickets for buildings located in Kestrel Falls, opened on or after 2025-02-07 and before 2025-06-28, with a priority of at least 2 and with no resolution date recorded. Return the IDs of the matching facility tickets.",
+      "reference_ids": [
+        79,
+        101,
+        130,
+        185,
+        197,
+        207,
+        322,
+        348,
+        361,
+        372
+      ],
+      "answer_table": "facility_tickets",
+      "n_answer": 10,
+      "n_samples": 1,
+      "schema_dump_chars": 4296,
+      "fingerprint": "4db16364dbbc5834738354e9aa7998641acd415958fd117f26d35887636673ab",
+      "traps": {
+        "date_start": 322,
+        "date_end": 33,
+        "null": [
+          31,
+          225,
+          357
+        ]
+      }
+    },
+    {
+      "task_id": "task_0072",
+      "template": "A1",
+      "difficulty": "agg",
+      "db_seed": 4206966064850156842,
+      "params": {
+        "tiers": [
+          "basic",
+          "enterprise"
+        ],
+        "opened_from": "2024-02-04",
+        "opened_before": "2025-06-03",
+        "min_severity": 2,
+        "note_type": "update",
+        "refund_above": 1000,
+        "min_notes": 2
+      },
+      "nl_request": "Find the support cases opened on or after 2024-02-04 and before 2025-06-03 with a severity of at least 2, for customers on the basic or enterprise tier, that have at least two update notes and at least one refund greater than 1000 with an approval date recorded. Return the IDs of the matching support cases.",
+      "reference_ids": [
+        5,
+        103,
+        144,
+        199,
+        250,
+        350,
+        424,
+        502,
+        510,
+        737
+      ],
+      "answer_table": "support_cases",
+      "n_answer": 10,
+      "n_samples": 3,
+      "schema_dump_chars": 4296,
+      "fingerprint": "c16387b32aec3f52b8a0e9644243e5ea71cffa5c56bf0ef049fbf371f9b7f5fe",
+      "traps": {
+        "date_start": 5,
+        "date_end": 390,
+        "null": [
+          126,
+          433,
+          607
+        ],
+        "amount": 321
+      }
+    },
+    {
+      "task_id": "task_0073",
+      "template": "A2",
+      "difficulty": "agg",
+      "db_seed": 13834625932118700152,
+      "params": {
+        "hired_from": "2024-02-14",
+        "hired_before": "2025-01-09",
+        "note_type": "legal_review",
+        "min_severity": 2,
+        "region": "west",
+        "min_cases": 2
+      },
+      "nl_request": "Find the employees hired on or after 2024-02-14 and before 2025-01-09 who wrote legal-review notes on at least two different support cases that each have a severity of at least 2, have no closed date recorded, and belong to a customer in the west region. Return the IDs of the matching employees.",
+      "reference_ids": [
+        26,
+        27,
+        31,
+        49,
+        55,
+        87
+      ],
+      "answer_table": "employees",
+      "n_answer": 6,
+      "n_samples": 1,
+      "schema_dump_chars": 4296,
+      "fingerprint": "0822eb4dd8cd50afd41f94d415043834ac9940e69df3aab72ae6884a4d90825d",
+      "traps": {
+        "date_start": 49,
+        "date_end": 39,
+        "null": [
+          18,
+          81,
+          88
+        ]
+      }
+    },
+    {
+      "task_id": "task_0074",
+      "template": "A3",
+      "difficulty": "agg",
+      "db_seed": 2073744201272068234,
+      "params": {
+        "requested_from": "2024-11-09",
+        "requested_before": "2025-12-03",
+        "min_amount": 5000,
+        "min_risk": 2,
+        "departments": [
+          "Billing",
+          "Quality Assurance"
+        ],
+        "min_total": 15000
+      },
+      "nl_request": "Find the procurement requests with a request date on or after 2024-11-09 and before 2025-12-03, for an amount of at least 5000, from vendors with a risk rating of at least 2, requested by an employee in the Billing or Quality Assurance department, with no need-by date recorded, and requested by an employee whose procurement requests with a request date in that same window add up to at least 15000 in total (counting all of that employee's requests in the window, whatever their vendor, need-by date or status). Return the IDs of the matching procurement requests.",
+      "reference_ids": [
+        3,
+        18,
+        53,
+        82,
+        138,
+        156,
+        223,
+        260,
+        286,
+        336,
+        357,
+        361,
+        389,
+        397
+      ],
+      "answer_table": "procurement_requests",
+      "n_answer": 14,
+      "n_samples": 9,
+      "schema_dump_chars": 4296,
+      "fingerprint": "4636a4978866cefe0054bcb24f7499090ede534b47c16fbdf1148eda5ea58e0b",
+      "traps": {}
+    },
+    {
+      "task_id": "task_0075",
+      "template": "T4",
+      "difficulty": "agg",
+      "db_seed": 14117754945688460119,
+      "params": {
+        "city": "Marrowick",
+        "opened_from": "2024-12-25",
+        "opened_before": "2025-12-31",
+        "min_priority": 2
+      },
+      "nl_request": "Find the facility tickets for buildings located in Marrowick, opened on or after 2024-12-25 and before 2025-12-31, with a priority of at least 2 and with no resolution date recorded. Return the IDs of the matching facility tickets.",
+      "reference_ids": [
+        26,
+        36,
+        49,
+        86,
+        89,
+        178,
+        181,
+        216,
+        265,
+        281,
+        286,
+        337,
+        460
+      ],
+      "answer_table": "facility_tickets",
+      "n_answer": 13,
+      "n_samples": 1,
+      "schema_dump_chars": 4296,
+      "fingerprint": "3f2ad5ccbc6a3d67aac50466c2de434a2f25adb6f49a017fc62bfc9232bdc13f",
+      "traps": {
+        "date_start": 286,
+        "date_end": 458,
+        "null": [
+          9,
+          152,
+          215
+        ]
+      }
+    },
+    {
+      "task_id": "task_0076",
+      "template": "A1",
+      "difficulty": "agg",
+      "db_seed": 1504883465873880694,
+      "params": {
+        "tiers": [
+          "enterprise"
+        ],
+        "opened_from": "2024-01-10",
+        "opened_before": "2025-03-18",
+        "min_severity": 3,
+        "note_type": "legal_review",
+        "refund_above": 250,
+        "min_notes": 2
+      },
+      "nl_request": "Find the support cases opened on or after 2024-01-10 and before 2025-03-18 with a severity of at least 3, for customers on the enterprise tier, that have at least two legal-review notes and at least one refund greater than 250 with an approval date recorded. Return the IDs of the matching support cases.",
+      "reference_ids": [
+        182,
+        184,
+        223,
+        475,
+        492,
+        748
+      ],
+      "answer_table": "support_cases",
+      "n_answer": 6,
+      "n_samples": 3,
+      "schema_dump_chars": 4296,
+      "fingerprint": "81bde5669ef635dd45108e22708ee442f0639614bbd4e6d91a09bca5aa657c4e",
+      "traps": {
+        "date_start": 492,
+        "date_end": 337,
+        "null": [
+          56,
+          110,
+          643
+        ],
+        "amount": 686
+      }
+    },
+    {
+      "task_id": "task_0077",
+      "template": "A2",
+      "difficulty": "agg",
+      "db_seed": 7942131647259502531,
+      "params": {
+        "hired_from": "2024-01-23",
+        "hired_before": "2025-04-09",
+        "note_type": "update",
+        "min_severity": 2,
+        "region": "north",
+        "min_cases": 2
+      },
+      "nl_request": "Find the employees hired on or after 2024-01-23 and before 2025-04-09 who wrote update notes on at least two different support cases that each have a severity of at least 2, have no closed date recorded, and belong to a customer in the north region. Return the IDs of the matching employees.",
+      "reference_ids": [
+        13,
+        15,
+        20,
+        25,
+        28,
+        33,
+        50,
+        54,
+        56,
+        67,
+        72,
+        75,
+        100,
+        104,
+        108,
+        117
+      ],
+      "answer_table": "employees",
+      "n_answer": 16,
+      "n_samples": 2,
+      "schema_dump_chars": 4296,
+      "fingerprint": "fe396bc6f2c2d78009af2e92ab3194c16eb0bcd4a2b7db8d8a13ed9d780d0d66",
+      "traps": {
+        "date_start": 15,
+        "date_end": 92,
+        "null": [
+          38,
+          62,
+          102
+        ]
+      }
+    },
+    {
+      "task_id": "task_0078",
+      "template": "A3",
+      "difficulty": "agg",
+      "db_seed": 4492766009888787790,
+      "params": {
+        "requested_from": "2024-07-26",
+        "requested_before": "2025-08-15",
+        "min_amount": 20000,
+        "min_risk": 4,
+        "departments": [
+          "Billing",
+          "Operations"
+        ],
+        "min_total": 60000
+      },
+      "nl_request": "Find the procurement requests with a request date on or after 2024-07-26 and before 2025-08-15, for an amount of at least 20000, from vendors with a risk rating of at least 4, requested by an employee in the Billing or Operations department, with no need-by date recorded, and requested by an employee whose procurement requests with a request date in that same window add up to at least 60000 in total (counting all of that employee's requests in the window, whatever their vendor, need-by date or status). Return the IDs of the matching procurement requests.",
+      "reference_ids": [
+        70,
+        94,
+        96,
+        115,
+        162,
+        200,
+        304
+      ],
+      "answer_table": "procurement_requests",
+      "n_answer": 7,
+      "n_samples": 1,
+      "schema_dump_chars": 4296,
+      "fingerprint": "f9ea218605bb4217a397fad6a3a8ddacacca40095a9f24daa740671fa7e6ea6a",
+      "traps": {}
+    },
+    {
+      "task_id": "task_0079",
+      "template": "T4",
+      "difficulty": "agg",
+      "db_seed": 17325632805593228073,
+      "params": {
+        "city": "Port Alder",
+        "opened_from": "2024-05-02",
+        "opened_before": "2025-03-12",
+        "min_priority": 2
+      },
+      "nl_request": "Find the facility tickets for buildings located in Port Alder, opened on or after 2024-05-02 and before 2025-03-12, with a priority of at least 2 and with no resolution date recorded. Return the IDs of the matching facility tickets.",
+      "reference_ids": [
+        22,
+        148,
+        162,
+        201,
+        226,
+        245,
+        375,
+        452,
+        490
+      ],
+      "answer_table": "facility_tickets",
+      "n_answer": 9,
+      "n_samples": 4,
+      "schema_dump_chars": 4296,
+      "fingerprint": "deb25c995c3b7a4ea98cd6f8d3f592a6c33a84dd9adf74e114c323c28517d212",
+      "traps": {
+        "date_start": 22,
+        "date_end": 354,
+        "null": [
+          42,
+          161,
+          433
+        ]
+      }
+    },
+    {
+      "task_id": "task_0080",
+      "template": "A1",
+      "difficulty": "agg",
+      "db_seed": 10905394621327686302,
+      "params": {
+        "tiers": [
+          "pro",
+          "enterprise"
+        ],
+        "opened_from": "2024-10-08",
+        "opened_before": "2025-06-07",
+        "min_severity": 3,
+        "note_type": "refund_request",
+        "refund_above": 500,
+        "min_notes": 2
+      },
+      "nl_request": "Find the support cases opened on or after 2024-10-08 and before 2025-06-07 with a severity of at least 3, for customers on the pro or enterprise tier, that have at least two refund-request notes and at least one refund greater than 500 with an approval date recorded. Return the IDs of the matching support cases.",
+      "reference_ids": [
+        196,
+        198,
+        266,
+        307,
+        318,
+        350,
+        469,
+        544,
+        628
+      ],
+      "answer_table": "support_cases",
+      "n_answer": 9,
+      "n_samples": 2,
+      "schema_dump_chars": 4296,
+      "fingerprint": "02816d9269bc6e7fa50a8a19b35f9aa5a045d4d3fb01c376c6eac9e6ec7bee9e",
+      "traps": {
+        "date_start": 196,
+        "date_end": 298,
+        "null": [
+          27,
+          465,
+          494
+        ],
+        "amount": 609
+      }
+    },
+    {
+      "task_id": "task_0081",
+      "template": "A2",
+      "difficulty": "agg",
+      "db_seed": 16623114225452916827,
+      "params": {
+        "hired_from": "2024-04-14",
+        "hired_before": "2025-02-07",
+        "note_type": "refund_request",
+        "min_severity": 2,
+        "region": "east",
+        "min_cases": 2
+      },
+      "nl_request": "Find the employees hired on or after 2024-04-14 and before 2025-02-07 who wrote refund-request notes on at least two different support cases that each have a severity of at least 2, have no closed date recorded, and belong to a customer in the east region. Return the IDs of the matching employees.",
+      "reference_ids": [
+        5,
+        7,
+        12,
+        17,
+        19,
+        26,
+        41,
+        58,
+        64,
+        77,
+        89,
+        95
+      ],
+      "answer_table": "employees",
+      "n_answer": 12,
+      "n_samples": 3,
+      "schema_dump_chars": 4296,
+      "fingerprint": "6c87f669bee8ba53ff0b8413735eb7e6e281cd80cd84224eff1eeef87fd6b136",
+      "traps": {
+        "date_start": 19,
+        "date_end": 51,
+        "null": [
+          10,
+          73,
+          100
+        ]
+      }
+    },
+    {
+      "task_id": "task_0082",
+      "template": "A3",
+      "difficulty": "agg",
+      "db_seed": 17500020881658339643,
+      "params": {
+        "requested_from": "2024-01-05",
+        "requested_before": "2025-07-22",
+        "min_amount": 10000,
+        "min_risk": 4,
+        "departments": [
+          "Legal",
+          "Quality Assurance"
+        ],
+        "min_total": 30000
+      },
+      "nl_request": "Find the procurement requests with a request date on or after 2024-01-05 and before 2025-07-22, for an amount of at least 10000, from vendors with a risk rating of at least 4, requested by an employee in the Legal or Quality Assurance department, with no need-by date recorded, and requested by an employee whose procurement requests with a request date in that same window add up to at least 30000 in total (counting all of that employee's requests in the window, whatever their vendor, need-by date or status). Return the IDs of the matching procurement requests.",
+      "reference_ids": [
+        15,
+        34,
+        44,
+        57,
+        97,
+        111,
+        127,
+        355,
+        365,
+        368,
+        369,
+        373
+      ],
+      "answer_table": "procurement_requests",
+      "n_answer": 12,
+      "n_samples": 1,
+      "schema_dump_chars": 4296,
+      "fingerprint": "08774742b1580f9546508f90f96a742fc230e196c15e0bf9c4d0b35b904dbbc2",
+      "traps": {}
+    },
+    {
+      "task_id": "task_0083",
+      "template": "T4",
+      "difficulty": "agg",
+      "db_seed": 14293695728840294258,
+      "params": {
+        "city": "Duskwater",
+        "opened_from": "2024-11-04",
+        "opened_before": "2025-12-31",
+        "min_priority": 2
+      },
+      "nl_request": "Find the facility tickets for buildings located in Duskwater, opened on or after 2024-11-04 and before 2025-12-31, with a priority of at least 2 and with no resolution date recorded. Return the IDs of the matching facility tickets.",
+      "reference_ids": [
+        30,
+        37,
+        95,
+        104,
+        163,
+        167,
+        178,
+        233,
+        245,
+        264,
+        305,
+        312,
+        331,
+        333,
+        338,
+        392,
+        419,
+        432,
+        456,
+        458,
+        473,
+        479
+      ],
+      "answer_table": "facility_tickets",
+      "n_answer": 22,
+      "n_samples": 2,
+      "schema_dump_chars": 4296,
+      "fingerprint": "25560d1a95987418db7dbc21377e10453fa2dc27d6d118e7ff013284f5647b7a",
+      "traps": {
+        "date_start": 104,
+        "date_end": 285,
+        "null": [
+          87,
+          144,
+          244
+        ]
+      }
+    },
+    {
+      "task_id": "task_0084",
+      "template": "A1",
+      "difficulty": "agg",
+      "db_seed": 12189681898913839022,
+      "params": {
+        "tiers": [
+          "basic"
+        ],
+        "opened_from": "2024-12-15",
+        "opened_before": "2025-05-12",
+        "min_severity": 2,
+        "note_type": "customer_call",
+        "refund_above": 750,
+        "min_notes": 2
+      },
+      "nl_request": "Find the support cases opened on or after 2024-12-15 and before 2025-05-12 with a severity of at least 2, for customers on the basic tier, that have at least two customer-call notes and at least one refund greater than 750 with an approval date recorded. Return the IDs of the matching support cases.",
+      "reference_ids": [
+        12,
+        132,
+        202,
+        278,
+        492
+      ],
+      "answer_table": "support_cases",
+      "n_answer": 5,
+      "n_samples": 1,
+      "schema_dump_chars": 4296,
+      "fingerprint": "4663cee7a9fc36c2fd7d7014d11b83c7813804dde4e749656609a35e00e2d564",
+      "traps": {
+        "date_start": 202,
+        "date_end": 756,
+        "null": [
+          21,
+          382,
+          487
+        ],
+        "amount": 572
+      }
+    },
+    {
+      "task_id": "task_0085",
+      "template": "A2",
+      "difficulty": "agg",
+      "db_seed": 2093050144030622767,
+      "params": {
+        "hired_from": "2024-06-11",
+        "hired_before": "2025-10-26",
+        "note_type": "legal_review",
+        "min_severity": 3,
+        "region": "north",
+        "min_cases": 2
+      },
+      "nl_request": "Find the employees hired on or after 2024-06-11 and before 2025-10-26 who wrote legal-review notes on at least two different support cases that each have a severity of at least 3, have no closed date recorded, and belong to a customer in the north region. Return the IDs of the matching employees.",
+      "reference_ids": [
+        5,
+        12,
+        20,
+        24,
+        25,
+        41,
+        50,
+        59,
+        64,
+        80,
+        86,
+        91,
+        96,
+        108,
+        116,
+        120
+      ],
+      "answer_table": "employees",
+      "n_answer": 16,
+      "n_samples": 6,
+      "schema_dump_chars": 4296,
+      "fingerprint": "2e3ba3766a1f5a0d8287d665357ab87aa283913718e52a938c51a78c93c8e7a1",
+      "traps": {
+        "date_start": 86,
+        "date_end": 17,
+        "null": [
+          31,
+          33,
+          78
+        ]
+      }
+    },
+    {
+      "task_id": "task_0086",
+      "template": "A3",
+      "difficulty": "agg",
+      "db_seed": 16104311370793551384,
+      "params": {
+        "requested_from": "2024-08-08",
+        "requested_before": "2025-11-10",
+        "min_amount": 20000,
+        "min_risk": 4,
+        "departments": [
+          "Procurement",
+          "Operations"
+        ],
+        "min_total": 40000
+      },
+      "nl_request": "Find the procurement requests with a request date on or after 2024-08-08 and before 2025-11-10, for an amount of at least 20000, from vendors with a risk rating of at least 4, requested by an employee in the Procurement or Operations department, with no need-by date recorded, and requested by an employee whose procurement requests with a request date in that same window add up to at least 40000 in total (counting all of that employee's requests in the window, whatever their vendor, need-by date or status). Return the IDs of the matching procurement requests.",
+      "reference_ids": [
+        25,
+        132,
+        209,
+        236,
+        365
+      ],
+      "answer_table": "procurement_requests",
+      "n_answer": 5,
+      "n_samples": 3,
+      "schema_dump_chars": 4296,
+      "fingerprint": "4dd836d091440071972f6aaa52929d8f8d0bb08c893a5e5f8b793ebe24e12f0b",
+      "traps": {}
+    },
+    {
+      "task_id": "task_0087",
+      "template": "T4",
+      "difficulty": "agg",
+      "db_seed": 80579035714427118,
+      "params": {
+        "city": "Port Alder",
+        "opened_from": "2024-10-09",
+        "opened_before": "2025-11-18",
+        "min_priority": 2
+      },
+      "nl_request": "Find the facility tickets for buildings located in Port Alder, opened on or after 2024-10-09 and before 2025-11-18, with a priority of at least 2 and with no resolution date recorded. Return the IDs of the matching facility tickets.",
+      "reference_ids": [
+        59,
+        67,
+        86,
+        87,
+        95,
+        110,
+        115,
+        148,
+        149,
+        156,
+        202,
+        205,
+        221,
+        224,
+        273,
+        289,
+        313,
+        323,
+        334,
+        340,
+        369,
+        383,
+        401,
+        413,
+        483,
+        485
+      ],
+      "answer_table": "facility_tickets",
+      "n_answer": 26,
+      "n_samples": 1,
+      "schema_dump_chars": 4296,
+      "fingerprint": "8f5a5bb6102f3973f2724306738a3d78229f7a15369ca82450a3679367887b5a",
+      "traps": {
+        "date_start": 148,
+        "date_end": 166,
+        "null": [
+          48,
+          439,
+          495
+        ]
+      }
+    },
+    {
+      "task_id": "task_0088",
+      "template": "A1",
+      "difficulty": "agg",
+      "db_seed": 12258786118734262090,
+      "params": {
+        "tiers": [
+          "pro",
+          "enterprise"
+        ],
+        "opened_from": "2024-07-22",
+        "opened_before": "2025-07-13",
+        "min_severity": 3,
+        "note_type": "update",
+        "refund_above": 750,
+        "min_notes": 2
+      },
+      "nl_request": "Find the support cases opened on or after 2024-07-22 and before 2025-07-13 with a severity of at least 3, for customers on the pro or enterprise tier, that have at least two update notes and at least one refund greater than 750 with an approval date recorded. Return the IDs of the matching support cases.",
+      "reference_ids": [
+        32,
+        34,
+        283,
+        348,
+        357,
+        425,
+        440,
+        525,
+        704
+      ],
+      "answer_table": "support_cases",
+      "n_answer": 9,
+      "n_samples": 3,
+      "schema_dump_chars": 4296,
+      "fingerprint": "09b0119bb799b7dd6c0eaff33b9ca4aa273d4e48db814d26fec42a102e4758a7",
+      "traps": {
+        "date_start": 34,
+        "date_end": 228,
+        "null": [
+          297,
+          347,
+          707
+        ],
+        "amount": 94
+      }
+    },
+    {
+      "task_id": "task_0089",
+      "template": "A2",
+      "difficulty": "agg",
+      "db_seed": 5128148651906384887,
+      "params": {
+        "hired_from": "2024-08-03",
+        "hired_before": "2025-03-12",
+        "note_type": "update",
+        "min_severity": 2,
+        "region": "east",
+        "min_cases": 2
+      },
+      "nl_request": "Find the employees hired on or after 2024-08-03 and before 2025-03-12 who wrote update notes on at least two different support cases that each have a severity of at least 2, have no closed date recorded, and belong to a customer in the east region. Return the IDs of the matching employees.",
+      "reference_ids": [
+        46,
+        66,
+        67,
+        71,
+        73,
+        98,
+        114
+      ],
+      "answer_table": "employees",
+      "n_answer": 7,
+      "n_samples": 4,
+      "schema_dump_chars": 4296,
+      "fingerprint": "16d189548fbdc690ce00392840ba3fd77c972a5741ad5bc3d7e85c56dafcd879",
+      "traps": {
+        "date_start": 67,
+        "date_end": 6,
+        "null": [
+          5,
+          30,
+          50
+        ]
+      }
+    },
+    {
+      "task_id": "task_0090",
+      "template": "A3",
+      "difficulty": "agg",
+      "db_seed": 10804214518412637070,
+      "params": {
+        "requested_from": "2024-07-10",
+        "requested_before": "2025-12-31",
+        "min_amount": 20000,
+        "min_risk": 3,
+        "departments": [
+          "Legal",
+          "Operations"
+        ],
+        "min_total": 60000
+      },
+      "nl_request": "Find the procurement requests with a request date on or after 2024-07-10 and before 2025-12-31, for an amount of at least 20000, from vendors with a risk rating of at least 3, requested by an employee in the Legal or Operations department, with no need-by date recorded, and requested by an employee whose procurement requests with a request date in that same window add up to at least 60000 in total (counting all of that employee's requests in the window, whatever their vendor, need-by date or status). Return the IDs of the matching procurement requests.",
+      "reference_ids": [
+        2,
+        54,
+        149,
+        254,
+        353,
+        355,
+        372
+      ],
+      "answer_table": "procurement_requests",
+      "n_answer": 7,
+      "n_samples": 4,
+      "schema_dump_chars": 4296,
+      "fingerprint": "08b8af8026b74b8603dd837c653cef54ea7083f4a58d655800a1cf330d021daf",
+      "traps": {}
+    },
+    {
+      "task_id": "task_0091",
+      "template": "T4",
+      "difficulty": "agg",
+      "db_seed": 4835030888321405950,
+      "params": {
+        "city": "Port Alder",
+        "opened_from": "2024-04-11",
+        "opened_before": "2025-01-18",
+        "min_priority": 2
+      },
+      "nl_request": "Find the facility tickets for buildings located in Port Alder, opened on or after 2024-04-11 and before 2025-01-18, with a priority of at least 2 and with no resolution date recorded. Return the IDs of the matching facility tickets.",
+      "reference_ids": [
+        34,
+        59,
+        135,
+        148,
+        156,
+        168,
+        336,
+        337,
+        411,
+        428,
+        448,
+        487
+      ],
+      "answer_table": "facility_tickets",
+      "n_answer": 12,
+      "n_samples": 3,
+      "schema_dump_chars": 4296,
+      "fingerprint": "6488d6cc8b5c6d65f441a0ff9ed65bc2a1b7ac4f0e2206e48bf376231478ab9b",
+      "traps": {
+        "date_start": 448,
+        "date_end": 254,
+        "null": [
+          93,
+          231,
+          473
+        ]
+      }
+    },
+    {
+      "task_id": "task_0092",
+      "template": "A1",
+      "difficulty": "agg",
+      "db_seed": 10709342850898507226,
+      "params": {
+        "tiers": [
+          "basic",
+          "enterprise"
+        ],
+        "opened_from": "2024-09-04",
+        "opened_before": "2025-04-12",
+        "min_severity": 2,
+        "note_type": "customer_call",
+        "refund_above": 1000,
+        "min_notes": 2
+      },
+      "nl_request": "Find the support cases opened on or after 2024-09-04 and before 2025-04-12 with a severity of at least 2, for customers on the basic or enterprise tier, that have at least two customer-call notes and at least one refund greater than 1000 with an approval date recorded. Return the IDs of the matching support cases.",
+      "reference_ids": [
+        32,
+        95,
+        110,
+        156,
+        294,
+        297,
+        324,
+        453,
+        561,
+        577,
+        582,
+        661,
+        766
+      ],
+      "answer_table": "support_cases",
+      "n_answer": 13,
+      "n_samples": 1,
+      "schema_dump_chars": 4296,
+      "fingerprint": "90bac6d24b070077770f86a225de3be74241fc0a1c12fb201eb3826b8151f818",
+      "traps": {
+        "date_start": 582,
+        "date_end": 488,
+        "null": [
+          84,
+          434,
+          547
+        ],
+        "amount": 336
+      }
+    },
+    {
+      "task_id": "task_0093",
+      "template": "A2",
+      "difficulty": "agg",
+      "db_seed": 15059892674204106188,
+      "params": {
+        "hired_from": "2025-03-19",
+        "hired_before": "2025-12-21",
+        "note_type": "refund_request",
+        "min_severity": 3,
+        "region": "east",
+        "min_cases": 2
+      },
+      "nl_request": "Find the employees hired on or after 2025-03-19 and before 2025-12-21 who wrote refund-request notes on at least two different support cases that each have a severity of at least 3, have no closed date recorded, and belong to a customer in the east region. Return the IDs of the matching employees.",
+      "reference_ids": [
+        21,
+        37,
+        66,
+        84,
+        107
+      ],
+      "answer_table": "employees",
+      "n_answer": 5,
+      "n_samples": 1,
+      "schema_dump_chars": 4296,
+      "fingerprint": "a60d465f8a720adf6b8a75e12ec96cf4ebb3e9158631cfe704295318b61a04d0",
+      "traps": {
+        "date_start": 66,
+        "date_end": 60,
+        "null": [
+          22,
+          48,
+          118
+        ]
+      }
+    },
+    {
+      "task_id": "task_0094",
+      "template": "A3",
+      "difficulty": "agg",
+      "db_seed": 8465897501880101646,
+      "params": {
+        "requested_from": "2024-04-05",
+        "requested_before": "2025-09-21",
+        "min_amount": 20000,
+        "min_risk": 4,
+        "departments": [
+          "Customer Support",
+          "Engineering"
+        ],
+        "min_total": 40000
+      },
+      "nl_request": "Find the procurement requests with a request date on or after 2024-04-05 and before 2025-09-21, for an amount of at least 20000, from vendors with a risk rating of at least 4, requested by an employee in the Customer Support or Engineering department, with no need-by date recorded, and requested by an employee whose procurement requests with a request date in that same window add up to at least 40000 in total (counting all of that employee's requests in the window, whatever their vendor, need-by date or status). Return the IDs of the matching procurement requests.",
+      "reference_ids": [
+        9,
+        12,
+        96,
+        159,
+        196,
+        312,
+        317,
+        319,
+        327,
+        399
+      ],
+      "answer_table": "procurement_requests",
+      "n_answer": 10,
+      "n_samples": 2,
+      "schema_dump_chars": 4296,
+      "fingerprint": "447f981002552ea0eaa64ce0e2fc32f749d312a079edcabaf086ea86c5358ea1",
+      "traps": {}
+    },
+    {
+      "task_id": "task_0095",
+      "template": "T4",
+      "difficulty": "agg",
+      "db_seed": 16422548540101577633,
+      "params": {
+        "city": "Ironvale",
+        "opened_from": "2024-02-02",
+        "opened_before": "2025-04-21",
+        "min_priority": 3
+      },
+      "nl_request": "Find the facility tickets for buildings located in Ironvale, opened on or after 2024-02-02 and before 2025-04-21, with a priority of at least 3 and with no resolution date recorded. Return the IDs of the matching facility tickets.",
+      "reference_ids": [
+        116,
+        145,
+        210,
+        220,
+        253,
+        267,
+        322,
+        404,
+        461
+      ],
+      "answer_table": "facility_tickets",
+      "n_answer": 9,
+      "n_samples": 1,
+      "schema_dump_chars": 4296,
+      "fingerprint": "985096f7a8ab0c90aab88c1168b5f79ed8d70d6de64bbed1643b56b75e0e01e8",
+      "traps": {
+        "date_start": 210,
+        "date_end": 140,
+        "null": [
+          40,
+          86,
+          406
+        ]
+      }
+    },
+    {
+      "task_id": "task_0096",
+      "template": "A1",
+      "difficulty": "agg",
+      "db_seed": 9468282086247489794,
+      "params": {
+        "tiers": [
+          "pro"
+        ],
+        "opened_from": "2024-12-19",
+        "opened_before": "2025-07-22",
+        "min_severity": 3,
+        "note_type": "refund_request",
+        "refund_above": 500,
+        "min_notes": 2
+      },
+      "nl_request": "Find the support cases opened on or after 2024-12-19 and before 2025-07-22 with a severity of at least 3, for customers on the pro tier, that have at least two refund-request notes and at least one refund greater than 500 with an approval date recorded. Return the IDs of the matching support cases.",
+      "reference_ids": [
+        455,
+        483,
+        539,
+        580,
+        661,
+        682
+      ],
+      "answer_table": "support_cases",
+      "n_answer": 6,
+      "n_samples": 1,
+      "schema_dump_chars": 4296,
+      "fingerprint": "930dda93970da76ef120943f9874efda4a8aaacc17b59cad63065f6db20f8390",
+      "traps": {
+        "date_start": 483,
+        "date_end": 191,
+        "null": [
+          115,
+          625,
+          795
+        ],
+        "amount": 795
+      }
+    },
+    {
+      "task_id": "task_0097",
+      "template": "A2",
+      "difficulty": "agg",
+      "db_seed": 5410570545843018408,
+      "params": {
+        "hired_from": "2024-02-03",
+        "hired_before": "2024-12-14",
+        "note_type": "update",
+        "min_severity": 2,
+        "region": "north",
+        "min_cases": 2
+      },
+      "nl_request": "Find the employees hired on or after 2024-02-03 and before 2024-12-14 who wrote update notes on at least two different support cases that each have a severity of at least 2, have no closed date recorded, and belong to a customer in the north region. Return the IDs of the matching employees.",
+      "reference_ids": [
+        13,
+        16,
+        21,
+        45,
+        62,
+        89,
+        90,
+        100,
+        102,
+        119
+      ],
+      "answer_table": "employees",
+      "n_answer": 10,
+      "n_samples": 1,
+      "schema_dump_chars": 4296,
+      "fingerprint": "e16552646beeb3bfdc85f84d1b8c666663a990f8ac22682f245901de98cea24a",
+      "traps": {
+        "date_start": 16,
+        "date_end": 116,
+        "null": [
+          47,
+          49,
+          99
+        ]
+      }
+    },
+    {
+      "task_id": "task_0098",
+      "template": "A3",
+      "difficulty": "agg",
+      "db_seed": 12716496042982905636,
+      "params": {
+        "requested_from": "2024-05-11",
+        "requested_before": "2025-10-10",
+        "min_amount": 5000,
+        "min_risk": 2,
+        "departments": [
+          "Customer Support",
+          "Facilities"
+        ],
+        "min_total": 10000
+      },
+      "nl_request": "Find the procurement requests with a request date on or after 2024-05-11 and before 2025-10-10, for an amount of at least 5000, from vendors with a risk rating of at least 2, requested by an employee in the Customer Support or Facilities department, with no need-by date recorded, and requested by an employee whose procurement requests with a request date in that same window add up to at least 10000 in total (counting all of that employee's requests in the window, whatever their vendor, need-by date or status). Return the IDs of the matching procurement requests.",
+      "reference_ids": [
+        4,
+        17,
+        33,
+        74,
+        98,
+        102,
+        107,
+        109,
+        123,
+        126,
+        209,
+        248,
+        251,
+        280,
+        283,
+        287,
+        304,
+        327,
+        339,
+        363,
+        365,
+        397
+      ],
+      "answer_table": "procurement_requests",
+      "n_answer": 22,
+      "n_samples": 1,
+      "schema_dump_chars": 4296,
+      "fingerprint": "70f34be04867260efed6917dbf7dcc07be0578782ff8f6169b4215feb3fe1c8f",
+      "traps": {}
+    },
+    {
+      "task_id": "task_0099",
+      "template": "T4",
+      "difficulty": "agg",
+      "db_seed": 932087250626842744,
+      "params": {
+        "city": "Kestrel Falls",
+        "opened_from": "2024-05-07",
+        "opened_before": "2025-07-11",
+        "min_priority": 2
+      },
+      "nl_request": "Find the facility tickets for buildings located in Kestrel Falls, opened on or after 2024-05-07 and before 2025-07-11, with a priority of at least 2 and with no resolution date recorded. Return the IDs of the matching facility tickets.",
+      "reference_ids": [
+        30,
+        60,
+        182,
+        297,
+        317,
+        396,
+        410,
+        428,
+        436,
+        458
+      ],
+      "answer_table": "facility_tickets",
+      "n_answer": 10,
+      "n_samples": 1,
+      "schema_dump_chars": 4296,
+      "fingerprint": "fa141d1098a92f26017133c52ef863356abb851ad37bd6d86e5d7b54a80eb10e",
+      "traps": {
+        "date_start": 428,
+        "date_end": 321,
+        "null": [
+          230,
+          315,
+          376
+        ]
+      }
+    }
+  ]
+}

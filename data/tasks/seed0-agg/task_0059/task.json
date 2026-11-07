@@ -1,0 +1,38 @@
+{
+  "task_id": "task_0059",
+  "template": "T4",
+  "difficulty": "agg",
+  "db_seed": 15364916661601569437,
+  "params": {
+    "city": "Vellmoor",
+    "opened_from": "2025-06-26",
+    "opened_before": "2025-12-20",
+    "min_priority": 3
+  },
+  "nl_request": "Find the facility tickets for buildings located in Vellmoor, opened on or after 2025-06-26 and before 2025-12-20, with a priority of at least 3 and with no resolution date recorded. Return the IDs of the matching facility tickets.",
+  "reference_ids": [
+    47,
+    247,
+    260,
+    393,
+    411,
+    433,
+    465,
+    488
+  ],
+  "answer_table": "facility_tickets",
+  "n_answer": 8,
+  "n_samples": 2,
+  "schema_dump_chars": 4296,
+  "fingerprint": "9e64e136eab84de4a8f878a811863d10288b42305ac9b80f84ab0b3260eff82b",
+  "traps": {
+    "date_start": 488,
+    "date_end": 487,
+    "null": [
+      19,
+      324,
+      421
+    ]
+  },
+  "reference_sql": "SELECT t.id\nFROM facility_tickets AS t\nJOIN buildings AS b ON b.id = t.building_id\nWHERE b.city = 'Vellmoor'\n  AND t.opened_at >= '2025-06-26' AND t.opened_at < '2025-12-20'\n  AND t.priority >= 3\n  AND t.resolved_at IS NULL\nORDER BY t.id"
+}

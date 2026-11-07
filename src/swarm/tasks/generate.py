@@ -42,10 +42,14 @@ from swarm.tasks.schema import (
     load_tables,
     schema_dump,
 )
-from swarm.tasks.templates import TEMPLATES, Template
+from swarm.tasks.templates import AGG_TEMPLATES, TEMPLATES, Template
 from swarm.tasks.traps import Update, harden, traps_bite
 
-DIFFICULTIES = ("base", "hard")
+DIFFICULTIES = ("base", "hard", "agg")
+# Row-count overrides per difficulty. The agg set triples the case notes: at 1,800 notes,
+# "notes on at least two different cases" (A2) matches about 3 employees in the whole
+# company, too few for a 5-30 answer.
+DIFFICULTY_ROW_COUNTS: dict[str, dict[str, int]] = {"agg": {"case_notes": 5400}}
 MIN_ANSWER = 5
 MAX_ANSWER = 30
 MAX_ANSWER_SHARE = 0.25
@@ -142,15 +146,18 @@ def generate_task(
 ) -> TaskSpec:
     """Build one task. With `out_dir`, also write out_dir/db.sqlite and out_dir/task.json.
 
-    `difficulty` is "base" or "hard" (traps planted after the draw; see swarm.tasks.traps). A
-    hard task starts from the same database as the base task with the same index, but draws
-    from its own random stream.
+    `difficulty` is "base", "hard" (traps planted after the draw; see swarm.tasks.traps) or
+    "agg" (hard, with an aggregation template and DIFFICULTY_ROW_COUNTS["agg"]). A hard task
+    starts from the same database as the base task with the same index, but draws from its
+    own random stream.
     """
     if difficulty not in DIFFICULTIES:
         raise ValueError(f"unknown difficulty {difficulty!r}; choose from {DIFFICULTIES}")
     task_id = f"task_{task_index:04d}"
     db_seed = derive_seed(base_seed, task_index)
-    conn = build_database(db_seed, row_counts)
+    conn = build_database(
+        db_seed, {**DIFFICULTY_ROW_COUNTS.get(difficulty, {}), **(row_counts or {})}
+    )
     try:
         tables = load_tables(conn)
         stream = (
@@ -167,7 +174,7 @@ def generate_task(
             answer_cap(len(tables[template.answer_table])),
             max_rejections,
             task_id,
-            hard=difficulty == "hard",
+            hard=difficulty in ("hard", "agg"),
         )
         reference_ids = sorted(answer)
         conn.executemany(
@@ -242,6 +249,11 @@ def _draw_until_accepted(
                 for f in template.filters
             )
             and (not hard or traps_bite(template, params, draw_tables, from_sql))
+            # an aggregation must bite: relaxing it (e.g. two -> one) changes the answer
+            and (
+                template.relax is None
+                or template.evaluate_py({**params, **template.relax}, draw_tables) != from_sql
+            )
         )
         if accepted:
             conn.commit()
@@ -289,6 +301,7 @@ def generate_tasks(
     if difficulty not in DIFFICULTIES:
         raise ValueError(f"unknown difficulty {difficulty!r}; choose from {DIFFICULTIES}")
     root = Path(out_root) / task_set_name(base_seed, difficulty)
+    templates = AGG_TEMPLATES if difficulty == "agg" else TEMPLATES
     if root.exists():
         if not force:
             raise FileExistsError(f"{root} already exists; use --force to replace it")
@@ -296,7 +309,7 @@ def generate_tasks(
     root.mkdir(parents=True)
     specs = []
     for index in range(n):
-        template = TEMPLATES[index % len(TEMPLATES)]
+        template = templates[index % len(templates)]
         spec = generate_task(
             index,
             base_seed,
@@ -312,7 +325,11 @@ def generate_tasks(
         generator=GENERATOR,
         base_seed=base_seed,
         n_tasks=n,
-        row_counts={**ROW_COUNTS, **(row_counts or {})},
+        row_counts={
+            **ROW_COUNTS,
+            **DIFFICULTY_ROW_COUNTS.get(difficulty, {}),
+            **(row_counts or {}),
+        },
         tasks=[ManifestTask(**spec.model_dump(exclude={"reference_sql"})) for spec in specs],
     )
     (root / MANIFEST_FILE).write_bytes(_json(manifest.model_dump(mode="json", exclude_none=True)))

@@ -1,0 +1,49 @@
+{
+  "task_id": "task_0098",
+  "template": "A3",
+  "difficulty": "agg",
+  "db_seed": 12716496042982905636,
+  "params": {
+    "requested_from": "2024-05-11",
+    "requested_before": "2025-10-10",
+    "min_amount": 5000,
+    "min_risk": 2,
+    "departments": [
+      "Customer Support",
+      "Facilities"
+    ],
+    "min_total": 10000
+  },
+  "nl_request": "Find the procurement requests with a request date on or after 2024-05-11 and before 2025-10-10, for an amount of at least 5000, from vendors with a risk rating of at least 2, requested by an employee in the Customer Support or Facilities department, with no need-by date recorded, and requested by an employee whose procurement requests with a request date in that same window add up to at least 10000 in total (counting all of that employee's requests in the window, whatever their vendor, need-by date or status). Return the IDs of the matching procurement requests.",
+  "reference_ids": [
+    4,
+    17,
+    33,
+    74,
+    98,
+    102,
+    107,
+    109,
+    123,
+    126,
+    209,
+    248,
+    251,
+    280,
+    283,
+    287,
+    304,
+    327,
+    339,
+    363,
+    365,
+    397
+  ],
+  "answer_table": "procurement_requests",
+  "n_answer": 22,
+  "n_samples": 1,
+  "schema_dump_chars": 4296,
+  "fingerprint": "70f34be04867260efed6917dbf7dcc07be0578782ff8f6169b4215feb3fe1c8f",
+  "traps": {},
+  "reference_sql": "SELECT pr.id\nFROM procurement_requests AS pr\nJOIN vendors AS v ON v.id = pr.vendor_id\nJOIN employees AS e ON e.id = pr.requested_by_employee_id\nJOIN departments AS d ON d.id = e.department_id\nWHERE pr.requested_at >= '2024-05-11'\n  AND pr.requested_at < '2025-10-10'\n  AND pr.amount >= 5000\n  AND v.risk_rating >= 2\n  AND d.name IN ('Customer Support', 'Facilities')\n  AND pr.needed_by IS NULL\n  AND (\n    SELECT SUM(other.amount) FROM procurement_requests AS other\n    WHERE other.requested_by_employee_id = pr.requested_by_employee_id\n      AND other.requested_at >= '2024-05-11' AND other.requested_at < '2025-10-10'\n  ) >= 10000\nORDER BY pr.id"
+}

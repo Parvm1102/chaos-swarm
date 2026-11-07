@@ -1,0 +1,36 @@
+{
+  "task_id": "task_0014",
+  "template": "A3",
+  "difficulty": "agg",
+  "db_seed": 8294404376080680957,
+  "params": {
+    "requested_from": "2024-02-10",
+    "requested_before": "2025-03-05",
+    "min_amount": 20000,
+    "min_risk": 2,
+    "departments": [
+      "Legal",
+      "Quality Assurance"
+    ],
+    "min_total": 40000
+  },
+  "nl_request": "Find the procurement requests with a request date on or after 2024-02-10 and before 2025-03-05, for an amount of at least 20000, from vendors with a risk rating of at least 2, requested by an employee in the Legal or Quality Assurance department, with no need-by date recorded, and requested by an employee whose procurement requests with a request date in that same window add up to at least 40000 in total (counting all of that employee's requests in the window, whatever their vendor, need-by date or status). Return the IDs of the matching procurement requests.",
+  "reference_ids": [
+    9,
+    10,
+    55,
+    61,
+    77,
+    165,
+    184,
+    352,
+    380
+  ],
+  "answer_table": "procurement_requests",
+  "n_answer": 9,
+  "n_samples": 3,
+  "schema_dump_chars": 4296,
+  "fingerprint": "120e6ba192f0db6c2ac77d7d7a5322ff14b833160fee507f78f3ba304f7b6851",
+  "traps": {},
+  "reference_sql": "SELECT pr.id\nFROM procurement_requests AS pr\nJOIN vendors AS v ON v.id = pr.vendor_id\nJOIN employees AS e ON e.id = pr.requested_by_employee_id\nJOIN departments AS d ON d.id = e.department_id\nWHERE pr.requested_at >= '2024-02-10'\n  AND pr.requested_at < '2025-03-05'\n  AND pr.amount >= 20000\n  AND v.risk_rating >= 2\n  AND d.name IN ('Legal', 'Quality Assurance')\n  AND pr.needed_by IS NULL\n  AND (\n    SELECT SUM(other.amount) FROM procurement_requests AS other\n    WHERE other.requested_by_employee_id = pr.requested_by_employee_id\n      AND other.requested_at >= '2024-02-10' AND other.requested_at < '2025-03-05'\n  ) >= 40000\nORDER BY pr.id"
+}

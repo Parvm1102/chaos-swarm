@@ -1,0 +1,41 @@
+{
+  "task_id": "task_0074",
+  "template": "A3",
+  "difficulty": "agg",
+  "db_seed": 2073744201272068234,
+  "params": {
+    "requested_from": "2024-11-09",
+    "requested_before": "2025-12-03",
+    "min_amount": 5000,
+    "min_risk": 2,
+    "departments": [
+      "Billing",
+      "Quality Assurance"
+    ],
+    "min_total": 15000
+  },
+  "nl_request": "Find the procurement requests with a request date on or after 2024-11-09 and before 2025-12-03, for an amount of at least 5000, from vendors with a risk rating of at least 2, requested by an employee in the Billing or Quality Assurance department, with no need-by date recorded, and requested by an employee whose procurement requests with a request date in that same window add up to at least 15000 in total (counting all of that employee's requests in the window, whatever their vendor, need-by date or status). Return the IDs of the matching procurement requests.",
+  "reference_ids": [
+    3,
+    18,
+    53,
+    82,
+    138,
+    156,
+    223,
+    260,
+    286,
+    336,
+    357,
+    361,
+    389,
+    397
+  ],
+  "answer_table": "procurement_requests",
+  "n_answer": 14,
+  "n_samples": 9,
+  "schema_dump_chars": 4296,
+  "fingerprint": "4636a4978866cefe0054bcb24f7499090ede534b47c16fbdf1148eda5ea58e0b",
+  "traps": {},
+  "reference_sql": "SELECT pr.id\nFROM procurement_requests AS pr\nJOIN vendors AS v ON v.id = pr.vendor_id\nJOIN employees AS e ON e.id = pr.requested_by_employee_id\nJOIN departments AS d ON d.id = e.department_id\nWHERE pr.requested_at >= '2024-11-09'\n  AND pr.requested_at < '2025-12-03'\n  AND pr.amount >= 5000\n  AND v.risk_rating >= 2\n  AND d.name IN ('Billing', 'Quality Assurance')\n  AND pr.needed_by IS NULL\n  AND (\n    SELECT SUM(other.amount) FROM procurement_requests AS other\n    WHERE other.requested_by_employee_id = pr.requested_by_employee_id\n      AND other.requested_at >= '2024-11-09' AND other.requested_at < '2025-12-03'\n  ) >= 15000\nORDER BY pr.id"
+}

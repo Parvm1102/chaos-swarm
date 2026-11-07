@@ -1,0 +1,53 @@
+{
+  "task_id": "task_0035",
+  "template": "T4",
+  "difficulty": "agg",
+  "db_seed": 8375796364769107579,
+  "params": {
+    "city": "Vellmoor",
+    "opened_from": "2024-06-25",
+    "opened_before": "2025-09-05",
+    "min_priority": 2
+  },
+  "nl_request": "Find the facility tickets for buildings located in Vellmoor, opened on or after 2024-06-25 and before 2025-09-05, with a priority of at least 2 and with no resolution date recorded. Return the IDs of the matching facility tickets.",
+  "reference_ids": [
+    46,
+    55,
+    67,
+    97,
+    130,
+    132,
+    154,
+    168,
+    199,
+    213,
+    234,
+    235,
+    245,
+    303,
+    314,
+    347,
+    405,
+    422,
+    430,
+    433,
+    453,
+    456,
+    468
+  ],
+  "answer_table": "facility_tickets",
+  "n_answer": 23,
+  "n_samples": 2,
+  "schema_dump_chars": 4296,
+  "fingerprint": "941f4a1294bdfcd0a6e0923ee34137f095d7ef291e96c539fc67673d4021b736",
+  "traps": {
+    "date_start": 97,
+    "date_end": 123,
+    "null": [
+      32,
+      288,
+      329
+    ]
+  },
+  "reference_sql": "SELECT t.id\nFROM facility_tickets AS t\nJOIN buildings AS b ON b.id = t.building_id\nWHERE b.city = 'Vellmoor'\n  AND t.opened_at >= '2024-06-25' AND t.opened_at < '2025-09-05'\n  AND t.priority >= 2\n  AND t.resolved_at IS NULL\nORDER BY t.id"
+}

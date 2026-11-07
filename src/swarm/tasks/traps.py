@@ -24,6 +24,7 @@ never ends up before the row's new date.
 """
 
 import copy
+import dataclasses
 import random
 from collections.abc import Callable
 from dataclasses import dataclass
@@ -56,6 +57,7 @@ class TrapSpec:
     null_filter: str
     break_null: Planter
     amount: AmountTrap | None = None
+    plant: bool = True  # False: day-level window only, no planted rows (see A3)
 
 
 # Per-template planters ----------------------------------------------------------------------
@@ -173,6 +175,14 @@ TRAP_SPECS: dict[str, TrapSpec] = {
     ),
 }
 
+# The aggregation templates (difficulty "agg") ask T1-T3's questions with one aggregate
+# condition; their filters keep T1-T3's names, so the same planters apply.
+TRAP_SPECS["A1"] = TRAP_SPECS["T1"]
+TRAP_SPECS["A2"] = TRAP_SPECS["T2"]
+# A3 plants nothing: its date-edge rows would need a requester whose window total already
+# reaches X from other requests, which almost never exists (46 of 50 draws had too few).
+TRAP_SPECS["A3"] = dataclasses.replace(TRAP_SPECS["T3"], plant=False)
+
 
 # Hardening ----------------------------------------------------------------------------------
 
@@ -189,6 +199,8 @@ def harden(
     start_key, end_key = spec.window
     p = dict(params)
     p[start_key], p[end_key] = day_level_window(p[start_key], p[end_key], rng)
+    if not spec.plant:
+        return p, [], {}
     work = copy.deepcopy(tables)
     updates: list[Update] = []
 
@@ -230,6 +242,8 @@ def harden(
 def traps_bite(template: Template, params: Params, tables: Tables, answer: set[int]) -> bool:
     """True when the sloppy reading of every trapped condition gives a different answer."""
     spec = TRAP_SPECS[template.name]
+    if not spec.plant:
+        return True
     start_key, end_key = spec.window
 
     def changes(**changed: Any) -> bool:

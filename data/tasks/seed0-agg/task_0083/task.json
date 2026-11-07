@@ -1,0 +1,52 @@
+{
+  "task_id": "task_0083",
+  "template": "T4",
+  "difficulty": "agg",
+  "db_seed": 14293695728840294258,
+  "params": {
+    "city": "Duskwater",
+    "opened_from": "2024-11-04",
+    "opened_before": "2025-12-31",
+    "min_priority": 2
+  },
+  "nl_request": "Find the facility tickets for buildings located in Duskwater, opened on or after 2024-11-04 and before 2025-12-31, with a priority of at least 2 and with no resolution date recorded. Return the IDs of the matching facility tickets.",
+  "reference_ids": [
+    30,
+    37,
+    95,
+    104,
+    163,
+    167,
+    178,
+    233,
+    245,
+    264,
+    305,
+    312,
+    331,
+    333,
+    338,
+    392,
+    419,
+    432,
+    456,
+    458,
+    473,
+    479
+  ],
+  "answer_table": "facility_tickets",
+  "n_answer": 22,
+  "n_samples": 2,
+  "schema_dump_chars": 4296,
+  "fingerprint": "25560d1a95987418db7dbc21377e10453fa2dc27d6d118e7ff013284f5647b7a",
+  "traps": {
+    "date_start": 104,
+    "date_end": 285,
+    "null": [
+      87,
+      144,
+      244
+    ]
+  },
+  "reference_sql": "SELECT t.id\nFROM facility_tickets AS t\nJOIN buildings AS b ON b.id = t.building_id\nWHERE b.city = 'Duskwater'\n  AND t.opened_at >= '2024-11-04' AND t.opened_at < '2025-12-31'\n  AND t.priority >= 2\n  AND t.resolved_at IS NULL\nORDER BY t.id"
+}

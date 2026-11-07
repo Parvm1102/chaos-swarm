@@ -1,0 +1,42 @@
+{
+  "task_id": "task_0021",
+  "template": "A2",
+  "difficulty": "agg",
+  "db_seed": 6615573080476811046,
+  "params": {
+    "hired_from": "2024-09-08",
+    "hired_before": "2025-09-02",
+    "note_type": "update",
+    "min_severity": 2,
+    "region": "south",
+    "min_cases": 2
+  },
+  "nl_request": "Find the employees hired on or after 2024-09-08 and before 2025-09-02 who wrote update notes on at least two different support cases that each have a severity of at least 2, have no closed date recorded, and belong to a customer in the south region. Return the IDs of the matching employees.",
+  "reference_ids": [
+    7,
+    11,
+    36,
+    68,
+    70,
+    83,
+    89,
+    105,
+    106,
+    108
+  ],
+  "answer_table": "employees",
+  "n_answer": 10,
+  "n_samples": 2,
+  "schema_dump_chars": 4296,
+  "fingerprint": "f79c6876e6ea13876f8d38eb8ada5eaab329cadc6a8614b3ee6a99f996aa202b",
+  "traps": {
+    "date_start": 68,
+    "date_end": 40,
+    "null": [
+      82,
+      84,
+      102
+    ]
+  },
+  "reference_sql": "SELECT e.id\nFROM employees AS e\nWHERE e.hired_at >= '2024-09-08' AND e.hired_at < '2025-09-02'\n  AND (\n    SELECT COUNT(DISTINCT n.case_id)\n    FROM case_notes AS n\n    JOIN support_cases AS sc ON sc.id = n.case_id\n    JOIN customers AS c ON c.id = sc.customer_id\n    WHERE n.author_employee_id = e.id\n      AND n.note_type = 'update'\n      AND sc.severity >= 2\n      AND sc.closed_at IS NULL\n      AND c.region = 'south'\n  ) >= 2\nORDER BY e.id"
+}

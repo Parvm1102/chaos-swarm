@@ -1,0 +1,39 @@
+{
+  "task_id": "task_0079",
+  "template": "T4",
+  "difficulty": "agg",
+  "db_seed": 17325632805593228073,
+  "params": {
+    "city": "Port Alder",
+    "opened_from": "2024-05-02",
+    "opened_before": "2025-03-12",
+    "min_priority": 2
+  },
+  "nl_request": "Find the facility tickets for buildings located in Port Alder, opened on or after 2024-05-02 and before 2025-03-12, with a priority of at least 2 and with no resolution date recorded. Return the IDs of the matching facility tickets.",
+  "reference_ids": [
+    22,
+    148,
+    162,
+    201,
+    226,
+    245,
+    375,
+    452,
+    490
+  ],
+  "answer_table": "facility_tickets",
+  "n_answer": 9,
+  "n_samples": 4,
+  "schema_dump_chars": 4296,
+  "fingerprint": "deb25c995c3b7a4ea98cd6f8d3f592a6c33a84dd9adf74e114c323c28517d212",
+  "traps": {
+    "date_start": 22,
+    "date_end": 354,
+    "null": [
+      42,
+      161,
+      433
+    ]
+  },
+  "reference_sql": "SELECT t.id\nFROM facility_tickets AS t\nJOIN buildings AS b ON b.id = t.building_id\nWHERE b.city = 'Port Alder'\n  AND t.opened_at >= '2024-05-02' AND t.opened_at < '2025-03-12'\n  AND t.priority >= 2\n  AND t.resolved_at IS NULL\nORDER BY t.id"
+}

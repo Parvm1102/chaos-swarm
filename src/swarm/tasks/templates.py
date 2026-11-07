@@ -15,6 +15,7 @@ enum values in their display form, and the request ends with "Return the IDs of 
 <rows>."
 """
 
+import math
 import random
 from collections import defaultdict
 from collections.abc import Callable, Iterable
@@ -24,7 +25,7 @@ from typing import Any, Literal
 
 from swarm.tasks.schema import NOTE_TYPES, REGIONS, TIERS, Tables
 
-FilterKind = Literal["date_window", "numeric", "categorical", "null"]
+FilterKind = Literal["date_window", "numeric", "categorical", "null", "aggregate"]
 Params = dict[str, Any]
 
 
@@ -47,6 +48,9 @@ class Template:
     sql: Callable[[Params], str]
     nl: Callable[[Params], str]
     evaluate_py: Callable[..., set[int]]  # (params, tables, drop=None) -> ids
+    # Aggregation templates only: params that relax the aggregation (e.g. "at least two" back
+    # to "at least one"). Generation requires the relaxed answer to differ: the count must bite.
+    relax: dict[str, Any] | None = None
 
     @property
     def label(self) -> str:
@@ -434,5 +438,277 @@ T4 = Template(
 )
 
 
+# Aggregation templates (difficulty "agg") ----------------------------------------------------
+# A1-A3 ask T1-T3's questions with one condition turned into an aggregate across a join. The
+# agg task set uses them with T4 unchanged; they are never part of the base or hard sets.
+
+_COUNT_WORDS = {1: "one", 2: "two"}
+
+
+def _a1_sample(rng: random.Random, tables: Tables) -> Params:
+    return {**_t1_sample(rng, tables), "min_notes": 2}
+
+
+def _a1_sql(p: Params) -> str:
+    return f"""SELECT sc.id
+FROM support_cases AS sc
+JOIN customers AS c ON c.id = sc.customer_id
+WHERE c.tier IN ({_in_list(p["tiers"])})
+  AND sc.opened_at >= {_q(p["opened_from"])} AND sc.opened_at < {_q(p["opened_before"])}
+  AND sc.severity >= {p["min_severity"]}
+  AND (
+    SELECT COUNT(*) FROM case_notes AS n
+    WHERE n.case_id = sc.id AND n.note_type = {_q(p["note_type"])}
+  ) >= {p["min_notes"]}
+  AND EXISTS (
+    SELECT 1 FROM refunds AS r
+    WHERE r.case_id = sc.id AND r.amount > {p["refund_above"]} AND r.approved_at IS NOT NULL
+  )
+ORDER BY sc.id"""
+
+
+def _a1_nl(p: Params) -> str:
+    tiers = _or_words([TIERS[t] for t in p["tiers"]])
+    return (
+        f"Find the support cases opened on or after {p['opened_from']} and before "
+        f"{p['opened_before']} with a severity of at least {p['min_severity']}, for customers on "
+        f"the {tiers} tier, that have at least {_COUNT_WORDS[p['min_notes']]} "
+        f"{NOTE_TYPES[p['note_type']]} notes and at least one refund greater than "
+        f"{p['refund_above']} with an approval date recorded. "
+        "Return the IDs of the matching support cases."
+    )
+
+
+def _a1_eval(p: Params, tables: Tables, drop: str | None = None) -> set[int]:
+    customers = _by_id(tables["customers"])
+    notes = _group(tables["case_notes"], "case_id")
+    refunds = _group(tables["refunds"], "case_id")
+    found = set()
+    for case in tables["support_cases"]:
+        if drop != "tier" and customers[case["customer_id"]]["tier"] not in p["tiers"]:
+            continue
+        if drop != "opened" and not _in_window(
+            case["opened_at"], p["opened_from"], p["opened_before"]
+        ):
+            continue
+        if drop != "severity" and case["severity"] < p["min_severity"]:
+            continue
+        if drop != "note_count":
+            matching = sum(note["note_type"] == p["note_type"] for note in notes[case["id"]])
+            if matching < p["min_notes"]:
+                continue
+        if not any(
+            (drop == "refund_amount" or refund["amount"] > p["refund_above"])
+            and (drop == "refund_approved" or refund["approved_at"] is not None)
+            for refund in refunds[case["id"]]
+        ):
+            continue
+        found.add(case["id"])
+    return found
+
+
+A1 = Template(
+    name="A1",
+    slug="cases_with_two_notes_and_refund",
+    answer_table="support_cases",
+    answer_noun="support cases",
+    joins=3,
+    difficulty="aggregate",
+    filters=(
+        Filter("opened", "date_window"),
+        Filter("severity", "numeric"),
+        Filter("tier", "categorical"),
+        Filter("note_count", "aggregate"),
+        Filter("refund_amount", "numeric"),
+        Filter("refund_approved", "null"),
+    ),
+    sample_params=_a1_sample,
+    sql=_a1_sql,
+    nl=_a1_nl,
+    evaluate_py=_a1_eval,
+    relax={"min_notes": 1},
+)
+
+
+def _a2_sample(rng: random.Random, tables: Tables) -> Params:
+    return {**_t2_sample(rng, tables), "min_cases": 2}
+
+
+def _a2_sql(p: Params) -> str:
+    return f"""SELECT e.id
+FROM employees AS e
+WHERE e.hired_at >= {_q(p["hired_from"])} AND e.hired_at < {_q(p["hired_before"])}
+  AND (
+    SELECT COUNT(DISTINCT n.case_id)
+    FROM case_notes AS n
+    JOIN support_cases AS sc ON sc.id = n.case_id
+    JOIN customers AS c ON c.id = sc.customer_id
+    WHERE n.author_employee_id = e.id
+      AND n.note_type = {_q(p["note_type"])}
+      AND sc.severity >= {p["min_severity"]}
+      AND sc.closed_at IS NULL
+      AND c.region = {_q(p["region"])}
+  ) >= {p["min_cases"]}
+ORDER BY e.id"""
+
+
+def _a2_nl(p: Params) -> str:
+    return (
+        f"Find the employees hired on or after {p['hired_from']} and before {p['hired_before']} "
+        f"who wrote {NOTE_TYPES[p['note_type']]} notes on at least "
+        f"{_COUNT_WORDS[p['min_cases']]} different support cases that each have a severity of at "
+        f"least {p['min_severity']}, have no closed date recorded, and belong to a customer in "
+        f"the {REGIONS[p['region']]} region. Return the IDs of the matching employees."
+    )
+
+
+def _a2_eval(p: Params, tables: Tables, drop: str | None = None) -> set[int]:
+    cases = _by_id(tables["support_cases"])
+    customers = _by_id(tables["customers"])
+    notes_by_author = _group(tables["case_notes"], "author_employee_id")
+
+    def qualifies(note: dict[str, Any]) -> bool:
+        case = cases[note["case_id"]]
+        return (
+            (drop == "note_type" or note["note_type"] == p["note_type"])
+            and (drop == "severity" or case["severity"] >= p["min_severity"])
+            and (drop == "no_closed_date" or case["closed_at"] is None)
+            and (drop == "region" or customers[case["customer_id"]]["region"] == p["region"])
+        )
+
+    needed = 1 if drop == "case_count" else p["min_cases"]
+    found = set()
+    for employee in tables["employees"]:
+        if drop != "hired" and not _in_window(
+            employee["hired_at"], p["hired_from"], p["hired_before"]
+        ):
+            continue
+        distinct_cases = {
+            note["case_id"] for note in notes_by_author[employee["id"]] if qualifies(note)
+        }
+        if len(distinct_cases) >= needed:
+            found.add(employee["id"])
+    return found
+
+
+A2 = Template(
+    name="A2",
+    slug="authors_on_two_cases",
+    answer_table="employees",
+    answer_noun="employees",
+    joins=3,
+    difficulty="aggregate",
+    filters=(
+        Filter("hired", "date_window"),
+        Filter("note_type", "categorical"),
+        Filter("severity", "numeric"),
+        Filter("no_closed_date", "null"),
+        Filter("region", "categorical"),
+        Filter("case_count", "aggregate"),
+    ),
+    sample_params=_a2_sample,
+    sql=_a2_sql,
+    nl=_a2_nl,
+    evaluate_py=_a2_eval,
+    relax={"min_cases": 1},
+)
+
+
+def _a3_sample(rng: random.Random, tables: Tables) -> Params:
+    """T3's draw plus X, the requester's window total: 2x or 3x the amount threshold, so that a
+    request between the threshold and X needs other requests in the window to qualify."""
+    params = _t3_sample(rng, tables)
+    return {**params, "min_total": params["min_amount"] * rng.choice([2, 3])}
+
+
+def _a3_sql(p: Params) -> str:
+    start, end = _q(p["requested_from"]), _q(p["requested_before"])
+    return f"""SELECT pr.id
+FROM procurement_requests AS pr
+JOIN vendors AS v ON v.id = pr.vendor_id
+JOIN employees AS e ON e.id = pr.requested_by_employee_id
+JOIN departments AS d ON d.id = e.department_id
+WHERE pr.requested_at >= {start}
+  AND pr.requested_at < {end}
+  AND pr.amount >= {p["min_amount"]}
+  AND v.risk_rating >= {p["min_risk"]}
+  AND d.name IN ({_in_list(p["departments"])})
+  AND pr.needed_by IS NULL
+  AND (
+    SELECT SUM(other.amount) FROM procurement_requests AS other
+    WHERE other.requested_by_employee_id = pr.requested_by_employee_id
+      AND other.requested_at >= {start} AND other.requested_at < {end}
+  ) >= {p["min_total"]}
+ORDER BY pr.id"""
+
+
+def _a3_nl(p: Params) -> str:
+    return (
+        f"Find the procurement requests with a request date on or after {p['requested_from']} "
+        f"and before {p['requested_before']}, for an amount of at least {p['min_amount']}, from "
+        f"vendors with a risk rating of at least {p['min_risk']}, requested by an employee in the "
+        f"{_or_words(p['departments'])} department, with no need-by date recorded, and requested "
+        "by an employee whose procurement requests with a request date in that same window add "
+        f"up to at least {p['min_total']} in total (counting all of that employee's requests in "
+        "the window, whatever their vendor, need-by date or status). "
+        "Return the IDs of the matching procurement requests."
+    )
+
+
+def _a3_eval(p: Params, tables: Tables, drop: str | None = None) -> set[int]:
+    vendors = _by_id(tables["vendors"])
+    employees = _by_id(tables["employees"])
+    departments = _by_id(tables["departments"])
+    in_window: dict[int, list[float]] = defaultdict(list)
+    for request in tables["procurement_requests"]:
+        if _in_window(request["requested_at"], p["requested_from"], p["requested_before"]):
+            in_window[request["requested_by_employee_id"]].append(request["amount"])
+    totals = {employee_id: math.fsum(amounts) for employee_id, amounts in in_window.items()}
+    found = set()
+    for request in tables["procurement_requests"]:
+        requester = request["requested_by_employee_id"]
+        department = departments[employees[requester]["department_id"]]
+        if drop != "requested" and not _in_window(
+            request["requested_at"], p["requested_from"], p["requested_before"]
+        ):
+            continue
+        if drop != "amount" and request["amount"] < p["min_amount"]:
+            continue
+        if drop != "risk" and vendors[request["vendor_id"]]["risk_rating"] < p["min_risk"]:
+            continue
+        if drop != "department" and department["name"] not in p["departments"]:
+            continue
+        if drop != "no_need_by" and request["needed_by"] is not None:
+            continue
+        if drop != "requester_total" and totals.get(requester, 0.0) < p["min_total"]:
+            continue
+        found.add(request["id"])
+    return found
+
+
+A3 = Template(
+    name="A3",
+    slug="risky_procurement_with_total",
+    answer_table="procurement_requests",
+    answer_noun="procurement requests",
+    joins=3,
+    difficulty="aggregate",
+    filters=(
+        Filter("requested", "date_window"),
+        Filter("amount", "numeric"),
+        Filter("risk", "numeric"),
+        Filter("department", "categorical"),
+        Filter("no_need_by", "null"),
+        Filter("requester_total", "aggregate"),
+    ),
+    sample_params=_a3_sample,
+    sql=_a3_sql,
+    nl=_a3_nl,
+    evaluate_py=_a3_eval,
+    relax={"min_total": 0},
+)
+
+
 TEMPLATES: tuple[Template, ...] = (T1, T2, T3, T4)
-TEMPLATES_BY_NAME = {template.name: template for template in TEMPLATES}
+AGG_TEMPLATES: tuple[Template, ...] = (A1, A2, A3, T4)  # the agg set: T4 stays as in "hard"
+TEMPLATES_BY_NAME = {template.name: template for template in (*TEMPLATES, A1, A2, A3)}
