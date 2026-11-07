@@ -41,6 +41,7 @@ swarm calibrate --model anthropic/claude-sonnet-5-5 --n 20 --cache-ttl 5m --budg
 ```bash
 swarm episode --dry-run --sequence 0 --episode 1   # one episode, scripted pair: offline, $0
 swarm episode --sequence 0 --episode 1 --budget 1  # one live episode (Haiku 5.5, seed0-hard)
+swarm trajectories --arm configs/arms/haiku_baseline.yaml [--dry-run]  # one arm (resumes)
 ```
 
 `swarm episode` runs one episode for the pair A, B (task phases, a 5-round channel of
