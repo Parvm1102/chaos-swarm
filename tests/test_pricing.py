@@ -111,3 +111,10 @@ def test_every_rate_card_has_the_documented_write_multipliers():
     for rates in cards:
         assert rates.cache_write_5m == pytest.approx(1.25 * rates.input)
         assert rates.cache_write_1h == pytest.approx(2 * rates.input)
+
+
+def test_a_batch_call_costs_half():
+    usage = Usage(input_tokens=1_000_000, output_tokens=1_000_000, cache_read_input_tokens=10_000)
+    full = cost_usd("claude-sonnet-5-5", usage, provider="anthropic", cache_ttl="5m")
+    half = cost_usd("claude-sonnet-5-5", usage, provider="anthropic", cache_ttl="5m", batch=True)
+    assert half == pytest.approx(full / 2) and full == pytest.approx(2 + 10 + 0.001)

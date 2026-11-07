@@ -30,6 +30,7 @@ VALUES = {
     "own_outcome": "Your saved answer was wrong",
     "peer_correct": "correct",
     "reward": 20,
+    "schema": "Table customers ...",
 }
 
 

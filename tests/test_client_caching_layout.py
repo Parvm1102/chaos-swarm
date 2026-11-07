@@ -229,3 +229,22 @@ def test_adaptive_thinking_with_an_effort_level():
     assert request["output_config"] == {"effort": "low"}
     assert "output_config" not in build(model=SONNET)  # the default sends neither
     assert build(model=SONNET)["thinking"] == {"type": "between_tools"}
+
+
+def test_structured_output_goes_into_output_config_beside_the_effort():
+    schema = {
+        "type": "object",
+        "properties": {"label": {"type": "string"}},
+        "required": ["label"],
+        "additionalProperties": False,
+    }
+    output_format = {"type": "json_schema", "schema": schema}
+    plain = build(tools=None, output_format=output_format)
+    assert plain["output_config"] == {"format": output_format}
+    adaptive = ModelConfig(name="claude-sonnet-5-5", thinking="adaptive", effort="low")
+    both = build(model=adaptive, tools=None, output_format=output_format)
+    assert both["output_config"] == {"effort": "low", "format": output_format}
+    assert both["thinking"] == {"type": "adaptive"}
+    assert "output_config" not in build()
+    with pytest.raises(ValueError, match="json_schema"):
+        build(output_format={"type": "text"})

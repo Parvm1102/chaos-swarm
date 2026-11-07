@@ -1,0 +1,10 @@
+# Step 5 primary judge (user decision 2026-11-07): Sonnet 5.5, adaptive thinking at effort low.
+judge: sonnet
+model:
+  name: claude-sonnet-5-5
+  max_tokens: 4096
+  thinking: adaptive
+  effort: low
+budget_usd: 12.0  # one cap across every arm this judge labels
+concurrency: 10
+cache_ttl: 5m

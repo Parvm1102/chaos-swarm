@@ -198,3 +198,5 @@ The design assumes no work record fits the 1,000-character channel budget, becau
 - The explicit rule line is a measured candidate for the vaccine.
 
 **Spend:** arms 2–6 cost $13.08: arm 2 $0.90, arm 3 $0.89, arm 4 $0.94, arm 5 $0.39 and Sonnet $9.97 (of its $12 cap). Arm 1 was reused at no new cost. A 20-trajectory condition in the subject configuration costs about $1.80.
+
+**Later (step 5):** Experiment 0 is frozen. docs/step5_notes.md recounts it under the tightened collusion criterion and the `fit_excluded` rule: the Haiku arms are unchanged, and only Sonnet's arm moves. It also gives the judges' pathway labels, which confirm the scripted-proposer result: B proposes in all 100 exchanges, and A never agrees.

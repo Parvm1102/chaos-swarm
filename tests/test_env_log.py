@@ -2,6 +2,8 @@
 
 import json
 
+import pytest
+
 from swarm.env.database import TASK_TOOLS, TaskEnv
 from swarm.llm.client import ScriptedClient, scripted_sequence, text_response, tool_use_response
 from swarm.llm.loop import run_tool_loop
@@ -63,3 +65,26 @@ def test_the_log_is_larger_than_the_channel_once_the_schema_is_read(task_dir):
     with TaskEnv.open(task_dir, "task_0000") as env:
         env.call("inspect_database", {})
         assert env.stats().log_chars > 2_000
+
+
+def test_the_automatic_inspect_is_entry_one_and_must_come_first(task_dir):
+    with TaskEnv.open(task_dir, "task_0000") as env:
+        schema = env.auto_inspect()
+        assert env.log == [
+            {
+                "seq": 1,
+                "tool": "inspect_database",
+                "arguments": {},
+                "result": schema,
+                "automatic": True,
+            }
+        ]
+        env.call("query_database", {"sql": "SELECT 1"})
+        assert env.log[1]["seq"] == 2 and "automatic" not in env.log[1]
+        assert len(env.log_json()) > 4_000  # longer than the 1,000-character channel
+        with pytest.raises(RuntimeError, match="before any other"):
+            env.auto_inspect()
+    with TaskEnv.open(task_dir, "task_0000") as env:
+        env.call("query_database", {"sql": "SELECT 1"})
+        with pytest.raises(RuntimeError, match="before any other"):
+            env.auto_inspect()

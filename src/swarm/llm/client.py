@@ -35,6 +35,10 @@ Other request rules (from the API docs, checked 2026-11-06)
   the builder refuses it up front and a dry-run catches it.
 - No refusal fallbacks: a fallback re-runs a declined request on a *different* model, which
   would mix models inside a trajectory. A refusal comes back as ``stop_reason == "refusal"``.
+- Structured output (the step-5 judges): ``output_format`` is sent as ``output_config.format``
+  (``{"type": "json_schema", "schema": ...}``), beside any effort. The first text block of the
+  reply is then JSON that validates against the schema, unless the call stopped early (refusal,
+  max_tokens).
 
 Retries: tenacity is the only retry layer (the SDK's own retries are off). It retries 429, 5xx
 (including 529 overloaded) and network errors or timeouts with jittered exponential backoff
@@ -127,6 +131,7 @@ class LLMClient(Protocol):
         max_tokens: int,
         tags: Tags,
         cache_until: int | None = None,
+        output_format: dict[str, Any] | None = None,
     ) -> LLMResponse: ...
 
 
@@ -143,6 +148,7 @@ def build_request_kwargs(
     max_tokens: int,
     cache_ttl: CacheTTL,
     cache_until: int | None = None,
+    output_format: dict[str, Any] | None = None,
 ) -> dict[str, Any]:
     """The exact keyword arguments for ``messages.create``.
 
@@ -202,8 +208,15 @@ def build_request_kwargs(
     thinking = thinking_config(model)
     if thinking is not None:
         request["thinking"] = dict(thinking)
+    output_config: dict[str, Any] = {}
     if model.effort is not None:
-        request["output_config"] = {"effort": model.effort}
+        output_config["effort"] = model.effort
+    if output_format is not None:
+        if output_format.get("type") != "json_schema" or "schema" not in output_format:
+            raise ValueError("output_format must be {'type': 'json_schema', 'schema': {...}}")
+        output_config["format"] = copy.deepcopy(output_format)
+    if output_config:
+        request["output_config"] = output_config
 
     markers = count_cache_markers(request)
     if markers > MAX_CACHE_MARKERS:  # impossible by construction; the API would answer 400
@@ -401,6 +414,7 @@ class AnthropicClient:
         max_tokens: int,
         tags: Tags,
         cache_until: int | None = None,
+        output_format: dict[str, Any] | None = None,
     ) -> LLMResponse:
         tags = _checked_tags(tags)
         self.meter.ensure_within_budget()
@@ -413,6 +427,7 @@ class AnthropicClient:
             max_tokens=max_tokens,
             cache_ttl=self.run.cache_ttl,
             cache_until=cache_until,
+            output_format=output_format,
         )
         async with self._in_flight:
             message = await self._create_with_retries(request, tags)
@@ -440,6 +455,11 @@ class AnthropicClient:
                 await self._pacer.wait()
                 message = await self._sdk.messages.create(**request)
         return message
+
+    @property
+    def sdk(self) -> Any:
+        """The SDK client (the optional judge batch backend submits through it)."""
+        return self._sdk
 
     async def aclose(self) -> None:
         await self._sdk.close()
@@ -548,6 +568,7 @@ class ScriptedClient:
         max_tokens: int,
         tags: Tags,
         cache_until: int | None = None,
+        output_format: dict[str, Any] | None = None,
     ) -> LLMResponse:
         tags = _checked_tags(tags)
         self.meter.ensure_within_budget()
@@ -560,6 +581,7 @@ class ScriptedClient:
             max_tokens=max_tokens,
             cache_ttl=self.run.cache_ttl,
             cache_until=cache_until,
+            output_format=output_format,
         )
         self.calls.append(RecordedCall(request=request, tags=tags))
         response = self.script(copy.deepcopy(messages), tools)

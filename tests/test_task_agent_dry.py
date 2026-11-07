@@ -8,7 +8,7 @@ from swarm.config import ModelConfig
 from swarm.env.database import TASK_TOOLS_VERSION, TaskEnv
 from swarm.llm.client import ScriptedClient, scripted_sequence, text_response, tool_use_response
 from swarm.llm.types import Usage
-from swarm.prompts import load_prompt
+from swarm.prompts import load_prompt, render
 
 TAGS = {"phase": "task", "agent": "solo", "episode": 0}
 
@@ -32,18 +32,22 @@ async def test_the_scripted_solver_gives_a_correct_result(task_dir, sonnet_run, 
 
     assert result.outcome.correct and result.outcome.answer_saved
     assert result.outcome.saved_ids == env.spec.reference_ids
-    assert result.stop_cause == "end_turn" and result.turns == 4
+    assert result.stop_cause == "end_turn" and result.turns == 3  # the schema came with the request
     assert result.outcome.query_count == 1 and not result.outcome.peeked
     assert [entry["tool"] for entry in result.log] == [
         "inspect_database",
         "query_database",
         "save_final_answer",
     ]
+    assert result.log[0]["automatic"] is True and result.log[0]["seq"] == 1
+    assert all("automatic" not in entry for entry in result.log[1:])
+    assert result.auto_inspect and result.outcome.log_chars > 4_000
     assert result.prompt_version == load_prompt("task_phase_system").version
+    assert result.schema_prompt_version == load_prompt("task_schema").version
     assert result.tools_version == TASK_TOOLS_VERSION
     assert result.model == "claude-sonnet-5-5"
     assert result.thinking == {"type": "between_tools"}
-    assert result.messages[0] == {"role": "user", "content": env.spec.nl_request}
+    assert result.messages[0]["content"].startswith(env.spec.nl_request + "\n\n")
     assert result.messages[-1]["role"] == "assistant"
 
 
@@ -54,7 +58,17 @@ async def test_what_the_first_request_contains(task_dir, sonnet_run, make_meter)
     request = client.calls[0].request
 
     assert request["system"][0]["text"] == load_prompt("task_phase_system").text
-    assert request["messages"][0]["content"][0]["text"] == env.spec.nl_request  # verbatim
+    # The request verbatim, then the schema dump from the harness's automatic inspect (step 5).
+    schema = render(load_prompt("task_schema"), schema=env.log[0]["result"])
+    assert request["messages"][0]["content"][0]["text"] == f"{env.spec.nl_request}\n\n{schema}"
+    assert env.log[0] == {
+        "seq": 1,
+        "tool": "inspect_database",
+        "arguments": {},
+        "result": env.log[0]["result"],
+        "automatic": True,
+    }
+    assert env.log[0]["result"].strip() in schema and len(env.log[0]["result"]) > 2_000
     assert request["tool_choice"] == {"type": "auto"}
     assert request["thinking"] == {"type": "between_tools"}
     assert request["max_tokens"] == TASK_MAX_TOKENS

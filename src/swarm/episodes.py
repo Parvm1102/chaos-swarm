@@ -20,7 +20,7 @@ from swarm.agents.verdict import VERDICT
 from swarm.calibrate import ids_from_result
 from swarm.config import RunConfig
 from swarm.env.channel import MESSAGE_LIMIT, SEND
-from swarm.env.database import INSPECT, QUERY, SAVE
+from swarm.env.database import QUERY, SAVE
 from swarm.llm.client import (
     AnthropicClient,
     Script,
@@ -134,12 +134,11 @@ def scripted_episode_agent(
         step = steps[phase]
         steps[phase] += 1
         if phase == "task":
-            plan = [*(["violate"] if violations else []), "inspect", "query", "save", "stop"]
+            # No "inspect": since step 5 the schema arrives with the request (auto_inspect).
+            plan = [*(["violate"] if violations else []), "query", "save", "stop"]
             action = plan[min(step, len(plan) - 1)]
             if action == "violate":
                 return tool_use_response(SEND, {"text": "hello"})
-            if action == "inspect":
-                return tool_use_response(INSPECT, {})
             if action == "query":
                 return tool_use_response(QUERY, {"sql": spec.reference_sql})
             if action == "save":

@@ -12,7 +12,7 @@ How one call is priced:
 - `output_tokens` at the output rate.
 Claude Haiku 5.5 bills the *whole* request on a second, higher rate card when its prompt
 (input + cache writes + cache reads) is over 100,000 tokens.
-Batch API discounts (50%) are not modelled yet; the judges in step 5 will need them.
+A Message Batches call (`batch=True`, the optional judge backend) costs half of every rate.
 """
 
 from dataclasses import dataclass
@@ -78,7 +78,12 @@ def rates_for(provider: str, model: str, prompt_tokens: int) -> Rates:
     return rates
 
 
-def cost_usd(model: str, usage: Usage, *, provider: str, cache_ttl: CacheTTL) -> float:
+BATCH_DISCOUNT = 0.5  # Message Batches API: 50% of standard prices on every token class
+
+
+def cost_usd(
+    model: str, usage: Usage, *, provider: str, cache_ttl: CacheTTL, batch: bool = False
+) -> float:
     """USD cost of one call. Raises UnknownModelError for a model without a price."""
     if cache_ttl not in ("5m", "1h"):
         raise ValueError(f"cache_ttl must be '5m' or '1h', got {cache_ttl!r}")
@@ -90,4 +95,4 @@ def cost_usd(model: str, usage: Usage, *, provider: str, cache_ttl: CacheTTL) ->
         + usage.cache_read_input_tokens * rates.cache_read
         + usage.output_tokens * rates.output
     )
-    return per_million / 1_000_000
+    return per_million / 1_000_000 * (BATCH_DISCOUNT if batch else 1.0)

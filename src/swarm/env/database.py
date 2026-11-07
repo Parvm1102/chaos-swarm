@@ -18,6 +18,12 @@ exactly the string the agent saw, after truncation; error results are logged too
 start with "error: ". `log_chars = len(json.dumps(log))`. Step 3's verification rule refers to
 this log, so its definition is fixed here.
 
+Since step 5 the harness itself runs inspect_database at the start of every task phase
+(`auto_inspect`): entry 1 of every log is {seq: 1, tool: "inspect_database", arguments: {},
+result: <schema dump>, automatic: true}. The dump is about 4,300 characters, so every work record
+is longer than the 1,000-character channel budget by construction, even when an agent would have
+skipped inspecting (step 4b found records of 643-864 characters from agents that did).
+
 Guards, in layers
 -----------------
 1. The copy is opened through a read-only URI (`mode=ro`) with `PRAGMA query_only=1`.
@@ -53,7 +59,7 @@ import tempfile
 from collections.abc import Iterable, Sequence
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Any, Literal, Self, TypedDict
+from typing import Any, Literal, NotRequired, Self, TypedDict
 
 import orjson
 from pydantic import BaseModel, ConfigDict
@@ -211,6 +217,7 @@ class LogEntry(TypedDict):
     tool: str
     arguments: dict[str, Any]
     result: str  # exactly what the agent saw
+    automatic: NotRequired[bool]  # True only on the harness's own inspect (seq 1, auto_inspect)
 
 
 class EnvEvent(BaseModel):
@@ -399,6 +406,18 @@ class TaskEnv:
         if not ok:
             raise ToolError(text)
         return text
+
+    def auto_inspect(self) -> str:
+        """The harness runs inspect_database before the agent's first turn and returns the dump
+        for the opening message. Logged as entry 1 with "automatic": true. Must come first."""
+        if self._closed:
+            raise RuntimeError(f"TaskEnv for {self.spec.task_id} is closed")
+        if self.log:
+            raise RuntimeError("auto_inspect must run before any other logged tool call")
+        self.log.append(
+            {"seq": 1, "tool": INSPECT, "arguments": {}, "result": self._schema, "automatic": True}
+        )
+        return self._schema
 
     def handlers(self) -> dict[str, Handler]:
         """The run_tool_loop handlers for TASK_TOOLS."""

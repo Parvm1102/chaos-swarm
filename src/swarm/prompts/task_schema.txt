@@ -1,0 +1,2 @@
+The database schema (inspect_database, run for you at the start of the task):
+$schema

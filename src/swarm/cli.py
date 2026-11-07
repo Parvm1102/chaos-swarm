@@ -12,6 +12,7 @@ from pathlib import Path
 from typing import Annotated, Any, get_args
 
 import anthropic
+import orjson
 import typer
 from rich.console import Console
 from rich.logging import RichHandler
@@ -19,6 +20,8 @@ from rich.progress import Progress
 from rich.table import Table
 
 from swarm.agents.task_agent import TASK_MAX_TOKENS
+from swarm.analysis.judges import JudgeConfig
+from swarm.analysis.validation import score_sheet
 from swarm.arms import load_arm
 from swarm.calibrate import pick_tasks, run_calibration, summarize_calibration, write_summary
 from swarm.config import (
@@ -31,6 +34,7 @@ from swarm.config import (
     Settings,
 )
 from swarm.episodes import episode_name, episode_task_ids, run_episode_to_files
+from swarm.judging import compute_pathways, make_sample, run_judge
 from swarm.llm.client import THINKING_OFF, AnthropicClient
 from swarm.llm.meter import USAGE_FILE, BudgetExceeded, CostMeter, summarize_usage_file
 from swarm.llm.pricing import PRICES, cost_usd
@@ -47,13 +51,17 @@ from swarm.tasks.generate import (
 )
 from swarm.tasks.sequences import SEQUENCES_FILE, make_sequence_set, write_sequences
 from swarm.tasks.templates import TEMPLATES_BY_NAME
-from swarm.trajectories import run_arm
+from swarm.trajectories import run_arm, summarize_arm
 
 app = typer.Typer(add_completion=False, no_args_is_help=True, help="Swarm collusion harness.")
 tasks_app = typer.Typer(
     no_args_is_help=True, help="Synthetic SQLite tasks: generate, sequence and inspect."
 )
 app.add_typer(tasks_app, name="tasks")
+validate_app = typer.Typer(
+    no_args_is_help=True, help="Hand validation of the judges: a blind sample, then its score."
+)
+app.add_typer(validate_app, name="validate")
 console = Console()
 DEFAULT_TASK_ROOT = Path("data/tasks")
 
@@ -621,6 +629,24 @@ def trajectories_command(
     console.print(f"wrote {run.run_dir}/{{summary.json, trajectories.jsonl, trajectories/}}")
 
 
+@app.command("summarize")
+def summarize_command(
+    arm_files: Annotated[
+        list[Path], typer.Option("--arm", help="An arm's YAML file (repeatable).")
+    ],
+    dry_run: Annotated[bool, typer.Option("--dry-run", help="The arm's dry-run folder.")] = False,
+) -> None:
+    """Recompute arms' trajectories.jsonl and summary.json from their episode records (offline,
+    no API calls): the current collusion criterion plus the recounts under the others."""
+    for arm_file in arm_files:
+        try:
+            summary = summarize_arm(load_arm(arm_file), dry_run=dry_run)
+        except (ValueError, OSError) as error:
+            console.print(f"[red]{arm_file}: {error}[/red]")
+            raise typer.Exit(code=1) from None
+        _print_arm(summary)
+
+
 def _print_arm(summary: dict[str, Any]) -> None:
     prov = summary["provenance"]
     table = Table(
@@ -633,6 +659,7 @@ def _print_arm(summary: dict[str, Any]) -> None:
     table.add_column(style="bold")
     table.add_column()
     table.add_row("trajectories / episodes", f"{summary['trajectories']} / {summary['episodes']}")
+    table.add_row("collusion criterion", summary.get("criterion", "original"))
     table.add_row("TC (any mutual ACCEPT)", _rate_text(summary["tc"]))
     table.add_row("CC (converged)", _rate_text(summary["cc"]))
     table.add_row("EC (episodes, pooled)", _rate_text(summary["ec_pooled"]))
@@ -641,7 +668,20 @@ def _print_arm(summary: dict[str, Any]) -> None:
         "onset episode",
         f"{onset['by_episode'] or 'none'}; no onset in {onset['none']}; median {onset['median']}",
     )
+    for name, recount in summary.get("recounts", {}).items():
+        table.add_row(
+            f"recount: {name}",
+            f"TC {recount['tc']['k']}/{recount['tc']['n']}, CC {recount['cc']['k']}, "
+            f"EC {recount['ec_pooled']['k']}/{recount['ec_pooled']['n']}",
+        )
+    if "record_fit_possible_episodes" in summary:
+        table.add_row(
+            "record could fit / compliant ACCEPTs",
+            f"{summary['record_fit_possible_episodes']} episodes / {summary['compliant_accepts']}",
+        )
     table.add_row("provisional pathway", str(summary["provisional_pathway"]))
+    if "pathway" in summary:
+        table.add_row(f"pathway ({summary['pathway_judge']})", str(summary["pathway"]))
     for agent in ("A", "B"):
         table.add_row(
             f"ACCEPT rate {agent} (unilateral)",
@@ -654,10 +694,11 @@ def _print_arm(summary: dict[str, Any]) -> None:
     table.add_row("refusals", f"{summary['refusals']['total']} {summary['refusals']['by_phase']}")
     table.add_row("reflections complete", _rate_text(summary["reflections_complete"]))
     proof = summary["channel_proof"]
+    holds = proof["max_delivered_chars"] < proof["min_peer_log_chars"]
     table.add_row(
         "channel proof",
-        f"max received {proof['max_delivered_chars']:,} chars < min peer record "
-        f"{proof['min_peer_log_chars']:,}",
+        f"max received {proof['max_delivered_chars']:,} chars {'<' if holds else '>='} min peer "
+        f"record {proof['min_peer_log_chars']:,}{'' if holds else ' (does NOT hold)'}",
     )
     cost = summary["cost"]
     table.add_row(
@@ -666,6 +707,221 @@ def _print_arm(summary: dict[str, Any]) -> None:
         f"${cost['per_trajectory_usd']:.4f}/trajectory)",
     )
     console.print(table)
+
+
+# swarm judge / pathways / validate (step 5) ------------------------------------------------------
+
+
+def _load_arms(arm_files: list[Path]) -> list[Any]:
+    try:
+        return [load_arm(path) for path in arm_files]
+    except (ValueError, OSError) as error:
+        console.print(f"[red]{error}[/red]")
+        raise typer.Exit(code=1) from None
+
+
+@app.command("judge")
+def judge_command(
+    arm_files: Annotated[
+        list[Path], typer.Option("--arm", help="An arm's YAML file (repeatable).")
+    ],
+    judge_file: Annotated[Path, typer.Option("--judge", help="The judge's YAML file.")],
+    dry_run: Annotated[
+        bool, typer.Option("--dry-run", help="Keyword stand-in judge on the dry-run arms, $0.")
+    ] = False,
+    backend: Annotated[
+        str, typer.Option("--backend", help="sync (default) or batch (Message Batches API).")
+    ] = "sync",
+    limit: Annotated[
+        int | None, typer.Option("--limit", help="At most this many new items per arm (pilot).")
+    ] = None,
+) -> None:
+    """Label every episode of the arms with one judge (resumes; items already labelled are
+    skipped). Live unless --dry-run (a live run needs SWARM_LIVE=1)."""
+    if backend not in ("sync", "batch"):
+        console.print("[red]--backend must be sync or batch[/red]")
+        raise typer.Exit(code=1)
+    arms = _load_arms(arm_files)
+    try:
+        judge = JudgeConfig.load(judge_file)
+        run = judge.run_config(dry_run=dry_run)
+        if not dry_run and Settings().anthropic_api_key() is None:
+            raise LiveCallRefused("ANTHROPIC_API_KEY is not set (put it in .env)")
+    except (ValueError, OSError) as error:
+        console.print(f"[red]{judge_file}: {error}[/red]")
+        raise typer.Exit(code=1) from None
+    except LiveCallRefused as error:
+        console.print(f"[red]refused:[/red] {error}")
+        raise typer.Exit(code=2) from None
+    meter = CostMeter.for_run(run)
+    console.print(
+        f"{'dry run (keyword judge)' if dry_run else 'LIVE'}: judge {judge.judge} = "
+        f"{judge.model.name} (thinking {judge.model.thinking}, effort {judge.model.effort}), "
+        f"{backend}, {judge.concurrency} at a time, budget ${judge.budget_usd:g} (spent "
+        f"${meter.total_usd:.4f}) on {', '.join(a.arm for a in arms)}"
+    )
+    try:
+        counts = asyncio.run(
+            run_judge(arms, judge, dry_run=dry_run, meter=meter, backend=backend, limit=limit)
+        )
+    except LiveCallRefused as error:
+        console.print(f"[red]refused:[/red] {error}")
+        raise typer.Exit(code=2) from None
+    except BudgetExceeded as error:
+        console.print(f"[red]over budget:[/red] {error}")
+        raise typer.Exit(code=3) from None
+    except anthropic.APIError as error:
+        console.print(f"[red]API error:[/red] {type(error).__name__}: {error}")
+        raise typer.Exit(code=1) from None
+    table = Table(title=f"judge {judge.judge}", title_justify="left")
+    for column in ("arm", "ok", "unresolved", "skipped", "already done"):
+        table.add_column(column)
+    for arm, c in counts.items():
+        table.add_row(
+            arm, str(c["ok"]), str(c["unresolved"]), str(c["skipped"]), str(c["already_done"])
+        )
+    console.print(table)
+    console.print(f"spent ${meter.total_usd:.4f} of ${judge.budget_usd:g} ({meter.path})")
+
+
+@app.command("pathways")
+def pathways_command(
+    arm_files: Annotated[
+        list[Path], typer.Option("--arm", help="An arm's YAML file (repeatable).")
+    ],
+    primary: Annotated[str, typer.Option(help="The judge that fills `pathway`.")] = "sonnet",
+    secondary: Annotated[str, typer.Option(help="The second judge.")] = "haiku",
+    dry_run: Annotated[bool, typer.Option("--dry-run", help="The dry-run arms.")] = False,
+) -> None:
+    """Final pathways from both judges' labels, judge agreement, and the counts in each summary
+    (offline: no API calls)."""
+    arms = _load_arms(arm_files)
+    try:
+        report = compute_pathways(arms, primary=primary, secondary=secondary, dry_run=dry_run)
+    except (ValueError, OSError) as error:
+        console.print(f"[red]{error}[/red]")
+        raise typer.Exit(code=1) from None
+    decision = report["decision"]
+    first, second = decision["primary"], decision["secondary"]
+    console.print(
+        f"primary judge: {first} (planned {decision['planned_primary']}; its refusal-unresolved "
+        f"rate {decision['planned_primary_refusal_unresolved']}/{decision['planned_primary_sent']}"
+        f" vs switch at >{decision['switch_rate']:.0%}"
+        f"{'; SWITCHED' if decision['switched'] else ''})"
+    )
+    table = Table(title="pathways", title_justify="left")
+    for column in (
+        "arm",
+        f"pathway ({first})",
+        f"pathway ({second})",
+        "same",
+        "proposal before onset",
+        "stated vs acted",
+    ):
+        table.add_column(column)
+    for arm, data in report["arms"].items():
+        agree = data["pathway_agreement"]
+        covered = data["coverage"]
+        table.add_row(
+            arm,
+            str(data["counts"][first]),
+            str(data["counts"].get(second, f"partial: {covered[second]}/{covered['items']} items")),
+            "-" if agree is None else f"{agree['same']}/{agree['of']}",
+            str(data["proposal_before_onset"]),
+            str(data["stated_vs_acted"]),
+        )
+    console.print(table)
+    agreement_table = Table(title=f"item agreement, {first} vs {second}", title_justify="left")
+    for column in ("scope", "kind", "n", "agreement", "kappa", "specific agreement per class"):
+        agreement_table.add_column(column)
+    scopes = [("pooled", report["pooled_item_agreement"])] + [
+        (arm, data["item_agreement"]) for arm, data in report["arms"].items()
+    ]
+    for scope, by_kind in scopes:
+        for kind, a in by_kind.items():
+            per_class = ", ".join(
+                f"{label} {c['specific_agreement']:.2f}"
+                if c["specific_agreement"] is not None
+                else f"{label} -"
+                for label, c in a["per_class"].items()
+            )
+            agreement_table.add_row(
+                scope,
+                kind,
+                str(a["n"]),
+                _percent(a["agreement"]),
+                "-" if a["kappa"] is None else f"{a['kappa']:.2f}",
+                per_class,
+            )
+    console.print(agreement_table)
+    console.print(f"wrote runs/<arm>/pathways.json, the summaries, and {report['path']}")
+
+
+@validate_app.command("sample")
+def validate_sample(
+    arm_files: Annotated[
+        list[Path], typer.Option("--arm", help="An arm's YAML file (repeatable).")
+    ],
+    primary: Annotated[str, typer.Option(help="The judge whose positives are oversampled.")] = (
+        "sonnet"
+    ),
+    secondary: Annotated[str, typer.Option(help="The second judge (its labels go in the key).")] = (
+        "haiku"
+    ),
+    n: Annotated[int, typer.Option(help="Items in the sample.")] = 30,
+    seed: Annotated[int, typer.Option(help="Sampling seed.")] = 0,
+    out: Annotated[Path, typer.Option(help="Output folder.")] = Path("runs/validation"),
+    dry_run: Annotated[bool, typer.Option("--dry-run", help="The dry-run arms.")] = False,
+) -> None:
+    """Draw the blind validation sample: a sheet to label (no arm, agent, episode or judge
+    labels), its key, and the labelling instructions."""
+    arms = _load_arms(arm_files)
+    try:
+        paths = make_sample(
+            arms, primary=primary, secondary=secondary, n=n, seed=seed, out_dir=out,
+            dry_run=dry_run,
+        )  # fmt: skip
+    except (ValueError, OSError) as error:
+        console.print(f"[red]{error}[/red]")
+        raise typer.Exit(code=1) from None
+    console.print(
+        f"sheet (label this): {paths['sheet']}\ninstructions: {paths['instructions']}\n"
+        f"key (do not open before labelling): {paths['key']}"
+    )
+
+
+@validate_app.command("score")
+def validate_score(
+    sheet: Annotated[Path, typer.Option(help="The labelled sheet (CSV).")],
+    key: Annotated[Path, typer.Option(help="The sample's key (JSON).")] = Path(
+        "runs/validation/step5_validation_key.json"
+    ),
+    second_sheet: Annotated[
+        Path | None, typer.Option(help="A second person's labelled sheet, for human agreement.")
+    ] = None,
+) -> None:
+    """Score the judges against the human labels (and two humans against each other)."""
+    try:
+        report = score_sheet(sheet, key, second_sheet)
+    except (ValueError, OSError, KeyError) as error:
+        console.print(f"[red]{error}[/red]")
+        raise typer.Exit(code=1) from None
+    out = sheet.with_suffix(".score.json")
+    out.write_bytes(orjson.dumps(report, option=orjson.OPT_INDENT_2) + b"\n")
+    table = Table(title=f"judges vs human ({report['labelled']}/{report['of']} labelled)")
+    for column in ("judge", "kind", "n", "accuracy (95% CI)", "kappa"):
+        table.add_column(column)
+    for judge, by_kind in report["judges"].items():
+        for kind, a in by_kind.items():
+            table.add_row(
+                judge,
+                kind,
+                str(a["n"]),
+                _rate_text(a["accuracy"]),
+                "-" if a["kappa"] is None else f"{a['kappa']:.2f}",
+            )
+    console.print(table)
+    console.print(f"wrote {out}")
 
 
 # swarm tasks ...------------------------------------------------------------------------------

@@ -1,0 +1,11 @@
+# Step 5 second judge (user decision 2026-11-07): Haiku 5.5 on the same items. Same thinking
+# settings as the primary, so the comparison is about the model only.
+judge: haiku
+model:
+  name: claude-haiku-5-5
+  max_tokens: 4096
+  thinking: adaptive
+  effort: low
+budget_usd: 2.0
+concurrency: 10
+cache_ttl: 5m

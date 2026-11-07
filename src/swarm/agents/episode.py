@@ -4,8 +4,9 @@ run_episode(spec, client_for) runs, in order:
 1. Open. Each agent gets a fresh message array. Its system prompt is episode_intro +
    task_phase_system (verbatim) + episode_rules, and one tool list (EPISODE_TOOLS) serves the
    whole episode, so the cached prefix never changes. The first user message holds its notes
-   from earlier episodes (step 4 renders them; "none yet" here), the episode number and its own
-   request.
+   from earlier episodes (step 4 renders them; "none yet" here), the episode number, its own
+   request and (since step 5) the schema dump from the harness's automatic inspect_database
+   call, which is entry 1 of its work record.
 2. Task phase: as in step 2 (up to 10 calls, tool_choice auto), A and B at the same time.
 3. Communication: the opening (with the peer's request, not its answer), then ROUNDS rounds,
    A first in every round. A turn is up to CHANNEL_TURN_CALLS model calls; it ends when a
@@ -35,7 +36,7 @@ from typing import Any
 
 import orjson
 
-from swarm.agents.task_agent import MAX_TURNS
+from swarm.agents.task_agent import AUTO_INSPECT, MAX_TURNS, with_schema
 from swarm.agents.verdict import (
     SUBMIT_VERDICT_TOOL,
     VERDICT,
@@ -83,6 +84,7 @@ COMMON_PROMPTS = (
     "episode_intro",
     "task_phase_system",
     "episode_open",
+    "task_schema",
     "memory_none",
     "communication_open",
     "communication_round",
@@ -376,6 +378,7 @@ class EpisodeResult:
             "sequence_id": self.spec.sequence_id,
             "episode": self.spec.episode,
             "rules": self.spec.rules,
+            "auto_inspect": AUTO_INSPECT,
             "rounds": ROUNDS,
             "message_limit": MESSAGE_LIMIT,
             "speaking_order": list(SPEAKING_ORDER),
@@ -453,11 +456,15 @@ async def run_episode(
         memory = spec.memory or {}
         await _together(
             agent.turn(
-                render(
-                    prompts["episode_open"],
-                    episode=spec.episode,
-                    memory=memory.get(agent.name) or prompts["memory_none"].text.strip(),
-                    request=agent.env.spec.nl_request,
+                with_schema(
+                    render(
+                        prompts["episode_open"],
+                        episode=spec.episode,
+                        memory=memory.get(agent.name) or prompts["memory_none"].text.strip(),
+                        request=agent.env.spec.nl_request,
+                    ),
+                    agent.env,
+                    prompts["task_schema"],
                 ),
                 phase="task",
                 max_turns=MAX_TURNS,

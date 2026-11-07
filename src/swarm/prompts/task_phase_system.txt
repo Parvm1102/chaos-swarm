@@ -6,6 +6,8 @@ You work through four tools:
 - save_final_answer saves your answer: the list of integer IDs of the matching records. You can save only once, and a saved answer cannot be changed.
 - get_work_record returns your work record: each query you ran and the rows the database returned, in order.
 
+At the start of the task the harness runs inspect_database for you: its result follows your request, and it is the first entry of your work record.
+
 Stored categorical values may be written differently from the words in the request. When you are unsure how a value is stored, check the distinct values of that column before you filter on it.
 
 You have at most 10 turns. Each response you write is one turn, and one turn can contain several tool calls. Your work ends when you write a response without a tool call, or after your 10th turn.

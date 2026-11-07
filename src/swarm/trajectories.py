@@ -10,7 +10,9 @@ client: one pacer, one cost meter), and writes into runs/<arm>/:
   prompt versions and tools version in the records, the task set's manifest digest, the sha256
   of sequences.json, and the model settings actually sent (thinking, effort);
 - usage.jsonl: the cost meter's journal.
-Running the same arm again resumes it (see swarm.agents.trajectory).
+Running the same arm again resumes it (see swarm.agents.trajectory). summarize_arm recomputes
+trajectories.jsonl and summary.json from the stored episode records alone (no API calls), e.g.
+after a metric changes (`swarm summarize`).
 
 In dry-run mode both agents are ScriptedClients. By default B starts accepting in episode 2 and A
 in episode 3 (a responsive pattern), so the metrics have something to measure.
@@ -25,13 +27,18 @@ from typing import Any
 import orjson
 
 from swarm.agents.episode import EpisodeAgent
-from swarm.agents.trajectory import TrajectorySpec, run_trajectory
-from swarm.analysis.metrics import arm_summary
+from swarm.agents.trajectory import (
+    TRAJECTORY_FILE,
+    TrajectorySpec,
+    load_records,
+    run_trajectory,
+)
+from swarm.analysis.metrics import arm_summary, trajectory_metrics
 from swarm.arms import ArmConfig
 from swarm.calibrate import first_error
 from swarm.episodes import scripted_episode_agent, scripted_proposer
 from swarm.llm.client import AnthropicClient, LLMClient, ScriptedClient, thinking_config
-from swarm.llm.meter import CostMeter
+from swarm.llm.meter import USAGE_FILE, CostMeter, summarize_usage_file
 from swarm.tasks.generate import load_manifest
 from swarm.tasks.sequences import SEQUENCES_FILE, SequencesFile
 
@@ -104,19 +111,55 @@ async def run_arm(
         async with AnthropicClient(run, meter) as client:
             trajectories = await _run_all(specs, with_peer(lambda agent: client), arm.concurrency)
 
-    with (run.run_dir / TRAJECTORIES_FILE).open("wb") as f:
+    del trajectories  # the summary is recomputed from the records, the single source
+    return write_summary(arm, run.run_dir, dry_run=dry_run, meter_total_usd=meter.total_usd)
+
+
+def write_summary(
+    arm: ArmConfig, run_dir: Path, *, dry_run: bool, meter_total_usd: float
+) -> dict[str, Any]:
+    """Recompute every trajectory's metrics from its episode records (default criterion), then
+    write trajectory.json files, trajectories.jsonl and summary.json (with the recounts)."""
+    records_by_trajectory, trajectories = [], []
+    for sequence_id in arm.sequences:
+        out_dir = run_dir / "trajectories" / f"s{sequence_id:02d}"
+        records = load_records(out_dir)
+        if not records:
+            raise ValueError(f"{out_dir} has no episode records")
+        previous = orjson.loads((out_dir / TRAJECTORY_FILE).read_bytes())
+        trajectory = {
+            "sequence_id": sequence_id,
+            "memory_enabled": arm.memory,
+            "tasks": previous["tasks"],
+            **trajectory_metrics(records),
+        }
+        _write(out_dir / TRAJECTORY_FILE, trajectory)
+        records_by_trajectory.append(records)
+        trajectories.append(trajectory)
+    with (run_dir / TRAJECTORIES_FILE).open("wb") as f:
         for trajectory in trajectories:
             f.write(orjson.dumps(trajectory) + b"\n")
     summary = {
         "arm": arm.arm,
         "description": arm.description,
         "dry_run": dry_run,
-        "provenance": provenance(arm, run.run_dir),
-        **arm_summary(trajectories),
-        "meter_total_usd": meter.total_usd,
+        "provenance": provenance(arm, run_dir),
+        **arm_summary(trajectories, records_by_trajectory=records_by_trajectory),
+        "meter_total_usd": meter_total_usd,
     }
-    _write(run.run_dir / SUMMARY_FILE, summary)
-    return summary
+    _write(run_dir / SUMMARY_FILE, summary)
+    from swarm.judging import attach_pathways  # judging imports this module
+
+    attach_pathways(run_dir)  # keep the step-5 pathway counts, if the judges have run
+    return orjson.loads((run_dir / SUMMARY_FILE).read_bytes())
+
+
+def summarize_arm(arm: ArmConfig, *, dry_run: bool = False) -> dict[str, Any]:
+    """Recompute an existing arm's summary offline, from its records and its usage journal."""
+    run_dir = arm.run_dir(dry_run=dry_run)
+    usage = run_dir / USAGE_FILE
+    total = summarize_usage_file(usage)["total_usd"] if usage.exists() else 0.0
+    return write_summary(arm, run_dir, dry_run=dry_run, meter_total_usd=total)
 
 
 async def _run_all(
@@ -142,11 +185,13 @@ def provenance(arm: ArmConfig, run_dir: Path) -> dict[str, Any]:
     """What exactly ran: versions found in the records, task set, sequences, model settings."""
     prompt_versions: dict[str, set[str]] = {}
     tools_versions: set[str] = set()
+    auto_inspect: set[bool] = set()
     for path in sorted(run_dir.glob("trajectories/s*/episodes/e*.json")):
         record = orjson.loads(path.read_bytes())
         for name, version in record["prompt_versions"].items():
             prompt_versions.setdefault(name, set()).add(version)
         tools_versions.add(record["tools_version"])
+        auto_inspect.add(record.get("auto_inspect", False))  # absent before step 5
     mixed = sorted(name for name, versions in prompt_versions.items() if len(versions) > 1)
     return {
         "provider": arm.provider,
@@ -158,6 +203,7 @@ def provenance(arm: ArmConfig, run_dir: Path) -> dict[str, Any]:
         "memory": arm.memory,
         "rules": arm.rules,
         "scripted_peer": arm.scripted_peer,
+        "auto_inspect": sorted(auto_inspect)[0] if len(auto_inspect) == 1 else "mixed",
         "sequences": arm.sequences,
         "episodes": arm.episodes,
         "task_dir": str(arm.task_dir),

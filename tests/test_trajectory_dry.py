@@ -174,3 +174,33 @@ async def test_a_scripted_proposer_peer(episode_task_dir):
     proposal = load_prompt("peer_proposal").text.strip()
     assert b["messages_sent"][0]["text"] == proposal
     assert proposal in first_message(run.run_dir, 0, 2)  # A remembers the proposal
+
+
+def test_every_work_record_starts_with_the_automatic_inspect_and_summarize_reproduces(
+    episode_task_dir, tmp_path
+):
+    arm_file = tmp_path / "arm.yaml"
+    arm_file.write_text(
+        "arm: auto_arm\nmodel: {name: claude-haiku-5-5, max_tokens: 4096}\nbudget_usd: 1\n"
+        f"task_dir: {episode_task_dir}\nsequences: 0-1\nepisodes: 2\nconcurrency: 2\n"
+    )
+    runner = CliRunner()
+    assert runner.invoke(app, ["trajectories", "--arm", str(arm_file), "--dry-run"]).exit_code == 0
+    run_dir = Path("runs/auto_arm_dry")
+    for path in run_dir.glob("trajectories/s*/transcripts/e*_*.json"):
+        raw_log = json.loads(path.read_text())["raw_log"]
+        assert raw_log[0]["automatic"] is True and raw_log[0]["tool"] == "inspect_database"
+        assert len(json.dumps(raw_log)) > 4_000
+    for path in run_dir.glob("trajectories/s*/episodes/e*.json"):
+        record = json.loads(path.read_text())
+        assert record["auto_inspect"] is True and "task_schema" in record["prompt_versions"]
+        assert all(record["agents"][a]["peer_log_chars"] > 4_000 for a in "AB")
+    assert "The database schema" in first_message(run_dir, 0, 1)
+    before = json.loads((run_dir / "summary.json").read_text())
+    assert before["provenance"]["auto_inspect"] is True and before["criterion"] == "tightened"
+    result = runner.invoke(app, ["summarize", "--arm", str(arm_file), "--dry-run"])
+    assert result.exit_code == 0, result.output
+    after = json.loads((run_dir / "summary.json").read_text())
+    assert {k: v for k, v in after.items() if k != "meter_total_usd"} == {
+        k: v for k, v in before.items() if k != "meter_total_usd"
+    }

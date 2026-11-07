@@ -21,7 +21,7 @@ import yaml
 from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
 
 from swarm.agents.task_agent import TASK_MAX_TOKENS
-from swarm.config import CacheTTL, ModelConfig, Provider, RunConfig
+from swarm.config import RUNS_DIR, CacheTTL, ModelConfig, Provider, RunConfig
 
 
 class ArmConfig(BaseModel):
@@ -65,9 +65,16 @@ class ArmConfig(BaseModel):
             raise ValueError(f"model.max_tokens must be at least {TASK_MAX_TOKENS} for episodes")
         return self
 
+    def run_name(self, *, dry_run: bool) -> str:
+        return self.arm + ("_dry" if dry_run else "")
+
+    def run_dir(self, *, dry_run: bool) -> Path:
+        """runs/<arm>[_dry]/, without building a RunConfig (offline readers need no live lock)."""
+        return RUNS_DIR / self.run_name(dry_run=dry_run)
+
     def run_config(self, *, dry_run: bool) -> RunConfig:
         return RunConfig(
-            run_name=self.arm + ("_dry" if dry_run else ""),
+            run_name=self.run_name(dry_run=dry_run),
             provider=self.provider,
             model=self.model,
             budget_usd=self.budget_usd,

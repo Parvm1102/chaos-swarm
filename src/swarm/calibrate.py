@@ -30,7 +30,7 @@ import orjson
 
 from swarm.agents.task_agent import MAX_TURNS, TaskPhaseResult, run_task_phase
 from swarm.config import RunConfig
-from swarm.env.database import INSPECT, QUERY, SAVE, TaskEnv
+from swarm.env.database import QUERY, SAVE, TaskEnv
 from swarm.llm.client import (
     AnthropicClient,
     LLMClient,
@@ -73,15 +73,14 @@ def pick_tasks(manifest: Manifest, n: int, seed: int) -> list[str]:
 
 
 def scripted_solver(spec: TaskSpec) -> Script:
-    """Inspect, run the reference SQL, save the IDs read back from its result, then stop."""
+    """Run the reference SQL, save the IDs read back from its result, then stop. (No inspect:
+    since step 5 the schema arrives with the request.)"""
 
     def script(messages: list[dict[str, Any]], tools: list[ToolSpec] | None) -> LLMResponse:
         turn = sum(message["role"] == "assistant" for message in messages)
         if turn == 0:
-            return tool_use_response(INSPECT, {})
-        if turn == 1:
             return tool_use_response(QUERY, {"sql": spec.reference_sql})
-        if turn == 2:
+        if turn == 1:
             last_result = messages[-1]["content"][0]["content"]
             return tool_use_response(SAVE, {"ids": ids_from_result(last_result)})
         return text_response("I saved the answer.")
@@ -181,6 +180,8 @@ def make_record(run: RunConfig, spec: TaskSpec, result: TaskPhaseResult) -> dict
         "max_turns": MAX_TURNS,
         "max_tokens": run.model.max_tokens,
         "prompt_version": result.prompt_version,
+        "schema_prompt_version": result.schema_prompt_version,
+        "auto_inspect": result.auto_inspect,
         "tools_version": result.tools_version,
         "run_name": run.run_name,
         "dry_run": run.dry_run,

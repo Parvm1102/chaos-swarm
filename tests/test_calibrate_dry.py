@@ -76,7 +76,7 @@ def test_dry_run_calibration_end_to_end(task_dir):
     assert summary["cache_read_fraction"] is None  # scripted calls report no tokens
     assert summary["task_ids"] == [record["task_id"] for record in records]
 
-    assert len(read_jsonl(run_dir / "usage.jsonl")) == 8 * 4  # every scripted call was metered
+    assert len(read_jsonl(run_dir / "usage.jsonl")) == 8 * 3  # every scripted call was metered
     assert len(list((run_dir / "transcripts").glob("task_*.json"))) == 8
 
     # The same folder is refused without --force, and replaced with it.

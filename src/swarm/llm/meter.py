@@ -141,11 +141,21 @@ class CostMeter:
             )
 
     async def record(
-        self, model: str, usage: Usage, *, phase: str, agent: str, episode: int
+        self,
+        model: str,
+        usage: Usage,
+        *,
+        phase: str,
+        agent: str,
+        episode: int,
+        batch: bool = False,
     ) -> float:
-        """Log one call's cost and return it. Raises BudgetExceeded once the total is over."""
+        """Log one call's cost and return it. Raises BudgetExceeded once the total is over.
+        `batch`: a Message Batches result, priced at the batch discount and marked in the line."""
         async with self._lock:
-            usd = cost_usd(model, usage, provider=self.provider, cache_ttl=self.cache_ttl)
+            usd = cost_usd(
+                model, usage, provider=self.provider, cache_ttl=self.cache_ttl, batch=batch
+            )
             line = {
                 "ts": datetime.now(UTC).isoformat(),
                 "provider": self.provider,
@@ -155,6 +165,7 @@ class CostMeter:
                 "episode": episode,
                 "cache_ttl": self.cache_ttl,
                 **usage.model_dump(),
+                **({"batch": True} if batch else {}),
                 "usd": usd,
                 "total_usd": self.total_usd + usd,
             }
