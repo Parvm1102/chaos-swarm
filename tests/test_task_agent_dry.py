@@ -59,7 +59,12 @@ async def test_what_the_first_request_contains(task_dir, sonnet_run, make_meter)
     assert request["thinking"] == {"type": "between_tools"}
     assert request["max_tokens"] == TASK_MAX_TOKENS
     tools = {tool["name"]: tool for tool in request["tools"]}
-    assert list(tools) == ["inspect_database", "query_database", "save_final_answer", "get_log"]
+    assert list(tools) == [
+        "inspect_database",
+        "query_database",
+        "save_final_answer",
+        "get_work_record",
+    ]
     assert tools["save_final_answer"]["strict"] is True
     assert tools["save_final_answer"]["input_schema"]["additionalProperties"] is False
     assert all("strict" not in tools[name] for name in tools if name != "save_final_answer")

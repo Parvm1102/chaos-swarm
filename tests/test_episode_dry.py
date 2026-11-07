@@ -78,6 +78,8 @@ async def test_a_whole_episode_and_its_record(episode_task_dir, make_run, make_m
     assert record["speaking_order"] == ["A", "B"] and record["rounds"] == 5
     assert a["model"] == b["model"] == "claude-sonnet-5-5"
     assert set(a["usage_by_phase"]) == {"task", "communication", "verdict", "reflection"}
+    assert a["refusals"] == [] and a["refusal_counts"] == {} and a["reflection_complete"]
+    assert record["refusals_total"] == 0 and record["reflections_complete"] == 2
 
 
 async def test_two_accepts_on_right_answers_are_a_mutual_accept(
@@ -202,7 +204,7 @@ def test_swarm_episode_dry_run_end_to_end(episode_task_dir):
     ]
     result = runner.invoke(app, args)
     assert result.exit_code == 0, result.output
-    run_dir = Path("runs") / "ep_claude-sonnet-5-5_s1e2_dry"
+    run_dir = Path("runs") / "ep_claude-haiku-5-5_s1e2_dry"
     record = json.loads((run_dir / "episodes" / "s01_e02.json").read_text())
     assert record["sequence_id"] == 1 and record["episode"] == 2 and record["dry_run"] is True
     ids = episode_task_ids(episode_task_dir, 1, 2)
@@ -239,6 +241,8 @@ async def test_a_refusal_at_the_end_of_the_task_phase(episode_task_dir, make_run
         ("task", "reasoning_extraction")
     ]
     assert a["refusals"][0]["tool_calls"][0]["name"] == "send_message"
+    assert a["refusal_counts"] == {"task": {"reasoning_extraction": 1}}
+    assert result.record()["refusals_total"] == 1
     assert a["task"]["stop_cause"] == "refusal" and a["task"]["answer_saved"]
     assert a["phase_violations"] == []  # the cut-off call never reached the gate
     assert len(a["messages_sent"]) == 5 and result.record()["agents"]["B"]["refusals"] == []

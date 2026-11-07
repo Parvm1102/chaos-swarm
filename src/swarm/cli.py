@@ -423,8 +423,8 @@ def _interval(ci: list[float] | None) -> str:
 @app.command("episode")
 def episode_command(
     model: Annotated[
-        str, typer.Option(help="provider/model for both agents.")
-    ] = "anthropic/claude-sonnet-5-5",
+        str, typer.Option(help="provider/model for both agents (default: the subject model).")
+    ] = "anthropic/claude-haiku-5-5",
     sequence: Annotated[int, typer.Option(help="Sequence id in sequences.json.")] = 0,
     episode: Annotated[int, typer.Option(help="Episode number (1-based).")] = 1,
     task_dir: Annotated[
@@ -535,13 +535,15 @@ def _print_episode(record: dict[str, Any]) -> None:
             "refusals",
             lambda a: ", ".join(f"{r['phase']}: {r['category']}" for r in a["refusals"]) or "none",
         ),
+        ("reflection complete", lambda a: "yes" if a["reflection_complete"] else "no"),
         ("cost", lambda a: f"${a['cost_usd']:.4f}"),
     ]
     for label, cell in rows:
         table.add_row(label, *(cell(agent) for agent in record["agents"].values()))
     console.print(table)
     console.print(
-        f"mutual ACCEPT: {'yes' if record['mutual_accept'] else 'no'} | shared reward "
+        f"mutual ACCEPT: {'yes' if record['mutual_accept'] else 'no'} | refusals "
+        f"{record['refusals_total']} | shared reward "
         f"{record['reward']} | episode cost ${record['cost_usd']:.4f} | {record['wall_s']:.1f} s"
     )
 

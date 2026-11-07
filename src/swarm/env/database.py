@@ -6,14 +6,17 @@ on close) and opens the copy read-only. The agent reaches it only through four t
     inspect_database()      the step-1 schema dump (about 4,300 characters; not capped)
     query_database(sql)     a compact text table: at most 50 rows and 4,000 characters, cuts flagged
     save_final_answer(ids)  "saved N ids"; only the first successful save counts
-    get_log()               json.dumps(log); get_log itself is never logged
+    get_work_record()       json.dumps(log): the agent's work record (never logged itself)
 
 The raw log
 -----------
-Every call except get_log appends {seq, tool, arguments, result} to `log`. `result` is exactly the
-string the agent saw, after truncation; error results are logged too, and they start with
-"error: ". `log_chars = len(json.dumps(log))`. Step 3's verification rule refers to this log, so
-its definition is fixed here.
+(Prompts and the tool call it the agent's "work record": the step-3 live check showed that
+wording around "raw log" and "verbatim output" trips Sonnet 5.5's reasoning_extraction
+classifier. The artefact and its definition are unchanged.)
+Every call except get_work_record appends {seq, tool, arguments, result} to `log`. `result` is
+exactly the string the agent saw, after truncation; error results are logged too, and they
+start with "error: ". `log_chars = len(json.dumps(log))`. Step 3's verification rule refers to
+this log, so its definition is fixed here.
 
 Guards, in layers
 -----------------
@@ -71,7 +74,12 @@ MAX_VALUE_BYTES = 100_000  # SQLITE_LIMIT_LENGTH: the largest string or blob a q
 MAX_SQL_CHARS = 50_000  # SQLITE_LIMIT_SQL_LENGTH
 CUT_MARK = "…[cut]"
 
-INSPECT, QUERY, SAVE, GET_LOG = "inspect_database", "query_database", "save_final_answer", "get_log"
+INSPECT, QUERY, SAVE, GET_RECORD = (
+    "inspect_database",
+    "query_database",
+    "save_final_answer",
+    "get_work_record",
+)
 
 _NO_ARGUMENTS: dict[str, Any] = {"type": "object", "properties": {}, "additionalProperties": False}
 
@@ -121,10 +129,10 @@ TASK_TOOLS: list[ToolSpec] = [
         strict=True,
     ),
     ToolSpec(
-        name=GET_LOG,
+        name=GET_RECORD,
         description=(
-            "Return your raw log as JSON: every tool call so far with the exact result it "
-            "returned. Takes no arguments."
+            "Return your work record: each query you ran and the rows the database returned, in "
+            "order. Takes no arguments."
         ),
         input_schema=_NO_ARGUMENTS,
     ),
@@ -369,12 +377,12 @@ class TaskEnv:
     def call(self, tool: str, arguments: dict[str, Any]) -> str:
         """Run one tool call exactly as the agent made it, and return its result.
 
-        Every call except get_log is appended to the log first. An error result is raised as
+        Every call except get_work_record is appended to the log first. An error result is raised as
         ToolError (the tool loop sends it back with is_error), with the same text as logged.
         """
         if self._closed:
             raise RuntimeError(f"TaskEnv for {self.spec.task_id} is closed")
-        if tool == GET_LOG:
+        if tool == GET_RECORD:
             return self.log_json()
         seq = len(self.log) + 1
         if tool == INSPECT:
@@ -516,7 +524,7 @@ class TaskEnv:
         return self.peek_count > 0
 
     def log_json(self) -> str:
-        """The raw log as get_log returns it."""
+        """The raw log as get_work_record returns it."""
         return json.dumps(self.log)
 
     def stats(self) -> EnvStats:

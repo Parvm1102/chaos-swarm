@@ -19,7 +19,7 @@ run_episode(spec, client_for) runs, in order:
 
 The phase gate: every handler checks the agent's current phase against PHASE_TOOLS. A tool
 called outside its phase gets an error result and a recorded phase violation; task tools called
-out of phase never reach the raw log. get_log works in the task, communication and verdict
+out of phase never reach the raw log. get_work_record works in the task, communication and verdict
 phases and is never logged. Within an episode each agent's history only grows: every request
 extends the previous one, and assistant turns (thinking blocks included) are replayed as is.
 """
@@ -56,7 +56,7 @@ from swarm.env.channel import (
     Channel,
     Delivery,
 )
-from swarm.env.database import GET_LOG, INSPECT, QUERY, SAVE, TASK_TOOLS, TaskEnv, TaskOutcome
+from swarm.env.database import GET_RECORD, INSPECT, QUERY, SAVE, TASK_TOOLS, TaskEnv, TaskOutcome
 from swarm.llm.client import THINKING_OFF, LLMClient, Tags
 from swarm.llm.loop import Handler, LoopResult, Stop, ToolError, run_tool_loop
 from swarm.llm.meter import TOKEN_FIELDS
@@ -74,9 +74,9 @@ EPISODE_TOOLS_VERSION = hashlib.sha256(
     orjson.dumps([tool.to_anthropic() for tool in EPISODE_TOOLS], option=orjson.OPT_SORT_KEYS)
 ).hexdigest()
 PHASE_TOOLS: dict[str, frozenset[str]] = {
-    "task": frozenset({INSPECT, QUERY, SAVE, GET_LOG}),
-    "communication": frozenset({SEND, GET_LOG}),
-    "verdict": frozenset({VERDICT, GET_LOG}),
+    "task": frozenset({INSPECT, QUERY, SAVE, GET_RECORD}),
+    "communication": frozenset({SEND, GET_RECORD}),
+    "verdict": frozenset({VERDICT, GET_RECORD}),
     "reflection": frozenset(),
 }
 PROMPT_NAMES = (
@@ -255,6 +255,20 @@ class EpisodeAgent:
                     )
         return found
 
+    def refusal_counts(self) -> dict[str, dict[str, int]]:
+        """{phase: {category: count}}: kept in every record for the report's discussion."""
+        counts: dict[str, dict[str, int]] = {}
+        for refusal in self.refusals():
+            by_category = counts.setdefault(refusal["phase"], {})
+            category = refusal["category"] or "unknown"
+            by_category[category] = by_category.get(category, 0) + 1
+        return counts
+
+    def reflection_complete(self) -> bool:
+        """The note was written: the reflection call ended normally with some text."""
+        call = next((c for c in self.calls if c.phase == "reflection"), None)
+        return call is not None and call.result.stop_cause == "end_turn" and bool(self.reflection)
+
     def usage_by_phase(self) -> dict[str, dict[str, float]]:
         run = self.spec.run
         phases: dict[str, dict[str, float]] = {}
@@ -333,6 +347,8 @@ class EpisodeResult:
                 "reflection": agent.reflection,
                 "phase_violations": agent.violations,
                 "refusals": agent.refusals(),
+                "refusal_counts": agent.refusal_counts(),
+                "reflection_complete": agent.reflection_complete(),
                 "usage_by_phase": usage,
                 "cost_usd": sum(bucket["usd"] for bucket in usage.values()),
             }
@@ -352,6 +368,8 @@ class EpisodeResult:
             "tools_version": EPISODE_TOOLS_VERSION,
             "agents": agents,
             "mutual_accept": self.mutual_accept,
+            "refusals_total": sum(len(agent["refusals"]) for agent in agents.values()),
+            "reflections_complete": sum(agent["reflection_complete"] for agent in agents.values()),
             "reward": self.reward,
             "cost_usd": sum(agent["cost_usd"] for agent in agents.values()),
             "wall_s": self.wall_s,
