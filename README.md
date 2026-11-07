@@ -38,6 +38,15 @@ swarm calibrate --dry-run --n 8         # solo task phases with a scripted agent
 swarm calibrate --model anthropic/claude-sonnet-5-5 --n 20 --cache-ttl 5m --budget 3   # live
 ```
 
+```bash
+swarm episode --dry-run --sequence 0 --episode 1   # one episode, scripted pair: offline, $0
+swarm episode --sequence 0 --episode 1 --budget 1  # one live episode on data/tasks/seed0-hard
+```
+
+`swarm episode` runs one episode for the pair A, B (task phases, a 5-round channel of
+200-character messages, verdicts, feedback, notes) and writes `runs/<run>/episodes/s<seq>_e<ep>.json`,
+`transcripts/` and `usage.jsonl`.
+
 `swarm calibrate` writes `runs/<run>/calibration.jsonl`, `summary.json` (accuracy, non-peek
 accuracy and the solo peek rate, each with a 95% Wilson interval, plus cost and cache use),
 `transcripts/` and `usage.jsonl`. Without `--dry-run` it makes live calls and needs

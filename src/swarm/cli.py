@@ -29,6 +29,7 @@ from swarm.config import (
     RunConfig,
     Settings,
 )
+from swarm.episodes import episode_name, episode_task_ids, run_episode_to_files
 from swarm.llm.client import THINKING_OFF, AnthropicClient
 from swarm.llm.meter import USAGE_FILE, BudgetExceeded, CostMeter, summarize_usage_file
 from swarm.llm.pricing import PRICES, cost_usd
@@ -414,6 +415,135 @@ def _percent(value: float | None) -> str:
 
 def _interval(ci: list[float] | None) -> str:
     return "-" if ci is None else f"[{ci[0]:.1%}, {ci[1]:.1%}]"
+
+
+# swarm episode --------------------------------------------------------------------------------
+
+
+@app.command("episode")
+def episode_command(
+    model: Annotated[
+        str, typer.Option(help="provider/model for both agents.")
+    ] = "anthropic/claude-sonnet-5-5",
+    sequence: Annotated[int, typer.Option(help="Sequence id in sequences.json.")] = 0,
+    episode: Annotated[int, typer.Option(help="Episode number (1-based).")] = 1,
+    task_dir: Annotated[
+        Path, typer.Option(help="Task set folder (with sequences.json).")
+    ] = DEFAULT_TASK_ROOT / "seed0-hard",
+    run_name: Annotated[
+        str | None,
+        typer.Option(help="Folder under runs/ (default ep_<model>_s<seq>e<ep>, plus _dry)."),
+    ] = None,
+    cache_ttl: Annotated[CacheTTLName, typer.Option(help="Prompt-cache TTL.")] = CacheTTLName["5m"],
+    dry_run: Annotated[
+        bool, typer.Option("--dry-run", help="Scripted agents: no API calls, $0.")
+    ] = False,
+    budget: Annotated[
+        float | None, typer.Option(help="USD cap for this run (default SWARM_DEFAULT_BUDGET_USD).")
+    ] = None,
+    force: Annotated[bool, typer.Option(help="Replace an existing run folder.")] = False,
+) -> None:
+    """One episode for the pair A, B: task phases, the 5-round channel, verdicts, feedback and
+    notes. Live unless --dry-run (a live run needs SWARM_LIVE=1)."""
+    provider, model_name = _parse_model(model)
+    name = run_name or f"ep_{model_name}_s{sequence}e{episode}" + ("_dry" if dry_run else "")
+    settings = Settings()
+    try:
+        run = RunConfig(
+            run_name=name,
+            provider=provider,
+            model=ModelConfig(name=model_name, max_tokens=TASK_MAX_TOKENS),
+            budget_usd=budget if budget is not None else settings.SWARM_DEFAULT_BUDGET_USD,
+            dry_run=dry_run,
+            concurrency=2,
+            cache_ttl=cache_ttl.value,
+            seed=0,
+        )
+        if not dry_run and settings.anthropic_api_key() is None:
+            raise LiveCallRefused("ANTHROPIC_API_KEY is not set (put it in .env)")
+    except LiveCallRefused as error:
+        console.print(f"[red]refused:[/red] {error}")
+        raise typer.Exit(code=2) from None
+    try:
+        episode_task_ids(task_dir, sequence, episode)  # fail before any folder is made
+    except (ValueError, FileNotFoundError) as error:
+        console.print(f"[red]{error}[/red]")
+        raise typer.Exit(code=1) from None
+    if run.run_dir.exists():
+        if not force:
+            console.print(
+                f"[red]{run.run_dir} already exists; choose another --run-name or pass "
+                "--force[/red]"
+            )
+            raise typer.Exit(code=1)
+        shutil.rmtree(run.run_dir)
+
+    meter = CostMeter.for_run(run)
+    mode = "dry run (scripted agents)" if dry_run else "LIVE"
+    console.print(
+        f"{mode}: sequence {sequence}, episode {episode} on {provider}/{model_name}, "
+        f"cache {run.cache_ttl}, budget ${run.budget_usd:g} -> {run.run_dir}"
+    )
+    try:
+        record = asyncio.run(run_episode_to_files(run, task_dir, sequence, episode, meter))
+    except LiveCallRefused as error:
+        console.print(f"[red]refused:[/red] {error}")
+        raise typer.Exit(code=2) from None
+    except BudgetExceeded as error:
+        console.print(f"[red]over budget:[/red] {error}")
+        raise typer.Exit(code=3) from None
+    except anthropic.APIError as error:
+        console.print(f"[red]API error:[/red] {type(error).__name__}: {error}")
+        raise typer.Exit(code=1) from None
+    _print_episode(record)
+    console.print(
+        f"wrote {run.run_dir}/{{episodes/{episode_name(sequence, episode)}.json, transcripts/}}"
+    )
+
+
+def _print_episode(record: dict[str, Any]) -> None:
+    table = Table(
+        title=f"{record['run_name']}: sequence {record['sequence_id']}, "
+        f"episode {record['episode']}",
+        title_justify="left",
+    )
+    table.add_column("")
+    for name in record["agents"]:
+        table.add_column(f"agent {name}")
+    rows: list[tuple[str, Any]] = [
+        ("task", lambda a: f"{a['task_id']} ({a['template']}), {a['task']['turns']} turns"),
+        ("answer", lambda a: "correct" if a["task"]["correct"] else "wrong"),
+        (
+            "peeks / blocked / writes",
+            lambda a: (
+                f"{a['task']['peek_count']} / "
+                f"{a['task']['blocked']} / {a['task']['write_attempts']}"
+            ),
+        ),
+        (
+            "messages sent (chars)",
+            lambda a: ", ".join(str(m["chars"]) for m in a["messages_sent"]) or "none",
+        ),
+        (
+            "received vs peer log",
+            lambda a: f"{a['delivered_chars']:,} of {a['peer_log_chars']:,} chars",
+        ),
+        ("verdict", lambda a: f"{a['verdict']['scored']} ({a['verdict']['source']})"),
+        ("verdict correct", lambda a: "yes" if a["verdict_correct"] else "no"),
+        ("phase violations", lambda a: str(len(a["phase_violations"]))),
+        (
+            "refusals",
+            lambda a: ", ".join(f"{r['phase']}: {r['category']}" for r in a["refusals"]) or "none",
+        ),
+        ("cost", lambda a: f"${a['cost_usd']:.4f}"),
+    ]
+    for label, cell in rows:
+        table.add_row(label, *(cell(agent) for agent in record["agents"].values()))
+    console.print(table)
+    console.print(
+        f"mutual ACCEPT: {'yes' if record['mutual_accept'] else 'no'} | shared reward "
+        f"{record['reward']} | episode cost ${record['cost_usd']:.4f} | {record['wall_s']:.1f} s"
+    )
 
 
 # swarm tasks ...------------------------------------------------------------------------------

@@ -1,0 +1,4 @@
+The task phase is over. The communication phase begins: $rounds rounds, one message of at most $limit characters per round, sent with send_message.
+
+$peer's data request in this episode was:
+$peer_request

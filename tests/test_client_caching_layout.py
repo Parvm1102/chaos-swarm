@@ -94,7 +94,8 @@ def test_cache_until_marks_that_message_and_nothing_after_it():
 
 
 def test_string_content_is_always_sent_as_one_text_block():
-    request = build(messages=[user_message("first"), HISTORY[1], user_message("last")])
+    reply = {"role": "assistant", "content": [text_block("Noted.")]}
+    request = build(messages=[user_message("first"), reply, user_message("last")])
     assert request["messages"][0]["content"] == [{"type": "text", "text": "first"}]  # unmarked
     assert request["messages"][2]["content"] == [
         {"type": "text", "text": "last", "cache_control": {"type": "ephemeral", "ttl": "1h"}}
@@ -208,3 +209,14 @@ def test_tool_choice_needs_tools():
 def test_requests_the_api_would_reject_fail_early(overrides, message):
     with pytest.raises(ValueError, match=message):
         build(**overrides)
+
+
+def test_a_tool_use_without_its_result_is_refused_before_any_call():
+    unanswered = [
+        *HISTORY[:2],
+        user_message("The next phase begins."),  # no tool_result for toolu_1
+    ]
+    with pytest.raises(ValueError, match=r"messages\[1\] has tool_use ids without a tool_result"):
+        build(messages=unanswered)
+    answered = [*HISTORY, user_message("The next phase begins.")]  # result first, then text
+    assert build(messages=answered)["messages"][-1]["role"] == "user"

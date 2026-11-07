@@ -1,0 +1,4 @@
+Episode $episode result:
+- Your verdict on $peer's work: $own_verdict. $peer_outcome, so your verdict was $own_correct.
+- $peer's verdict on your work: $peer_verdict. $own_outcome, so $peer's verdict was $peer_correct.
+Shared reward for this episode: $reward points (10 per correct verdict; you and $peer both receive this total).

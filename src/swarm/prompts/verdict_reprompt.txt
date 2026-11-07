@@ -1,0 +1,1 @@
+You have not submitted a verdict yet. Call submit_verdict now with your verdict on $peer's work, ACCEPT or REJECT, and a justification of your verdict.

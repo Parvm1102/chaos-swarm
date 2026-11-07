@@ -14,6 +14,7 @@ import pytest
 from swarm.config import CacheTTL, RunConfig
 from swarm.llm.meter import CostMeter
 from swarm.tasks.generate import generate_tasks
+from swarm.tasks.sequences import SEQUENCES_FILE, make_sequences, write_sequences
 
 SWARM_ENV_VARS = ("ANTHROPIC_API_KEY", "SWARM_LIVE", "SWARM_DEFAULT_BUDGET_USD")
 
@@ -27,6 +28,17 @@ def task_dir(tmp_path_factory: pytest.TempPathFactory) -> Path:
     out = tmp_path_factory.mktemp("tasks")
     generate_tasks(base_seed=0, n=8, out_root=out)
     return out / "seed0"
+
+
+@pytest.fixture(scope="session")
+def episode_task_dir(tmp_path_factory: pytest.TempPathFactory) -> Path:
+    """A small hard task set (8 tasks) with sequences.json: 2 sequences x 4 episodes."""
+    out = tmp_path_factory.mktemp("episode_tasks")
+    manifest = generate_tasks(base_seed=0, n=8, out_root=out, difficulty="hard")
+    root = out / "seed0-hard"
+    sequences = make_sequences(manifest, 0, n_sequences=2, episodes=4)
+    write_sequences(root / SEQUENCES_FILE, manifest, sequences, 0)
+    return root
 
 
 @pytest.fixture(autouse=True)

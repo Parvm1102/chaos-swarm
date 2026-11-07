@@ -267,3 +267,26 @@ async def test_going_over_budget_stops_the_loop(make_run, make_meter):
     with pytest.raises(BudgetExceeded):
         await loop(client, handlers={"add": add}, max_turns=10)
     assert len(client.calls) == 3  # $0.50, $1.00 (equal to the cap: allowed), $1.50: stop
+
+
+async def test_a_refusal_inside_a_tool_call_is_answered_not_executed(client_for):
+    started = tool_use_response("add", {"a": 1}, text="Adding.")
+    refused = started.model_copy(update={"stop_reason": "refusal"})
+    client = client_for(scripted_sequence(refused))
+    ran: list[dict[str, Any]] = []
+    result = await loop(client, handlers={"add": lambda args: ran.append(args) or "x"})
+
+    assert result.stop_cause == "refusal" and ran == []  # the cut-off call never runs
+    record = result.tool_calls[0]
+    assert record.is_error and not record.executed and "'refusal'" in record.result
+    assert result.messages[-1] == {
+        "role": "user",
+        "content": [
+            {
+                "type": "tool_result",
+                "tool_use_id": refused.tool_calls[0].id,
+                "content": record.result,
+                "is_error": True,
+            }
+        ],
+    }

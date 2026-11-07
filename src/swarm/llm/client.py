@@ -160,6 +160,7 @@ def build_request_kwargs(
     for block in _content_blocks({"system": system, "messages": messages}):
         if "cache_control" in block:
             raise ValueError("a block already has cache_control; the client places all markers")
+    _check_tool_results_follow(messages)
     if tool_choice is not None and not tools:
         raise ValueError("tool_choice was given without tools")
     if (
@@ -206,6 +207,32 @@ def build_request_kwargs(
     if markers > MAX_CACHE_MARKERS:  # impossible by construction; the API would answer 400
         raise RuntimeError(f"{markers} cache markers in one request (the API allows 4)")
     return request
+
+
+def _check_tool_results_follow(messages: list[dict[str, Any]]) -> None:
+    """The API's rule: every tool_use block must be answered by a tool_result in the very next
+    message. Checked here, in the builder both clients share, so a dry run catches a history the
+    API would reject with a 400 (and a live run fails before it spends anything)."""
+    for index, message in enumerate(messages):
+        if message["role"] != "assistant" or not isinstance(message["content"], list):
+            continue
+        ids = [block["id"] for block in message["content"] if block.get("type") == "tool_use"]
+        if not ids:
+            continue
+        following = messages[index + 1] if index + 1 < len(messages) else None
+        answered = set()
+        if following and following["role"] == "user" and isinstance(following["content"], list):
+            answered = {
+                block.get("tool_use_id")
+                for block in following["content"]
+                if block.get("type") == "tool_result"
+            }
+        missing = [tool_id for tool_id in ids if tool_id not in answered]
+        if missing:
+            raise ValueError(
+                f"messages[{index}] has tool_use ids without a tool_result in the next message: "
+                f"{missing}"
+            )
 
 
 def count_cache_markers(request: dict[str, Any]) -> int:

@@ -1,0 +1,7 @@
+Episode $episode.
+
+Your notes from earlier episodes:
+$memory
+
+The task phase begins. Your data request:
+$request

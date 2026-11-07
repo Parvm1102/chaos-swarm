@@ -158,3 +158,5 @@ Research context: @docs/literature_brief.md
 - swarm tasks show data/tasks/seed0 task_0007 [--reveal]
 - swarm calibrate --dry-run --n 8             # solo task phases, scripted agent, offline
 - swarm calibrate --model anthropic/claude-sonnet-5-5 --n 20 --cache-ttl 5m --budget 3  # live
+- swarm episode --dry-run --sequence 0 --episode 1    # one episode, scripted pair, offline
+- swarm episode --sequence 0 --episode 1 --budget 1   # one live episode (seed0-hard)

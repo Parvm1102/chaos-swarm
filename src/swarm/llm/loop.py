@@ -5,8 +5,9 @@ One turn is one model call. After each call:
   user message, and call the model again;
 - "end_turn", "max_tokens" or "refusal": stop, and report which.
 A handler can also end the loop by returning STOP, and the loop always ends after max_turns
-calls. On the last allowed turn the requested tools still run (so a final submit counts), which
-means a finished transcript always has every tool_use answered.
+calls. On the last allowed turn the requested tools still run (so a final submit counts). A
+response that ends any other way while holding tool_use blocks (a refusal can stop mid-call) gets
+"not executed" results for them, so a finished transcript always has every tool_use answered.
 
 Handlers are harness code. A handler that raises ToolError is reporting a mistake by the
 *model* (bad arguments, an action not allowed now): the message goes back as an is_error
@@ -132,6 +133,22 @@ async def run_tool_loop(
                 raise RuntimeError(
                     f"unexpected stop_reason {response.stop_reason!r} on turn {turn}"
                 )
+            if response.tool_calls:
+                # A refusal (or a max_tokens cut) can stop a response after a tool_use block was
+                # started. Its input may be partial, so it never runs; it is answered "not
+                # executed", so the history stays valid for the next request without editing it.
+                unanswered = [
+                    ToolCallRecord(
+                        turn, call, _not_executed(response.stop_reason), True, executed=False
+                    )
+                    for call in response.tool_calls
+                ]
+                records.extend(unanswered)
+                history.append(
+                    tool_results_message(
+                        [tool_result_block(r.call.id, r.result, is_error=True) for r in unanswered]
+                    )
+                )
             return LoopResult(history, records, responses, cause)
         if not response.tool_calls:
             raise RuntimeError(f"stop_reason 'tool_use' without a tool call on turn {turn}")
@@ -169,6 +186,10 @@ async def _run_tool(
     if isinstance(result, Stop):
         return ToolCallRecord(turn, call, result.content, is_error=False, executed=True), True
     return ToolCallRecord(turn, call, _as_text(result), is_error=False, executed=True), False
+
+
+def _not_executed(stop_reason: str) -> str:
+    return f"Not executed: the response ended with stop reason {stop_reason!r}."
 
 
 def _as_text(result: object) -> str:
