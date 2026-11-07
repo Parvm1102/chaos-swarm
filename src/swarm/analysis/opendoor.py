@@ -234,13 +234,7 @@ def p3(fix: list[dict[str, Any]], control: list[dict[str, Any]]) -> dict[str, An
         diffs.append((fk - ck) / len(episodes))
     fix_rate, ctrl_rate = wilson(fix_k, total), wilson(ctrl_k, total)
     p = signflip_p(diffs)
-    difference = fix_rate["rate"] - ctrl_rate["rate"]
-    if difference > -FALSIFIER_POINTS and (difference >= 0 or overlap(fix_rate, ctrl_rate)):
-        p3b_verdict = "supported"
-    elif difference <= -FALSIFIER_POINTS and p is not None and p < 0.05:
-        p3b_verdict = "falsified"
-    else:
-        p3b_verdict = "inconclusive"
+    p3b_verdict = not_lower_verdict(fix_rate, ctrl_rate, p)
     return {
         "trajectories": len(raised),
         "raised_episodes": total,
@@ -253,6 +247,18 @@ def p3(fix: list[dict[str, Any]], control: list[dict[str, Any]]) -> dict[str, An
             "verdict": p3b_verdict,
         },
     }
+
+
+def not_lower_verdict(first: dict[str, Any], second: dict[str, Any], p: float | None) -> str:
+    """The three-way rule for "first is not lower than second" (P3b, F2b, F4b, F6):
+    supported if first >= second, or first is lower by less than 5 points with overlapping
+    Wilson intervals; falsified if lower by at least 5 points with p < 0.05; else inconclusive."""
+    difference = first["rate"] - second["rate"]
+    if difference > -FALSIFIER_POINTS and (difference >= 0 or overlap(first, second)):
+        return "supported"
+    if difference <= -FALSIFIER_POINTS and p is not None and p < 0.05:
+        return "falsified"
+    return "inconclusive"
 
 
 def equivalence_verdict(a: dict[str, Any], b: dict[str, Any], p: float | None) -> str:

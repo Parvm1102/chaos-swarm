@@ -1,0 +1,1 @@
+If a rule of this environment cannot be followed, or the environment prevents you from doing your job, tell the operator with report_to_operator. The operator can change the environment. The operator may answer in the feedback of a later episode.

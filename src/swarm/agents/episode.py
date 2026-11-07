@@ -119,8 +119,17 @@ COMMON_PROMPTS = (
 RULES_PROMPTS = {"explicit": "episode_rules", "paper": "episode_rules_paper"}
 # The task-phase prompt variants: the original, and Experiment 1's two-rule version (the query
 # cap added to the no-peek rule).
-TASK_PROMPTS = ("task_phase_system", "task_phase_system_rules2")
-PROMPT_NAMES = (*COMMON_PROMPTS, *RULES_PROMPTS.values(), TASK_PROMPTS[1])  # every episode prompt
+TASK_PROMPTS = ("task_phase_system", "task_phase_system_rules2", "task_phase_system_rules2_cap1")
+# Step 8: the intro without the "short messages through a limited channel" framing, and the
+# operator-rules variants (the neutral sentence, or the explicit invitation).
+INTRO_PROMPTS = ("episode_intro", "episode_intro_plain")
+OPERATOR_RULES_PROMPTS = {"neutral": "operator_rules", "invite": "operator_rules_invite"}
+PROMPT_NAMES = (  # every episode prompt file
+    *COMMON_PROMPTS,
+    *RULES_PROMPTS.values(),
+    *TASK_PROMPTS[1:],
+    INTRO_PROMPTS[1],
+)
 
 
 @dataclass(frozen=True)
@@ -138,6 +147,9 @@ class EpisodeSpec:
     query_cap: int | None = None  # Experiment 1: 2 query_database calls per task (logged)
     operator: bool = False  # Experiment 3: report_to_operator and its rules sentence
     operator_replies: dict[str, str] | None = None  # agent -> reply atop this episode's feedback
+    operator_rules: str = "neutral"  # a key of OPERATOR_RULES_PROMPTS
+    operator_checkin: bool = False  # step 8: an operator line atop every feedback, both agents
+    intro_prompt: str = "episode_intro"  # one of INTRO_PROMPTS
 
 
 @dataclass(frozen=True)
@@ -173,9 +185,10 @@ class EpisodeAgent:
             limit=spec.message_limit,
         )
         if spec.operator:  # the one neutral sentence, as the rules block's last paragraph
-            rules = f"{rules}\n\n{prompts['operator_rules'].text.strip()}"
+            sentence = prompts[OPERATOR_RULES_PROMPTS[spec.operator_rules]].text.strip()
+            rules = f"{rules}\n\n{sentence}"
         self.system = [
-            text_block(render(prompts["episode_intro"], agent=name, peer=self.peer)),
+            text_block(render(prompts[spec.intro_prompt], agent=name, peer=self.peer)),
             text_block(prompts[spec.task_prompt].text),  # verbatim, as calibrated
             text_block(rules),
         ]
@@ -447,6 +460,9 @@ class EpisodeResult:
             "task_prompt": self.spec.task_prompt,
             "query_cap": self.spec.query_cap,
             "operator": self.spec.operator,
+            "operator_rules": self.spec.operator_rules if self.spec.operator else None,
+            "operator_checkin": self.spec.operator_checkin,
+            "intro_prompt": self.spec.intro_prompt,
             "speaking_order": list(SPEAKING_ORDER),
             # Everything that passed through the channel, in order (text None: a silence notice).
             # Step 4 rebuilds each agent's memory of the channel from this list.
@@ -505,10 +521,17 @@ async def run_episode(
         raise ValueError(f"unknown rules variant {spec.rules!r}; choose from {list(RULES_PROMPTS)}")
     if spec.task_prompt not in TASK_PROMPTS:
         raise ValueError(f"unknown task prompt {spec.task_prompt!r}; choose from {TASK_PROMPTS}")
-    names = [n for n in COMMON_PROMPTS if n != "task_phase_system"]
-    names = (*names, spec.task_prompt, RULES_PROMPTS[spec.rules])
+    if spec.intro_prompt not in INTRO_PROMPTS:
+        raise ValueError(f"unknown intro prompt {spec.intro_prompt!r}; choose from {INTRO_PROMPTS}")
+    if spec.operator_checkin and not spec.operator:
+        raise ValueError("the operator check-in needs the report tool (operator=True)")
+    names = [n for n in COMMON_PROMPTS if n not in ("task_phase_system", "episode_intro")]
+    names = (*names, spec.intro_prompt, spec.task_prompt, RULES_PROMPTS[spec.rules])
     if spec.operator:
-        names = (*names, *OPERATOR_PROMPTS)
+        operator_names = [n for n in OPERATOR_PROMPTS if n != "operator_rules"]
+        names = (*names, *operator_names, OPERATOR_RULES_PROMPTS[spec.operator_rules])
+    if spec.operator_checkin:
+        names = (*names, "operator_checkin")
     prompts = {name: load_prompt(name) for name in names}
     channel = Channel(limit=spec.message_limit)
     started = time.perf_counter()
@@ -609,10 +632,17 @@ async def run_episode(
             )
             for name, agent in agents.items()
         }
-        for name, reply in (spec.operator_replies or {}).items():
-            # Experiment 3: the operator's reply to last episode's report, atop the feedback
-            shown = render(prompts["operator_reply"], reply=reply)
-            feedback[name] = f"{shown}\n\n{feedback[name]}"
+        for name in SPEAKING_ORDER:
+            # Experiment 3: the operator's reply to last episode's report, atop the feedback;
+            # step 8's check-in goes above everything, for both agents.
+            top = []
+            if spec.operator_checkin:
+                top.append(prompts["operator_checkin"].text.strip())
+            reply = (spec.operator_replies or {}).get(name)
+            if reply is not None:
+                top.append(render(prompts["operator_reply"], reply=reply))
+            if top:
+                feedback[name] = "\n\n".join([*top, feedback[name]])
         reflection_prompt = prompts["reflection"].text.strip()
         await _together(
             agents[name].run_reflection(f"{feedback[name]}\n\n{reflection_prompt}")

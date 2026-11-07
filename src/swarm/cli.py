@@ -47,6 +47,7 @@ from swarm.llm.meter import (
 )
 from swarm.llm.pricing import PRICES, cost_usd
 from swarm.llm.types import LLMResponse, text_block, user_message
+from swarm.step8 import run_followups
 from swarm.tasks.generate import (
     DIFFICULTIES,
     GroundTruthMismatch,
@@ -304,7 +305,8 @@ def calibrate(
     summary.json, transcripts/ and usage.jsonl.
     """
     provider, model_name = _parse_model(model)
-    if task_prompt not in ("task_phase_system", "task_phase_system_rules2"):
+    if task_prompt not in ("task_phase_system", "task_phase_system_rules2",
+                           "task_phase_system_rules2_cap1"):  # fmt: skip
         console.print(f"[red]unknown --task-prompt {task_prompt!r}[/red]")
         raise typer.Exit(code=1)
     name = run_name or f"calib_{model_name}_{cache_ttl.value}" + ("_dry" if dry_run else "")
@@ -889,6 +891,67 @@ def opendoor_command(
                 hypotheses.add_row(f"{name}: {part}", sub["verdict"])
     console.print(hypotheses)
     console.print(f"wrote {report['path']} and {report['appendix']}")
+
+
+# swarm followups (step 8) -----------------------------------------------------------------------
+
+
+@app.command("followups")
+def followups_command(
+    invite: Annotated[Path, typer.Option(help="e3_invite.")],
+    checkin: Annotated[Path, typer.Option(help="e3_checkin.")],
+    cap1: Annotated[Path, typer.Option(help="e1_cap1.")],
+    cap1_nomem: Annotated[Path, typer.Option(help="e1_cap1_nomem.")],
+    plainintro: Annotated[Path, typer.Option(help="e1_unconstrained_plainintro.")],
+    control: Annotated[Path, typer.Option(help="e3_control (reused comparison).")],
+    fix: Annotated[Path, typer.Option(help="e3_fix (reused comparison).")],
+    unconstrained: Annotated[Path, typer.Option(help="e1_unconstrained (reused comparison).")],
+    dry_run: Annotated[bool, typer.Option("--dry-run", help="The dry-run arms.")] = False,
+) -> None:
+    """Step 8's pre-registered follow-up analysis (offline): F1-F6 and the cap-1 hypotheses."""
+    roles = {
+        "invite": invite,
+        "checkin": checkin,
+        "cap1": cap1,
+        "cap1_nomem": cap1_nomem,
+        "plainintro": plainintro,
+        "control": control,
+        "fix": fix,
+        "unconstrained": unconstrained,
+    }
+    arms = dict(zip(roles, _load_arms(list(roles.values())), strict=True))
+    try:
+        report = run_followups(arms, dry_run=dry_run)
+    except (ValueError, OSError) as error:
+        console.print(f"[red]{error}[/red]")
+        raise typer.Exit(code=1) from None
+    table = Table(title="follow-up arms", title_justify="left")
+    for column in ("role", "arm", "TC", "EC", "cap violations", "delivered", "ever reported", "$"):
+        table.add_column(column)
+    for role, a in report["arms"].items():
+        delivered, reports = a["record_delivered_rate"], a["reports"]
+        table.add_row(
+            role,
+            a["arm"],
+            f"{a['collusion']['tc']['k']}/{a['collusion']['tc']['n']}",
+            f"{a['collusion']['ec_pooled']['k']}/{a['collusion']['ec_pooled']['n']}",
+            _rate_text(a["cap_violation_rate"]),
+            "-" if delivered is None else _rate_text(delivered),
+            "-" if reports is None else _rate_text(reports["trajectories_ever_reporting"]),
+            f"{a['cost']['total_usd']:.2f}",
+        )
+    console.print(table)
+    hypotheses = Table(title="pre-registered follow-up hypotheses", title_justify="left")
+    hypotheses.add_column("hypothesis")
+    hypotheses.add_column("verdict")
+    for name, h in report["hypotheses"].items():
+        if "verdict" in h:
+            hypotheses.add_row(name, h["verdict"])
+        for part, sub in h.items():
+            if isinstance(sub, dict) and "verdict" in sub:
+                hypotheses.add_row(f"{name}: {part}", sub["verdict"])
+    console.print(hypotheses)
+    console.print(f"wrote {report['path']}")
 
 
 # swarm judge / pathways / validate (step 5) ------------------------------------------------------

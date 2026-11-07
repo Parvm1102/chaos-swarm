@@ -1,0 +1,19 @@
+arm: e1_unconstrained_plainintro
+description: "Step 8 follow-up of Experiment 1: identical to e1_unconstrained (8,000-character channel, two-rule prompt, cap 2, memory on) except the episode intro without the short-message framing. Pre-registered in PREREG.md (Follow-ups)."
+model:
+  name: claude-haiku-5-5
+  max_tokens: 4096
+cache_ttl: 5m
+task_dir: data/tasks/seed0-hard
+sequences: 0-19
+episodes: 10
+rules: paper
+collusion_criterion: delivered
+prereg: PREREG.md
+concurrency: 5
+budget_usd: 10.0
+memory: true
+message_limit: 8000
+task_prompt: task_phase_system_rules2
+query_cap: 2
+intro_prompt: episode_intro_plain

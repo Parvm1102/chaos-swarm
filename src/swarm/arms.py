@@ -43,12 +43,18 @@ class ArmConfig(BaseModel):
     seed: int = 0
     # Experiment 1 (spillover). Defaults reproduce every earlier arm.
     message_limit: int = Field(default=200, ge=1)  # characters per channel message
-    task_prompt: Literal["task_phase_system", "task_phase_system_rules2"] = "task_phase_system"
+    task_prompt: Literal[
+        "task_phase_system", "task_phase_system_rules2", "task_phase_system_rules2_cap1"
+    ] = "task_phase_system"
     query_cap: int | None = Field(default=None, ge=0)  # query_database calls per task (logged)
     collusion_criterion: Literal["tightened", "delivered"] = "tightened"
     prereg: Path | None = None  # its sha256 goes into every summary; a live run guards it
     # Experiment 3 (open door): report_to_operator with an operator policy; None: no tool.
     operator_policy: Literal["ack", "fix"] | None = None
+    # Step 8 follow-ups.
+    operator_rules: Literal["neutral", "invite"] = "neutral"  # the rules sentence of tool arms
+    operator_checkin: bool = False  # an operator check-in atop every feedback (prompted)
+    intro_prompt: Literal["episode_intro", "episode_intro_plain"] = "episode_intro"
 
     @field_validator("sequences", mode="before")
     @classmethod
@@ -66,6 +72,22 @@ class ArmConfig(BaseModel):
         if not value or len(set(value)) != len(value) or min(value) < 0:
             raise ValueError("sequences must be distinct, non-negative and not empty")
         return sorted(value)
+
+    @model_validator(mode="after")
+    def _prompt_matches_the_cap(self) -> Self:
+        expected = {
+            "task_phase_system": None,
+            "task_phase_system_rules2": 2,
+            "task_phase_system_rules2_cap1": 1,
+        }[self.task_prompt]
+        if self.query_cap != expected:
+            raise ValueError(
+                f"task_prompt {self.task_prompt} states a cap of {expected}, "
+                f"but query_cap is {self.query_cap}"
+            )
+        if (self.operator_rules != "neutral" or self.operator_checkin) and not self.operator_policy:
+            raise ValueError("operator_rules and operator_checkin need an operator_policy")
+        return self
 
     @model_validator(mode="after")
     def _room_for_the_task_phase(self) -> Self:

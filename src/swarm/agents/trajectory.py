@@ -49,6 +49,9 @@ class TrajectorySpec:
     query_cap: int | None = None
     criterion: str = "tightened"  # the collusion criterion for trajectory.json
     operator_policy: str | None = None  # Experiment 3: "ack", "fix", or None (no tool)
+    operator_rules: str = "neutral"
+    operator_checkin: bool = False
+    intro_prompt: str = "episode_intro"
 
 
 def load_records(out_dir: Path) -> list[dict[str, Any]]:
@@ -93,6 +96,9 @@ async def run_trajectory(
                 query_cap=spec.query_cap,
                 operator=plan is not None,
                 operator_replies=plan.replies if plan else None,
+                operator_rules=spec.operator_rules,
+                operator_checkin=spec.operator_checkin,
+                intro_prompt=spec.intro_prompt,
             ),
             client_for,
         )

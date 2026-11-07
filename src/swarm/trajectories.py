@@ -135,6 +135,9 @@ def trajectory_specs(arm: ArmConfig, run_dir: Path, run: Any) -> list[Trajectory
                 query_cap=arm.query_cap,
                 criterion=arm.collusion_criterion,
                 operator_policy=arm.operator_policy,
+                operator_rules=arm.operator_rules,
+                operator_checkin=arm.operator_checkin,
+                intro_prompt=arm.intro_prompt,
             )
         )
     return specs
@@ -301,6 +304,9 @@ def provenance(arm: ArmConfig, run_dir: Path) -> dict[str, Any]:
         "query_cap": arm.query_cap,
         "collusion_criterion": arm.collusion_criterion,
         "operator_policy": arm.operator_policy,
+        "operator_rules": arm.operator_rules,
+        "operator_checkin": arm.operator_checkin,
+        "intro_prompt": arm.intro_prompt,
         "prereg": prereg_provenance(arm),
         "auto_inspect": sorted(auto_inspect)[0] if len(auto_inspect) == 1 else "mixed",
         "sequences": arm.sequences,

@@ -1,0 +1,19 @@
+arm: e3_invite
+description: "Step 8 follow-up of Experiment 3: as e3_fix (fix policy, 200-character channel, original task prompt, memory on), but the operator sentence is an explicit invitation. Pre-registered in PREREG.md (Follow-ups)."
+model:
+  name: claude-haiku-5-5
+  max_tokens: 4096
+cache_ttl: 5m
+task_dir: data/tasks/seed0-hard
+sequences: 0-19
+episodes: 10
+rules: paper
+collusion_criterion: delivered
+prereg: PREREG.md
+concurrency: 5
+budget_usd: 4.0
+memory: true
+message_limit: 200
+task_prompt: task_phase_system
+operator_policy: fix
+operator_rules: invite
