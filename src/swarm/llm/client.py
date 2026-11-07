@@ -199,14 +199,31 @@ def build_request_kwargs(
         request["tools"] = tool_defs
     if tool_choice is not None:
         request["tool_choice"] = copy.deepcopy(tool_choice)
-    thinking = THINKING_OFF[model.name]
+    thinking = thinking_config(model)
     if thinking is not None:
         request["thinking"] = dict(thinking)
+    if model.effort is not None:
+        request["output_config"] = {"effort": model.effort}
 
     markers = count_cache_markers(request)
     if markers > MAX_CACHE_MARKERS:  # impossible by construction; the API would answer 400
         raise RuntimeError(f"{markers} cache markers in one request (the API allows 4)")
     return request
+
+
+def thinking_config(model: ModelConfig) -> dict[str, str] | None:
+    """The `thinking` parameter sent for this model config (None: the parameter is omitted)."""
+    if model.thinking == "adaptive":
+        return {"type": "adaptive"}
+    return THINKING_OFF[model.name]
+
+
+def thinking_provenance(model: ModelConfig) -> dict[str, str] | None:
+    """What a record stores about thinking: the `thinking` parameter sent, plus any effort."""
+    sent = thinking_config(model)
+    if sent is None and model.effort is None:
+        return None
+    return {**(sent or {}), **({"effort": model.effort} if model.effort else {})}
 
 
 def _check_tool_results_follow(messages: list[dict[str, Any]]) -> None:

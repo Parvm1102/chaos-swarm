@@ -111,3 +111,15 @@ def test_yaml_must_be_a_mapping(tmp_path):
     path.write_text("- just\n- a list\n")
     with pytest.raises(ValueError, match="mapping"):
         load_run_config(path)
+
+
+def test_effort_needs_adaptive_thinking():
+    from swarm.config import ModelConfig
+    from swarm.llm.client import thinking_provenance
+
+    with pytest.raises(ValueError, match="effort"):
+        ModelConfig(name="claude-sonnet-5-5", effort="low")
+    adaptive = ModelConfig(name="claude-sonnet-5-5", thinking="adaptive", effort="low")
+    assert thinking_provenance(adaptive) == {"type": "adaptive", "effort": "low"}
+    assert thinking_provenance(ModelConfig(name="claude-haiku-5-5")) == {"type": "disabled"}
+    assert thinking_provenance(ModelConfig(name="claude-opus-5-5")) is None

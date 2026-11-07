@@ -6,7 +6,12 @@ from collections import Counter
 import pytest
 
 from swarm.tasks.generate import Manifest, ManifestTask
-from swarm.tasks.sequences import load_sequences, make_sequences, write_sequences
+from swarm.tasks.sequences import (
+    load_sequences,
+    make_sequence_set,
+    make_sequences,
+    write_sequences,
+)
 
 TEMPLATE_NAMES = ("T1", "T2", "T3", "T4")
 
@@ -93,3 +98,37 @@ def test_a_different_seed_gives_different_sequences(manifest):
 def test_counts_that_cannot_be_balanced_are_refused():
     with pytest.raises(ValueError, match="used equally"):
         make_sequences(fake_manifest(per_template=24), seed=0)
+
+
+def test_forty_sequences_extend_the_twenty_append_only(manifest, sequences):
+    forty = make_sequence_set(manifest, seed=0, n_sequences=40, episodes=10)
+    assert forty[:20] == sequences  # the first batch is the 20-sequence set, unchanged
+    assert [s.sequence_id for s in forty] == list(range(40))
+    uses = Counter(e.a for s in forty for e in s.episodes) + Counter(
+        e.b for s in forty for e in s.episodes
+    )
+    assert set(uses.values()) == {8} and len(uses) == len(manifest.tasks)
+    for sequence in forty[20:]:
+        a = {e.a for e in sequence.episodes}
+        b = {e.b for e in sequence.episodes}
+        assert len(a) == len(b) == 10 and not a & b
+    assert forty[20:] != forty[:20]
+
+
+def test_the_written_forty_keep_the_first_twenty_byte_identical(manifest, tmp_path):
+    import json
+
+    twenty, forty = tmp_path / "twenty.json", tmp_path / "forty.json"
+    write_sequences(twenty, manifest, make_sequence_set(manifest, seed=0, n_sequences=20), seed=0)
+    write_sequences(forty, manifest, make_sequence_set(manifest, seed=0, n_sequences=40), seed=0)
+    old, new = json.loads(twenty.read_text()), json.loads(forty.read_text())
+    assert new["sequences"][:20] == old["sequences"] and new["n_sequences"] == 40
+    old_text = twenty.read_text()
+    first_twenty = old_text[old_text.index('"sequences"') : old_text.rindex("]")].rstrip()
+    assert first_twenty.rstrip("]").rstrip() in forty.read_text()  # same bytes, in place
+
+
+def test_more_than_one_batch_must_be_whole_batches(manifest):
+    with pytest.raises(ValueError, match="whole batches"):
+        make_sequence_set(manifest, seed=0, n_sequences=30)
+    assert make_sequence_set(manifest, seed=0, n_sequences=20) == make_sequences(manifest, seed=0)

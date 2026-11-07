@@ -32,7 +32,7 @@ swarm tasks sequences --seed 0          # 20 fixed sequences x 10 episodes x 2 a
 swarm tasks stats data/tasks/seed0      # per-template counts, answer sizes, duplicate check
 swarm tasks show data/tasks/seed0 task_0007 [--reveal]
 swarm tasks generate --seed 0 --n 100 --difficulty hard   # data/tasks/seed0-hard: planted traps
-swarm tasks sequences --seed 0 --difficulty hard          # the task set the experiments use
+swarm tasks sequences --seed 0 --difficulty hard --n-seq 40   # the experiments' task set
 
 swarm calibrate --dry-run --n 8         # solo task phases with a scripted agent: offline, $0
 swarm calibrate --model anthropic/claude-sonnet-5-5 --n 20 --cache-ttl 5m --budget 3   # live

@@ -9,6 +9,11 @@ make_sequences builds n_sequences sequences of `episodes` episodes for agents A 
 - across all sequences every task is used exactly the same number of times (4 for 100 tasks and
   20 sequences): each template's tasks are dealt from shuffled decks, one block per sequence.
 The same sequences.json is reused by every experimental arm.
+
+make_sequence_set deals more than SEQUENCE_BATCH sequences in batches of SEQUENCE_BATCH: batch 0
+is exactly what make_sequences gives for a single batch, and every later batch draws from its
+own seeded stream. A set of 40 therefore starts with the very same 20 sequences as a set of 20
+(append-only), and each batch on its own uses every task equally often.
 """
 
 import random
@@ -20,6 +25,7 @@ from pydantic import BaseModel, ConfigDict
 from swarm.tasks.generate import Manifest, derive_seed
 
 SEQUENCES_FILE = "sequences.json"
+SEQUENCE_BATCH = 20
 
 
 class Episode(BaseModel):
@@ -49,14 +55,23 @@ class SequencesFile(BaseModel):
 
 
 def make_sequences(
-    manifest: Manifest, seed: int, n_sequences: int = 20, episodes: int = 10
+    manifest: Manifest,
+    seed: int,
+    n_sequences: int = 20,
+    episodes: int = 10,
+    *,
+    batch: int = 0,
 ) -> list[Sequence]:
     """Deterministic sequences for this manifest (see the module docstring for the rules).
 
     Raises ValueError when the counts cannot be balanced exactly (for example a template whose
     task count does not divide the number of slots it has to fill).
     """
-    rng = random.Random(derive_seed(seed, "sequences"))
+    # Batch 0 keeps the original stream, so files written before batches existed are unchanged.
+    stream_seed = (
+        derive_seed(seed, "sequences") if batch == 0 else derive_seed(seed, "sequences", batch)
+    )
+    rng = random.Random(stream_seed)
     by_template: dict[str, list[str]] = {}
     for task in manifest.tasks:
         by_template.setdefault(task.template, []).append(task.task_id)
@@ -88,12 +103,12 @@ def make_sequences(
         blocks[name] = [stream[i : i + per_template] for i in range(0, slots, per_template)]
 
     sequences = []
-    for sequence_id in range(n_sequences):
+    for index in range(n_sequences):
         a_more = set(rng.sample(names, a_extra))
         a_tasks: list[str] = []
         b_tasks: list[str] = []
         for name in names:
-            block = blocks[name][sequence_id]
+            block = blocks[name][index]
             take = a_base + (1 if name in a_more else 0)
             a_tasks.extend(block[:take])
             b_tasks.extend(block[take:])
@@ -101,7 +116,7 @@ def make_sequences(
         rng.shuffle(b_tasks)
         sequences.append(
             Sequence(
-                sequence_id=sequence_id,
+                sequence_id=batch * n_sequences + index,
                 episodes=[
                     Episode(episode=i + 1, a=a, b=b)
                     for i, (a, b) in enumerate(zip(a_tasks, b_tasks, strict=True))
@@ -109,6 +124,25 @@ def make_sequences(
             )
         )
     return sequences
+
+
+def make_sequence_set(
+    manifest: Manifest, seed: int, n_sequences: int = SEQUENCE_BATCH, episodes: int = 10
+) -> list[Sequence]:
+    """n_sequences sequences: one make_sequences batch up to SEQUENCE_BATCH, else whole batches of
+    SEQUENCE_BATCH (see the module docstring)."""
+    if n_sequences <= SEQUENCE_BATCH:
+        return make_sequences(manifest, seed, n_sequences, episodes)
+    if n_sequences % SEQUENCE_BATCH:
+        raise ValueError(
+            f"more than {SEQUENCE_BATCH} sequences come in whole batches of {SEQUENCE_BATCH}, "
+            f"got {n_sequences}"
+        )
+    return [
+        sequence
+        for batch in range(n_sequences // SEQUENCE_BATCH)
+        for sequence in make_sequences(manifest, seed, SEQUENCE_BATCH, episodes, batch=batch)
+    ]
 
 
 def write_sequences(

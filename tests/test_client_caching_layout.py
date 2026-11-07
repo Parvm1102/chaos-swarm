@@ -220,3 +220,12 @@ def test_a_tool_use_without_its_result_is_refused_before_any_call():
         build(messages=unanswered)
     answered = [*HISTORY, user_message("The next phase begins.")]  # result first, then text
     assert build(messages=answered)["messages"][-1]["role"] == "user"
+
+
+def test_adaptive_thinking_with_an_effort_level():
+    adaptive = ModelConfig(name="claude-sonnet-5-5", thinking="adaptive", effort="low")
+    request = build(model=adaptive)
+    assert request["thinking"] == {"type": "adaptive"}
+    assert request["output_config"] == {"effort": "low"}
+    assert "output_config" not in build(model=SONNET)  # the default sends neither
+    assert build(model=SONNET)["thinking"] == {"type": "between_tools"}

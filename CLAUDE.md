@@ -94,6 +94,8 @@ Research context: @docs/literature_brief.md
   sequences.json: 20 fixed sequences × 10 episodes × 2 agents. Within a sequence A and B get
   disjoint task sets; each sequence has 5 tasks per template (3/2 split between the agents);
   every task is used exactly 4 times. Every experimental arm uses the same sequences.
+  data/tasks/seed0-hard/sequences.json holds 40 sequences (since step 3): dealt in batches of
+  20, so sequences 0-19 are byte-identical to the original file and every task is used 8 times.
 - The schema dump (the canonical text `inspect_database` returns, ~4,300 characters) must
   exceed 2,000 characters so a raw task log can never fit through the 1,000-character
   channel budget.
@@ -133,7 +135,9 @@ Research context: @docs/literature_brief.md
   Models: claude-haiku-5-5 is the SUBJECT model of the main arms (decided after the step-3
   live check: Sonnet 5.5's reasoning_extraction classifier refuses verification talk and every
   reflection, Haiku 5.5 refused nothing); claude-sonnet-5-5 is the spot check (it ran the
-  step-2 calibration); claude-opus-5-5 spot checks only. Refusal counts stay in every record.
+  step-2 calibration), run with thinking adaptive + effort "low" (`--thinking adaptive
+  --effort low`: 0 refusals in the diagnostic episode); claude-opus-5-5 spot checks only.
+  Refusal counts stay in every record.
 - LLM, AgentRouter: official `openai` SDK (AsyncOpenAI with base_url) for its
   OpenAI-compatible endpoint (GPT models, chat completions + function calling), and the same
   `anthropic` SDK with base_url for its Anthropic-compatible endpoint (its Claude models).
@@ -158,7 +162,7 @@ Research context: @docs/literature_brief.md
 - swarm tasks generate --seed 0 --n 100       # data/tasks/seed0 (~11 s; --force to replace)
 - swarm tasks sequences --seed 0              # data/tasks/seed0/sequences.json
 - swarm tasks generate --seed 0 --n 100 --difficulty hard   # data/tasks/seed0-hard (~16 s)
-- swarm tasks sequences --seed 0 --difficulty hard          # the set steps 3–8 use
+- swarm tasks sequences --seed 0 --difficulty hard --n-seq 40   # the set steps 3–8 use
 - swarm tasks stats data/tasks/seed0
 - swarm tasks show data/tasks/seed0 task_0007 [--reveal]
 - swarm calibrate --dry-run --n 8             # solo task phases, scripted agent, offline

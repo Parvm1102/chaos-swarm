@@ -60,6 +60,11 @@ class ModelConfig(BaseModel):
     # v1 runs with extended thinking off. A budget could not be sent anyway: `budget_tokens`
     # is a 400 on all three 5.5 models (a later "thinking on" would be adaptive + effort).
     thinking_budget: int | None = None
+    # "off": each model's off switch (client.THINKING_OFF), the v1 default. "adaptive": the model
+    # decides when and how much to think, at `effort` (output_config.effort; None = the model's
+    # default). Adaptive is for named settings only, such as the Sonnet spot-check diagnostic.
+    thinking: Literal["off", "adaptive"] = "off"
+    effort: Literal["low", "medium", "high", "xhigh", "max"] | None = None
 
     @field_validator("temperature")
     @classmethod
@@ -74,6 +79,12 @@ class ModelConfig(BaseModel):
         if value is not None:
             raise ValueError("thinking_budget must stay None in v1 (no extended thinking)")
         return value
+
+    @model_validator(mode="after")
+    def _effort_needs_adaptive_thinking(self) -> Self:
+        if self.effort is not None and self.thinking != "adaptive":
+            raise ValueError("effort is only sent with thinking='adaptive'")
+        return self
 
 
 class RunConfig(BaseModel):

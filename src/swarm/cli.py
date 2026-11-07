@@ -44,7 +44,7 @@ from swarm.tasks.generate import (
     summarize,
     task_set_name,
 )
-from swarm.tasks.sequences import SEQUENCES_FILE, make_sequences, write_sequences
+from swarm.tasks.sequences import SEQUENCES_FILE, make_sequence_set, write_sequences
 from swarm.tasks.templates import TEMPLATES_BY_NAME
 
 app = typer.Typer(add_completion=False, no_args_is_help=True, help="Swarm collusion harness.")
@@ -58,6 +58,10 @@ DEFAULT_TASK_ROOT = Path("data/tasks")
 # The --provider and --cache-ttl choices come straight from config, so the CLI cannot drift.
 ProviderName = StrEnum("ProviderName", {name: name for name in get_args(Provider)})
 CacheTTLName = StrEnum("CacheTTLName", {ttl: ttl for ttl in get_args(CacheTTL)})
+ThinkingName = StrEnum("ThinkingName", {"off": "off", "adaptive": "adaptive"})
+EffortName = StrEnum(
+    "EffortName", {level: level for level in ("low", "medium", "high", "xhigh", "max")}
+)
 DifficultyName = StrEnum("DifficultyName", {name: name for name in DIFFICULTIES})
 
 PING_PROMPT = "Reply with the single word pong"
@@ -441,6 +445,14 @@ def episode_command(
     budget: Annotated[
         float | None, typer.Option(help="USD cap for this run (default SWARM_DEFAULT_BUDGET_USD).")
     ] = None,
+    thinking: Annotated[
+        ThinkingName,
+        typer.Option(help="off: each model's off switch (v1); adaptive: the model decides."),
+    ] = ThinkingName.off,
+    effort: Annotated[
+        EffortName | None,
+        typer.Option(help="output_config.effort (only with --thinking adaptive)."),
+    ] = None,
     force: Annotated[bool, typer.Option(help="Replace an existing run folder.")] = False,
 ) -> None:
     """One episode for the pair A, B: task phases, the 5-round channel, verdicts, feedback and
@@ -449,10 +461,20 @@ def episode_command(
     name = run_name or f"ep_{model_name}_s{sequence}e{episode}" + ("_dry" if dry_run else "")
     settings = Settings()
     try:
+        model_config = ModelConfig(
+            name=model_name,
+            max_tokens=TASK_MAX_TOKENS,
+            thinking=thinking.value,
+            effort=effort.value if effort else None,
+        )
+    except ValueError as error:  # pydantic's ValidationError is a ValueError
+        console.print(f"[red]{error}[/red]")
+        raise typer.Exit(code=1) from None
+    try:
         run = RunConfig(
             run_name=name,
             provider=provider,
-            model=ModelConfig(name=model_name, max_tokens=TASK_MAX_TOKENS),
+            model=model_config,
             budget_usd=budget if budget is not None else settings.SWARM_DEFAULT_BUDGET_USD,
             dry_run=dry_run,
             concurrency=2,
@@ -603,7 +625,7 @@ def tasks_sequences(
     task_dir = Path(root) / task_set_name(seed, difficulty.value)
     manifest = load_manifest(task_dir)
     try:
-        sequences = make_sequences(manifest, seed, n_sequences=n_seq, episodes=episodes)
+        sequences = make_sequence_set(manifest, seed, n_sequences=n_seq, episodes=episodes)
     except ValueError as error:
         console.print(f"[red]{error}[/red]")
         raise typer.Exit(code=1) from None

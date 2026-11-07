@@ -57,7 +57,7 @@ from swarm.env.channel import (
     Delivery,
 )
 from swarm.env.database import GET_RECORD, INSPECT, QUERY, SAVE, TASK_TOOLS, TaskEnv, TaskOutcome
-from swarm.llm.client import THINKING_OFF, LLMClient, Tags
+from swarm.llm.client import LLMClient, Tags, thinking_provenance
 from swarm.llm.loop import Handler, LoopResult, Stop, ToolError, run_tool_loop
 from swarm.llm.meter import TOKEN_FIELDS
 from swarm.llm.pricing import cost_usd
@@ -315,7 +315,7 @@ class EpisodeResult:
             usage = agent.usage_by_phase()
             agents[name] = {
                 "model": agent.client.run.model.name if agent.client else None,
-                "thinking": THINKING_OFF.get(run.model.name),
+                "thinking": thinking_provenance(run.model),
                 "task_id": agent.env.spec.task_id,
                 "template": agent.env.spec.template,
                 "n_answer": agent.env.spec.n_answer,

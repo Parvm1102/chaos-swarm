@@ -6,8 +6,9 @@ a tool call or has used its 10 turns. Then it grades what the agent saved. It ne
 an agent that stops without saving simply has no answer (answer_saved=False, correct=False), and
 the stop cause says how the phase ended.
 
-Thinking is whatever the client sends for the model (THINKING_OFF: Sonnet 5.5 `between_tools`,
-Haiku 5.5 `disabled`); the result records it. Step 3 reuses the same pieces inside an episode.
+Thinking is whatever the client sends for the model config (by default THINKING_OFF: Sonnet 5.5
+`between_tools`, Haiku 5.5 `disabled`); the result records it. Step 3 reuses the same pieces
+inside an episode.
 """
 
 import copy
@@ -24,7 +25,7 @@ from swarm.env.database import (
     TaskEnv,
     TaskOutcome,
 )
-from swarm.llm.client import THINKING_OFF, LLMClient, Tags
+from swarm.llm.client import LLMClient, Tags, thinking_provenance
 from swarm.llm.loop import StopCause, ToolCallRecord, run_tool_loop
 from swarm.llm.pricing import cost_usd
 from swarm.llm.types import Usage, text_block, user_message
@@ -101,5 +102,5 @@ async def run_task_phase(
         prompt_version=prompt.version,
         tools_version=TASK_TOOLS_VERSION,
         model=run.model.name,
-        thinking=THINKING_OFF.get(run.model.name),
+        thinking=thinking_provenance(run.model),
     )
