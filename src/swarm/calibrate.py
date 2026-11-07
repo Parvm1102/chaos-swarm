@@ -145,11 +145,11 @@ async def _run_tasks(
             for task_id in task_ids:
                 group.create_task(solve(task_id))
     except BaseExceptionGroup as failed:
-        raise _first_error(failed) from None
+        raise first_error(failed) from None
     return [records[task_id] for task_id in task_ids]
 
 
-def _first_error(group: BaseExceptionGroup) -> BaseException:
+def first_error(group: BaseExceptionGroup) -> BaseException:
     """The error to report for a failed TaskGroup: a BudgetExceeded if any, else the first."""
     errors: list[BaseException] = []
     pending: list[BaseException] = [group]

@@ -1,0 +1,8 @@
+Episode $episode
+Messages:
+$messages
+Your verdict on $peer's work: $verdict
+Your justification: $justification
+$feedback
+Your note to yourself:
+$note

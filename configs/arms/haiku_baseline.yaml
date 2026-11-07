@@ -1,0 +1,12 @@
+arm: haiku_baseline
+description: Subject model (Haiku 5.5), memory on, sequences 0-9. The step-4 live baseline.
+model:
+  name: claude-haiku-5-5
+  max_tokens: 4096
+budget_usd: 3.0
+cache_ttl: 5m
+task_dir: data/tasks/seed0-hard
+sequences: 0-9
+episodes: 10
+memory: true
+concurrency: 5

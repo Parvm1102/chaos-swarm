@@ -19,6 +19,7 @@ from rich.progress import Progress
 from rich.table import Table
 
 from swarm.agents.task_agent import TASK_MAX_TOKENS
+from swarm.arms import load_arm
 from swarm.calibrate import pick_tasks, run_calibration, summarize_calibration, write_summary
 from swarm.config import (
     RUNS_DIR,
@@ -46,6 +47,7 @@ from swarm.tasks.generate import (
 )
 from swarm.tasks.sequences import SEQUENCES_FILE, make_sequence_set, write_sequences
 from swarm.tasks.templates import TEMPLATES_BY_NAME
+from swarm.trajectories import run_arm
 
 app = typer.Typer(add_completion=False, no_args_is_help=True, help="Swarm collusion harness.")
 tasks_app = typer.Typer(
@@ -568,6 +570,95 @@ def _print_episode(record: dict[str, Any]) -> None:
         f"{record['refusals_total']} | shared reward "
         f"{record['reward']} | episode cost ${record['cost_usd']:.4f} | {record['wall_s']:.1f} s"
     )
+
+
+# swarm trajectories ---------------------------------------------------------------------------
+
+
+@app.command("trajectories")
+def trajectories_command(
+    arm_file: Annotated[Path, typer.Option("--arm", help="The arm's YAML file.")],
+    dry_run: Annotated[
+        bool, typer.Option("--dry-run", help="Scripted agents: no API calls, $0.")
+    ] = False,
+) -> None:
+    """Run (or resume) every trajectory of one arm, then write its summary. Live unless
+    --dry-run (a live run needs SWARM_LIVE=1)."""
+    try:
+        arm = load_arm(arm_file)
+    except (ValueError, OSError) as error:
+        console.print(f"[red]{arm_file}: {error}[/red]")
+        raise typer.Exit(code=1) from None
+    try:
+        run = arm.run_config(dry_run=dry_run)
+        if not dry_run and Settings().anthropic_api_key() is None:
+            raise LiveCallRefused("ANTHROPIC_API_KEY is not set (put it in .env)")
+    except LiveCallRefused as error:
+        console.print(f"[red]refused:[/red] {error}")
+        raise typer.Exit(code=2) from None
+    done = len(list(run.run_dir.glob("trajectories/s*/trajectory.json")))
+    meter = CostMeter.for_run(run)  # a resumed arm keeps its spend against the same cap
+    mode = "dry run (scripted agents)" if dry_run else "LIVE"
+    console.print(
+        f"{mode}: arm {arm.arm} on {arm.provider}/{arm.model.name}, memory "
+        f"{'on' if arm.memory else 'off'}, sequences {arm.sequences[0]}-{arm.sequences[-1]} "
+        f"({len(arm.sequences)}), {arm.episodes} episodes, {arm.concurrency} at a time, budget "
+        f"${arm.budget_usd:g} (spent ${meter.total_usd:.4f}; {done} trajectories done) -> "
+        f"{run.run_dir}"
+    )
+    try:
+        summary = asyncio.run(run_arm(arm, dry_run=dry_run, meter=meter))
+    except LiveCallRefused as error:
+        console.print(f"[red]refused:[/red] {error}")
+        raise typer.Exit(code=2) from None
+    except BudgetExceeded as error:
+        console.print(f"[red]over budget:[/red] {error}")
+        raise typer.Exit(code=3) from None
+    except anthropic.APIError as error:
+        console.print(f"[red]API error:[/red] {type(error).__name__}: {error}")
+        raise typer.Exit(code=1) from None
+    _print_arm(summary)
+    console.print(f"wrote {run.run_dir}/{{summary.json, trajectories.jsonl, trajectories/}}")
+
+
+def _print_arm(summary: dict[str, Any]) -> None:
+    prov = summary["provenance"]
+    table = Table(
+        title=f"{summary['arm']}: {prov['model']} (memory {'on' if prov['memory'] else 'off'}"
+        f"{', dry run' if summary['dry_run'] else ''})",
+        title_justify="left",
+        show_header=False,
+    )
+    table.add_column(style="bold")
+    table.add_column()
+    table.add_row("trajectories / episodes", f"{summary['trajectories']} / {summary['episodes']}")
+    table.add_row("TC (any mutual ACCEPT)", _rate_text(summary["tc"]))
+    table.add_row("CC (converged)", _rate_text(summary["cc"]))
+    table.add_row("EC (episodes, pooled)", _rate_text(summary["ec_pooled"]))
+    onset = summary["onset"]
+    table.add_row(
+        "onset episode",
+        f"{onset['by_episode'] or 'none'}; no onset in {onset['none']}; median {onset['median']}",
+    )
+    table.add_row("provisional pathway", str(summary["provisional_pathway"]))
+    table.add_row("task accuracy", _rate_text(summary["task_accuracy"]))
+    table.add_row("peek rate (task phases)", _rate_text(summary["peek_rate"]))
+    table.add_row("verdict sources", str(summary["verdict_sources"]))
+    table.add_row("refusals", f"{summary['refusals']['total']} {summary['refusals']['by_phase']}")
+    table.add_row("reflections complete", _rate_text(summary["reflections_complete"]))
+    proof = summary["channel_proof"]
+    table.add_row(
+        "channel proof",
+        f"max received {proof['max_delivered_chars']:,} chars < min peer record "
+        f"{proof['min_peer_log_chars']:,}",
+    )
+    cost = summary["cost"]
+    table.add_row(
+        "cost",
+        f"${cost['total_usd']:.4f} (${cost['per_episode_usd']:.4f}/episode, "
+        f"${cost['per_trajectory_usd']:.4f}/trajectory)",
+    )
+    console.print(table)
 
 
 # swarm tasks ...------------------------------------------------------------------------------

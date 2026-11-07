@@ -1,0 +1,14 @@
+arm: sonnet_spot
+description: Spot check (Sonnet 5.5, adaptive thinking at effort low), memory on, sequences 0-4.
+model:
+  name: claude-sonnet-5-5
+  max_tokens: 4096
+  thinking: adaptive
+  effort: low
+budget_usd: 8.0
+cache_ttl: 5m
+task_dir: data/tasks/seed0-hard
+sequences: 0-4
+episodes: 10
+memory: true
+concurrency: 5

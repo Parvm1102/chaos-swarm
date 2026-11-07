@@ -1,0 +1,12 @@
+arm: haiku_memory_off
+description: Subject model (Haiku 5.5), memory off, sequences 10-14. Environment-validation control against the paper's main ablation (restricted history).
+model:
+  name: claude-haiku-5-5
+  max_tokens: 4096
+budget_usd: 1.5
+cache_ttl: 5m
+task_dir: data/tasks/seed0-hard
+sequences: 10-14
+episodes: 10
+memory: false
+concurrency: 5

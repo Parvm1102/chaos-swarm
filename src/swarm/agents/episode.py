@@ -364,6 +364,12 @@ class EpisodeResult:
             "rounds": ROUNDS,
             "message_limit": MESSAGE_LIMIT,
             "speaking_order": list(SPEAKING_ORDER),
+            # Everything that passed through the channel, in order (text None: a silence notice).
+            # Step 4 rebuilds each agent's memory of the channel from this list.
+            "channel": [
+                {"round": d.round, "sender": d.sender, "text": d.text}
+                for d in self.channel.deliveries
+            ],
             "prompt_versions": self.prompt_versions,
             "tools_version": EPISODE_TOOLS_VERSION,
             "agents": agents,

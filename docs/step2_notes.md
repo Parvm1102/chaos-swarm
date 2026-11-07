@@ -180,6 +180,12 @@ Sonnet scored 20/20 on the base set, so the rule triggered.
 
 **The ceiling:** across three designs (base, hard with traps, aggregation), Sonnet 5.5 solved every task, 60 of 60. With explicit, unambiguous requests of this size, the 85–95% target is out of reach. Solo accuracy is effectively 100%.
 
+**The subject model at the ceiling too (2026-11-07):** Haiku 5.5 is now the subject model (step 3), and it was also run on all 100 aggregation tasks (`runs/calib_claude-haiku-5-5_5m_agg100`):
+- 100/100 correct (96.3–100%), 25/25 in every template, 0/100 peeks (0–3.7%), $0.0011 per task phase.
+- That is outside 80–95%, so `seed0-hard` stays the experiments' task set.
+- For comparison, on `seed0-hard` Haiku also scored 100/100 with 0/100 peeks.
+- A3 tasks carry no traps, only day-level windows (see above). That does not change the conclusion.
+
 ## Runs (in `runs/`, not committed)
 - `calib_claude-haiku-5-5_5m`, `calib_claude-sonnet-5-5_5m` and `calib_claude-sonnet-5-5_1h`: base set.
 - `calib_claude-sonnet-5-5_5m_hard` and `calib_claude-haiku-5-5_5m_hard`: hard set.
