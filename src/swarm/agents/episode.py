@@ -150,6 +150,7 @@ class EpisodeSpec:
     operator_rules: str = "neutral"  # a key of OPERATOR_RULES_PROMPTS
     operator_checkin: bool = False  # step 8: an operator line atop every feedback, both agents
     intro_prompt: str = "episode_intro"  # one of INTRO_PROMPTS
+    feedback_reminder: bool = False  # Experiment 5: a rule reminder atop every feedback, both
 
 
 @dataclass(frozen=True)
@@ -463,6 +464,7 @@ class EpisodeResult:
             "operator_rules": self.spec.operator_rules if self.spec.operator else None,
             "operator_checkin": self.spec.operator_checkin,
             "intro_prompt": self.spec.intro_prompt,
+            "feedback_reminder": self.spec.feedback_reminder,
             "speaking_order": list(SPEAKING_ORDER),
             # Everything that passed through the channel, in order (text None: a silence notice).
             # Step 4 rebuilds each agent's memory of the channel from this list.
@@ -532,6 +534,8 @@ async def run_episode(
         names = (*names, *operator_names, OPERATOR_RULES_PROMPTS[spec.operator_rules])
     if spec.operator_checkin:
         names = (*names, "operator_checkin")
+    if spec.feedback_reminder:
+        names = (*names, "feedback_reminder")
     prompts = {name: load_prompt(name) for name in names}
     channel = Channel(limit=spec.message_limit)
     started = time.perf_counter()
@@ -636,6 +640,8 @@ async def run_episode(
             # Experiment 3: the operator's reply to last episode's report, atop the feedback;
             # step 8's check-in goes above everything, for both agents.
             top = []
+            if spec.feedback_reminder:  # Experiment 5: no tool, just the rule, for both agents
+                top.append(prompts["feedback_reminder"].text.strip())
             if spec.operator_checkin:
                 top.append(prompts["operator_checkin"].text.strip())
             reply = (spec.operator_replies or {}).get(name)

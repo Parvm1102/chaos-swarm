@@ -47,6 +47,7 @@ from swarm.llm.meter import (
 )
 from swarm.llm.pricing import PRICES, cost_usd
 from swarm.llm.types import LLMResponse, text_block, user_message
+from swarm.replication import run_replication
 from swarm.step8 import run_followups
 from swarm.tasks.generate import (
     DIFFICULTIES,
@@ -654,7 +655,7 @@ def trajectories_command(
         console.print(f"[red]refused:[/red] {error}")
         raise typer.Exit(code=2) from None
     done = len(list(run.run_dir.glob("trajectories/s*/trajectory.json")))
-    meter = CostMeter.for_run(run)  # a resumed arm keeps its spend against the same cap
+    meter = arm.meter(dry_run=dry_run)  # keeps its spend on resume; the arm's breaker limits
     mode = "dry run (scripted agents)" if dry_run else "LIVE"
     console.print(
         f"{mode}: arm {arm.arm} on {arm.provider}/{arm.model.name}, memory "
@@ -950,6 +951,69 @@ def followups_command(
         for part, sub in h.items():
             if isinstance(sub, dict) and "verdict" in sub:
                 hypotheses.add_row(f"{name}: {part}", sub["verdict"])
+    console.print(hypotheses)
+    console.print(f"wrote {report['path']}")
+
+
+# swarm replication (Sonnet 5 subject family + Experiment 5) --------------------------------------
+
+
+@app.command("replication")
+def replication_command(
+    pilot: Annotated[Path, typer.Option(help="s5_pilot.")],
+    explicit: Annotated[Path, typer.Option(help="s5_explicit.")],
+    paper: Annotated[Path, typer.Option(help="s5_paper.")],
+    nomem: Annotated[Path, typer.Option(help="s5_paper_nomem.")],
+    reminder: Annotated[Path, typer.Option(help="e5_reminder.")],
+    control: Annotated[Path, typer.Option(help="e3_control (reused comparison).")],
+    checkin: Annotated[Path, typer.Option(help="e3_checkin (reused, descriptive).")],
+    haiku_explicit: Annotated[Path, typer.Option(help="haiku_baseline (Experiment 0).")],
+    haiku_paper: Annotated[Path, typer.Option(help="haiku_paper_nothink (Experiment 0).")],
+    dry_run: Annotated[bool, typer.Option("--dry-run", help="The dry-run arms.")] = False,
+) -> None:
+    """The pre-registered replication analysis (offline): R1, R2 (Sonnet 5), E1, E2 (reminder)."""
+    roles = {
+        "pilot": pilot,
+        "explicit": explicit,
+        "paper": paper,
+        "nomem": nomem,
+        "reminder": reminder,
+        "control": control,
+        "checkin": checkin,
+        "haiku_explicit": haiku_explicit,
+        "haiku_paper": haiku_paper,
+    }
+    arms = dict(zip(roles, _load_arms(list(roles.values())), strict=True))
+    try:
+        report = run_replication(arms, dry_run=dry_run)
+    except (ValueError, OSError) as error:
+        console.print(f"[red]{error}[/red]")
+        raise typer.Exit(code=1) from None
+    table = Table(title="replication arms", title_justify="left")
+    for column in ("role", "arm", "status", "TC", "EC", "accuracy", "refusals", "$"):
+        table.add_column(column)
+    for role, a in report["arms"].items():
+        if "collusion" not in a:
+            table.add_row(role, a["arm"], a["status"], "-", "-", "-", "-", "-")
+            continue
+        c = a["collusion"]
+        table.add_row(
+            role,
+            a["arm"],
+            a["status"],
+            f"{c['tc']['k']}/{c['tc']['n']}",
+            f"{c['ec_pooled']['k']}/{c['ec_pooled']['n']}",
+            _percent(a["task_accuracy"]["rate"]),
+            str(a["refusals"]["total"]),
+            f"{a['cost']['total_usd']:.2f}",
+        )
+    console.print(table)
+    console.print(f"pilot gate: {report['pilot_gate']}")
+    hypotheses = Table(title="pre-registered hypotheses", title_justify="left")
+    hypotheses.add_column("hypothesis")
+    hypotheses.add_column("verdict")
+    for name, h in report["hypotheses"].items():
+        hypotheses.add_row(name, h.get("verdict") or h.get("direction"))
     console.print(hypotheses)
     console.print(f"wrote {report['path']}")
 

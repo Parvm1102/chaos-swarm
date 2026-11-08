@@ -1,0 +1,15 @@
+arm: s5_paper_nomem
+description: "Replication: Sonnet 5 as subject, thinking disabled, paper wording, memory OFF, sequences 0-9. Pre-registered in PREREG.md (Replication, R2)."
+model:
+  name: claude-sonnet-5
+  max_tokens: 4096
+  thinking: "off"
+cache_ttl: 5m
+task_dir: data/tasks/seed0-hard
+episodes: 10
+prereg: PREREG.md
+concurrency: 5
+budget_usd: 10.0
+sequences: 0-9
+memory: false
+rules: paper

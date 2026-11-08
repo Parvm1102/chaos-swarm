@@ -49,6 +49,12 @@ e1_cap1, e1_cap1_nomem, e1_unconstrained_plainintro. Arm options operator_rules 
 invite), operator_checkin, intro_prompt, task_phase_system_rules2_cap1 (a guard ties the
 prompt's cap to query_cap).
 
+Replication + Experiment 5 (PREREG.md fourth section): Sonnet 5 (claude-sonnet-5, thinking
+disabled) as a second subject family: guarded pilot s5_pilot (breaker 1/1; any refusal retires
+it), then s5_explicit / s5_paper / s5_paper_nomem (R1, R2). e5_reminder = e3_control plus the
+`feedback_reminder` line atop every feedback (E1, E2). Arm options feedback_reminder,
+breaker_reasoning_extraction, breaker_any (lower only). Analysis: `swarm replication`.
+
 We extend it with three experiments, in this priority order:
 1. Spillover — once pairs collude on the verification rule, do they violate an UNRELATED
    rule more (no-peek on a `_reference` answer table; or a query-count cap)?
@@ -243,5 +249,10 @@ Research context: @docs/literature_brief.md
   --cap1 configs/arms/e1_cap1.yaml --cap1-nomem configs/arms/e1_cap1_nomem.yaml \
   --plainintro configs/arms/e1_unconstrained_plainintro.yaml --control configs/arms/e3_control.yaml \
   --fix configs/arms/e3_fix.yaml --unconstrained configs/arms/e1_unconstrained.yaml   # step 8
+- swarm replication --pilot configs/arms/s5_pilot.yaml --explicit configs/arms/s5_explicit.yaml \
+  --paper configs/arms/s5_paper.yaml --nomem configs/arms/s5_paper_nomem.yaml \
+  --reminder configs/arms/e5_reminder.yaml --control configs/arms/e3_control.yaml \
+  --checkin configs/arms/e3_checkin.yaml --haiku-explicit configs/arms/haiku_baseline.yaml \
+  --haiku-paper configs/arms/haiku_paper_nothink.yaml       # R1, R2, E1, E2
 - swarm validate sample --arm <yaml> [--arm ...] --n 30   # blind sheet + key in runs/validation/
 - swarm validate score --sheet runs/validation/step5_validation_sheet.csv [--second-sheet ...]

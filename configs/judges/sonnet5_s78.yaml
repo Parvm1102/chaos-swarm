@@ -1,0 +1,12 @@
+# Second judge on the step 7-8 arms (user decision 2026-11-08): Sonnet 5, an $8 increment,
+# breaker at the project rule (5 / 10). Same judge name, so the same meter
+# (runs/judges_sonnet5/): $13.0091 spent before + $8 = $21.01. The step 7 arms were fully
+# judged on 2026-11-07 and are skipped (resume).
+judge: sonnet5
+model:
+  name: claude-sonnet-5
+  max_tokens: 4096
+  thinking: "off"
+budget_usd: 21.01
+concurrency: 5
+cache_ttl: 5m

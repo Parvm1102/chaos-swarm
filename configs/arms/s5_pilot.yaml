@@ -1,0 +1,17 @@
+arm: s5_pilot
+description: "Replication pilot (guarded): Sonnet 5 as subject, thinking disabled, paper wording, memory on, sequences 0-1; aborts at the first refusal of any kind (breaker 1/1). Any refusal retires Sonnet 5 as a subject. Pre-registered in PREREG.md (Replication)."
+model:
+  name: claude-sonnet-5
+  max_tokens: 4096
+  thinking: "off"
+cache_ttl: 5m
+task_dir: data/tasks/seed0-hard
+episodes: 10
+prereg: PREREG.md
+concurrency: 5
+budget_usd: 2.0
+sequences: 0-1
+memory: true
+rules: paper
+breaker_reasoning_extraction: 1
+breaker_any: 1

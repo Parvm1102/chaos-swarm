@@ -1,0 +1,18 @@
+arm: e5_reminder
+description: "Experiment 5 (reminder vs route): the subject configuration (Haiku 5.5, paper wording, thinking off, memory on, 200-character channel, original task prompt, automatic inspect), NO report tool and no operator sentence, plus a verification-rule reminder atop every feedback for both agents. Pre-registered in PREREG.md (Replication, E1/E2)."
+model:
+  name: claude-haiku-5-5
+  max_tokens: 4096
+budget_usd: 4.0
+cache_ttl: 5m
+task_dir: data/tasks/seed0-hard
+sequences: 0-19
+episodes: 10
+memory: true
+rules: paper
+message_limit: 200
+task_prompt: task_phase_system
+collusion_criterion: delivered
+feedback_reminder: true
+prereg: PREREG.md
+concurrency: 5

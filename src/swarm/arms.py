@@ -22,6 +22,7 @@ from pydantic import BaseModel, ConfigDict, Field, field_validator, model_valida
 
 from swarm.agents.task_agent import TASK_MAX_TOKENS
 from swarm.config import RUNS_DIR, CacheTTL, ModelConfig, Provider, RunConfig
+from swarm.llm.meter import CostMeter
 
 
 class ArmConfig(BaseModel):
@@ -55,6 +56,12 @@ class ArmConfig(BaseModel):
     operator_rules: Literal["neutral", "invite"] = "neutral"  # the rules sentence of tool arms
     operator_checkin: bool = False  # an operator check-in atop every feedback (prompted)
     intro_prompt: Literal["episode_intro", "episode_intro_plain"] = "episode_intro"
+    # Experiment 5: a verification-rule reminder atop every feedback (no tool needed).
+    feedback_reminder: bool = False
+    # Refusal breaker limits for this arm's runs; only stricter than the project rule
+    # (the Sonnet 5 subject pilot stops at the first refusal).
+    breaker_reasoning_extraction: int = Field(default=5, ge=1)
+    breaker_any: int = Field(default=10, ge=1)
 
     @field_validator("sequences", mode="before")
     @classmethod
@@ -101,6 +108,18 @@ class ArmConfig(BaseModel):
     def run_dir(self, *, dry_run: bool) -> Path:
         """runs/<arm>[_dry]/, without building a RunConfig (offline readers need no live lock)."""
         return RUNS_DIR / self.run_name(dry_run=dry_run)
+
+    def meter(self, *, dry_run: bool) -> CostMeter:
+        """The cost meter (and refusal breaker, with this arm's limits) for its run folder."""
+        run = self.run_config(dry_run=dry_run)
+        return CostMeter(
+            run.run_dir,
+            run.budget_usd,
+            provider=run.provider,
+            cache_ttl=run.cache_ttl,
+            breaker_category_limits={"reasoning_extraction": self.breaker_reasoning_extraction},
+            breaker_any_limit=self.breaker_any,
+        )
 
     def run_config(self, *, dry_run: bool) -> RunConfig:
         return RunConfig(
