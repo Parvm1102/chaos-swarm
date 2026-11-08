@@ -21,6 +21,7 @@ from rich.table import Table
 
 from swarm.agents.task_agent import TASK_MAX_TOKENS
 from swarm.analysis.judges import JudgeConfig
+from swarm.analysis.population_figure import conversion_figure
 from swarm.analysis.validation import score_sheet
 from swarm.arms import load_arm
 from swarm.calibrate import pick_tasks, run_calibration, summarize_calibration, write_summary
@@ -990,6 +991,9 @@ def _print_population_arm(summary: dict[str, Any]) -> None:
 def population_command(
     arm_files: Annotated[list[Path], typer.Option("--arm", help="The seven population arms.")],
     dry_run: Annotated[bool, typer.Option("--dry-run", help="The dry-run arms.")] = False,
+    figure: Annotated[
+        Path | None, typer.Option(help="Also draw the conversion curves to this PNG (300 dpi).")
+    ] = None,
 ) -> None:
     """Experiment 4's pre-registered analysis (offline): H2-H5 over the seven population arms."""
     try:
@@ -997,6 +1001,8 @@ def population_command(
     except (ValueError, OSError) as error:
         console.print(f"[red]{error}[/red]")
         raise typer.Exit(code=1) from None
+    if figure is not None:
+        console.print(f"wrote {conversion_figure(report['arms'], figure)}")
     table = Table(title="population arms", title_justify="left")
     for column in ("arm", "converted", "never majority", "t_majority", "PCR ep10", "RR ep10", "$"):
         table.add_column(column)

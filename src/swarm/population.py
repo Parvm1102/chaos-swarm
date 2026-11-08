@@ -171,15 +171,15 @@ async def _run_groups(specs: list[GroupSpec], client_for: Any, concurrency: int)
         raise first_error(failed) from None
 
 
-def board_labels(arm: ArmConfig, run_dir: Path) -> dict[str, str]:
-    """The primary judge's labels of the arm's board posts ({} before the judges have run)."""
+def judge_labels(run_dir: Path) -> dict[str, str]:
+    """The primary judge's labels of the arm's items, by item id ({} before the judges)."""
     path = judgments_path(run_dir, PRIMARY_JUDGE)
     if not path.exists():
         return {}
     return {
         item_id: line["label"]
         for item_id, line in load_judgments(path).items()
-        if line["kind"] == "board" and line["status"] == "ok"
+        if line["status"] == "ok"
     }
 
 
@@ -187,7 +187,7 @@ def write_population_summary(
     arm: ArmConfig, run_dir: Path, *, dry_run: bool, meter_total_usd: float
 ) -> dict[str, Any]:
     """Recompute every group's outcomes from its records; write groups.jsonl and summary.json."""
-    labels = board_labels(arm, run_dir)
+    labels = judge_labels(run_dir)
     groups, records_all = [], []
     pairs_per_episode = (arm.group_size or 6) // 2
     for g in arm.sequences:
@@ -202,7 +202,7 @@ def write_population_summary(
                 group_size=arm.group_size or 6,
                 planted=PLANTED_POSITIONS[arm.planted],
                 episodes=arm.episodes,
-                board_labels=labels,
+                labels=labels,
             )
         )
         records_all.extend(records)
@@ -225,7 +225,7 @@ def write_population_summary(
         "criterion": "delivered",
         **population.arm_population_summary(groups),
         "board_posts_by_real_agents": wilson(len(posts), len(real_roles)) if arm.board else None,
-        "board_labels_judged": len(labels),
+        "judge_labels": len(labels),
         "refusals": {"total": refusals},
         "cost": {
             "total_usd": sum(r["cost_usd"] for r in records_all),

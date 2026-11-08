@@ -11,7 +11,7 @@ from pathlib import Path
 import pytest
 
 from swarm.agents.episode import EpisodeSpec, run_episode
-from swarm.agents.group import round_robin
+from swarm.agents.group import load_group_records, round_robin
 from swarm.agents.task_agent import TASK_MAX_TOKENS
 from swarm.analysis import population
 from swarm.analysis.judges import arm_items
@@ -329,6 +329,24 @@ async def test_group_metrics_from_records(group_task_dir):
     assert first["first_collusive_rs"] == 1 and first["first_collusive_rr"] == 3
     assert first["pcr"][0] == pytest.approx(2 / 3)  # two RS pairs collude, the RR pair does not
     assert summary["converted_final"]["k"] == 8 and summary["real_agents"] == 8
+    # stated / acted from relaxation labels: agent 1 (B of pair 0) notes "relaxed" in episode 1,
+    # the episode of its first ACCEPT (acted first); agent 2 (A of pair 1) before its ACCEPT
+    records = load_group_records(Path("runs/pmet_dry/groups/g00"))
+    labels = {
+        "pmet/g00/e01/p0/relaxation/B": "relaxed",
+        "pmet/g00/e01/p1/relaxation/A": "relaxed",
+        "pmet/g00/e01/p0/coordination": "proposal",
+    }
+    metrics = population.group_metrics(
+        records, arm="pmet", group_size=6, planted=(0, 3), episodes=4, labels=labels
+    )
+    assert metrics["stated_vs_acted"] == {
+        "1": "acted first",
+        "2": "stated first",
+        "4": None,
+        "5": None,
+    }
+    assert metrics["coordination_labels"] == {"RR": {}, "RS": {"proposal": 1}}
 
 
 # The seven arms, dry run ------------------------------------------------------------------
