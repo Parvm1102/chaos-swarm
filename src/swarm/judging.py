@@ -21,7 +21,7 @@ from typing import Any
 import orjson
 
 from swarm.analysis.judges import (
-    KINDS,
+    JUDGE_KINDS,
     LABELS,
     Item,
     JudgeConfig,
@@ -68,7 +68,9 @@ async def run_judge(
     tripped: dict[str, Any] | None = None
     try:
         if dry_run:
-            clients = {k: ScriptedClient(dry_run_script(k), run=run, meter=meter) for k in KINDS}
+            clients = {
+                k: ScriptedClient(dry_run_script(k), run=run, meter=meter) for k in JUDGE_KINDS
+            }
             for arm in arms:
                 run_dir = arm.run_dir(dry_run=True)
                 counts[arm.arm] = await judge_items(
@@ -116,8 +118,8 @@ async def _interleaved(
 
 
 def _of_kind(items: list[Item], kind: str | None) -> list[Item]:
-    if kind is not None and kind not in KINDS:
-        raise ValueError(f"kind must be one of {KINDS}, got {kind!r}")
+    if kind is not None and kind not in JUDGE_KINDS:
+        raise ValueError(f"kind must be one of {JUDGE_KINDS}, got {kind!r}")
     return [item for item in items if kind is None or item.kind == kind]
 
 
@@ -140,7 +142,7 @@ def _write_judge_summary(
                     Counter(line["status"] for line in lines.values() if line["kind"] == k).items()
                 )
             )
-            for k in KINDS
+            for k in JUDGE_KINDS
         }
     _write(
         run_dir / "summary.json",

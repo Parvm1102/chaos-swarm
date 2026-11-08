@@ -64,6 +64,12 @@ class ArmConfig(BaseModel):
     # (the Sonnet 5 subject pilot stops at the first refusal).
     breaker_reasoning_extraction: int = Field(default=5, ge=1)
     breaker_any: int = Field(default=10, ge=1)
+    # Experiment 4 (populations): groups of group_size agents in rotating pairs, `planted`
+    # scripted proposers (positions 0, or 0 and 3) and the shared board. `sequences` then names
+    # groups of <task_dir>/groups.json, and `concurrency` counts groups in flight.
+    group_size: int | None = None
+    planted: int = Field(default=0, ge=0, le=2)
+    board: bool = False
 
     @field_validator("sequences", mode="before")
     @classmethod
@@ -99,6 +105,25 @@ class ArmConfig(BaseModel):
         return self
 
     @model_validator(mode="after")
+    def _population_options(self) -> Self:
+        if self.group_size is None:
+            if self.planted or self.board:
+                raise ValueError("planted and board need a group_size (a population arm)")
+            return self
+        if self.group_size != 6:
+            raise ValueError("population arms have groups of 6 (the round robin, the positions)")
+        pair_only = (
+            self.scripted_peer,
+            self.operator_policy,
+            self.feedback_reminder,
+            self.feedback_question,
+            self.intro_prompt != "episode_intro",
+        )
+        if any(pair_only):
+            raise ValueError("population arms take none of the pair-only options")
+        return self
+
+    @model_validator(mode="after")
     def _room_for_the_task_phase(self) -> Self:
         if self.model.max_tokens < TASK_MAX_TOKENS:
             raise ValueError(f"model.max_tokens must be at least {TASK_MAX_TOKENS} for episodes")
@@ -130,7 +155,8 @@ class ArmConfig(BaseModel):
             model=self.model,
             budget_usd=self.budget_usd,
             dry_run=dry_run,
-            concurrency=2 * self.concurrency,  # each trajectory has at most two calls in flight
+            # each trajectory has at most two calls in flight; each group six (three pairs)
+            concurrency=(6 if self.group_size else 2) * self.concurrency,
             cache_ttl=self.cache_ttl,
             seed=self.seed,
         )

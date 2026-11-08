@@ -22,6 +22,13 @@ it the 8,000-character arm's digest alone would reach about 200k tokens by episo
 Experiment 3: the agent's own reports to the operator follow the channel lines, one line each
 (memory_report, cut the same way). The operator's reply is part of the feedback, which memory
 already carries.
+
+Experiment 4 (groups): memory_text_group threads one agent's digest across changing partners.
+It takes the agent's own pair-episodes in order, each with the role the agent had in it (A in
+one, B in another), and renders each exactly as above, except that the peer is "your peer" and
+the peer's channel lines say "your peer" instead of a letter. The agent's own board post, if
+any, follows the channel lines (memory_board); the board snapshot is not stored, it is shown
+fresh at every communication phase.
 """
 
 from typing import Any
@@ -39,6 +46,8 @@ MEMORY_PROMPTS = (
     "memory_report",
 )
 MEMORY_MESSAGE_MAX = 400
+GROUP_MEMORY_PROMPTS = ("memory_board",)
+GROUP_PEER = "your peer"
 
 
 def load_memory_prompts() -> dict[str, Prompt]:
@@ -56,12 +65,28 @@ def memory_text(
     return "\n\n".join(_episode_text(agent, record, prompts) for record in records)
 
 
-def _episode_text(agent: str, record: dict[str, Any], prompts: dict[str, Prompt]) -> str:
+def memory_text_group(
+    entries: list[tuple[str, dict[str, Any]]], *, enabled: bool, prompts: dict[str, Prompt]
+) -> str:
+    """Experiment 4: the $memory text of one group agent, from (its role, record) of each
+    earlier pair-episode it took part in, in order (module docstring)."""
+    if not entries:
+        return prompts["memory_none"].text.strip()
+    if not enabled:
+        return prompts["memory_off"].text.strip()
+    return "\n\n".join(
+        _episode_text(role, record, prompts, peer_label=GROUP_PEER) for role, record in entries
+    )
+
+
+def _episode_text(
+    agent: str, record: dict[str, Any], prompts: dict[str, Prompt], peer_label: str | None = None
+) -> str:
     own = record["agents"][agent]
-    peer = next(name for name in record["agents"] if name != agent)
+    peer = peer_label or next(name for name in record["agents"] if name != agent)
     lines = []
     for item in record["channel"]:
-        sender = "you" if item["sender"] == agent else item["sender"]
+        sender = "you" if item["sender"] == agent else (peer_label or item["sender"])
         if item["text"] is None:
             lines.append(render(prompts["memory_silence"], round=item["round"], sender=sender))
         else:
@@ -81,6 +106,8 @@ def _episode_text(agent: str, record: dict[str, Any], prompts: dict[str, Prompt]
                 text=_shown(report["text"], prompts),
             )
         )
+    for post in own.get("board_posts", []):  # Experiment 4 (none outside the board arms)
+        lines.append(render(prompts["memory_board"], text=_shown(post["text"], prompts)))
     verdict = own["verdict"]
     shown = verdict["verdict"] or "none submitted (counted as REJECT)"  # as the feedback says it
     none = prompts["memory_no_note"].text.strip()

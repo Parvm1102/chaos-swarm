@@ -47,6 +47,7 @@ from swarm.llm.meter import (
 )
 from swarm.llm.pricing import PRICES, cost_usd
 from swarm.llm.types import LLMResponse, text_block, user_message
+from swarm.population import run_population
 from swarm.replication import run_replication
 from swarm.step8 import run_followups
 from swarm.tasks.generate import (
@@ -59,6 +60,7 @@ from swarm.tasks.generate import (
     summarize,
     task_set_name,
 )
+from swarm.tasks.groups import GROUPS_FILE, make_groups, write_groups
 from swarm.tasks.sequences import SEQUENCES_FILE, make_sequence_set, write_sequences
 from swarm.tasks.templates import TEMPLATES_BY_NAME
 from swarm.trajectories import run_arm, summarize_arm
@@ -703,6 +705,9 @@ def summarize_command(
 
 
 def _print_arm(summary: dict[str, Any]) -> None:
+    if summary.get("population"):
+        _print_population_arm(summary)
+        return
     prov = summary["provenance"]
     table = Table(
         title=f"{summary['arm']}: {prov['model']} (memory {'on' if prov['memory'] else 'off'}, "
@@ -955,6 +960,69 @@ def followups_command(
     console.print(f"wrote {report['path']}")
 
 
+def _print_population_arm(summary: dict[str, Any]) -> None:
+    table = Table(
+        title=f"{summary['arm']} (population: k={summary['planted']}, board "
+        f"{'on' if summary['board'] else 'off'}{', dry run' if summary['dry_run'] else ''})",
+        title_justify="left",
+    )
+    table.add_column("metric")
+    table.add_column("value")
+    table.add_row("groups / real agents", f"{summary['groups']} / {summary['real_agents']}")
+    table.add_row("converted by episode 10", _rate_text(summary["converted_final"]))
+    pcr = [p["mean"] for p in summary["pcr_by_episode"]]
+    table.add_row("PCR by episode", " ".join("-" if v is None else f"{v:.2f}" for v in pcr))
+    rr = [p["mean"] for p in summary["rr_collusion_by_episode"]]
+    table.add_row("real-real collusion", " ".join("-" if v is None else f"{v:.2f}" for v in rr))
+    table.add_row("time to majority", str(summary["t_majority"]))
+    table.add_row("time to norm", str(summary["t_norm"]))
+    table.add_row("exposure at conversion", str(summary["exposure_at_conversion"]["median"]))
+    table.add_row("task accuracy (real)", _rate_text(summary["task_accuracy"]))
+    table.add_row("refusals", str(summary["refusals"]["total"]))
+    table.add_row("cost", f"${summary['cost']['total_usd']:.4f}")
+    console.print(table)
+
+
+# swarm population (Experiment 4) ----------------------------------------------------------------
+
+
+@app.command("population")
+def population_command(
+    arm_files: Annotated[list[Path], typer.Option("--arm", help="The seven population arms.")],
+    dry_run: Annotated[bool, typer.Option("--dry-run", help="The dry-run arms.")] = False,
+) -> None:
+    """Experiment 4's pre-registered analysis (offline): H2-H5 over the seven population arms."""
+    try:
+        report = run_population(_load_arms(arm_files), dry_run=dry_run)
+    except (ValueError, OSError) as error:
+        console.print(f"[red]{error}[/red]")
+        raise typer.Exit(code=1) from None
+    table = Table(title="population arms", title_justify="left")
+    for column in ("arm", "converted", "never majority", "t_majority", "PCR ep10", "RR ep10", "$"):
+        table.add_column(column)
+    for role, a in report["arms"].items():
+        pcr, rr = a["pcr_by_episode"][-1]["mean"], a["rr_collusion_by_episode"][-1]["mean"]
+        table.add_row(
+            role,
+            _rate_text(a["converted_final"]),
+            str(a["groups_majority_never"]),
+            str(a["t_majority"]),
+            "-" if pcr is None else f"{pcr:.2f}",
+            "-" if rr is None else f"{rr:.2f}",
+            f"{a['cost']['total_usd']:.2f}",
+        )
+    console.print(table)
+    hypotheses = Table(title="pre-registered hypotheses", title_justify="left")
+    hypotheses.add_column("hypothesis")
+    hypotheses.add_column("verdict")
+    for name, h in report["hypotheses"].items():
+        hypotheses.add_row(name, h["verdict"])
+        for part, sub in h.get("comparisons", {}).items():
+            hypotheses.add_row(f"  {part}", sub["verdict"])
+    console.print(hypotheses)
+    console.print(f"wrote {report['path']}")
+
+
 # swarm replication (Sonnet 5 subject family + Experiment 5) --------------------------------------
 
 
@@ -1051,7 +1119,8 @@ def judge_command(
         int | None, typer.Option("--limit", help="At most this many new items per arm (pilot).")
     ] = None,
     kind: Annotated[
-        str | None, typer.Option("--kind", help="Only this item kind: coordination or relaxation.")
+        str | None,
+        typer.Option("--kind", help="Only this item kind: coordination, relaxation or board."),
     ] = None,
     interleave: Annotated[
         bool,
@@ -1062,8 +1131,8 @@ def judge_command(
 ) -> None:
     """Label every episode of the arms with one judge (resumes; items already labelled are
     skipped). Live unless --dry-run (a live run needs SWARM_LIVE=1)."""
-    if kind not in (None, "coordination", "relaxation"):
-        console.print("[red]--kind must be coordination or relaxation[/red]")
+    if kind not in (None, "coordination", "relaxation", "board"):
+        console.print("[red]--kind must be coordination, relaxation or board[/red]")
         raise typer.Exit(code=1)
     if backend not in ("sync", "batch"):
         console.print("[red]--backend must be sync or batch[/red]")
@@ -1387,6 +1456,32 @@ def tasks_sequences(
     console.print(
         f"wrote {content.n_sequences} sequences x {content.episodes} episodes -> {path} "
         f"(manifest {content.manifest_digest[:12]})"
+    )
+
+
+@tasks_app.command("groups")
+def tasks_groups(
+    seed: Annotated[int, typer.Option(help="Task set seed (also seeds the shuffles).")] = 0,
+    n_groups: Annotated[int, typer.Option(help="Number of groups.")] = 10,
+    root: Annotated[Path, typer.Option(help="Root folder for task sets.")] = DEFAULT_TASK_ROOT,
+    difficulty: Annotated[
+        DifficultyName, typer.Option(help="Which task set: base or hard.")
+    ] = DifficultyName.base,
+) -> None:
+    """Write <root>/seed<seed>[-hard]/groups.json: Experiment 4's task schedule (6 agents x 10
+    episodes per group, 60 distinct tasks per group)."""
+    task_dir = Path(root) / task_set_name(seed, difficulty.value)
+    manifest = load_manifest(task_dir)
+    try:
+        groups = make_groups(manifest, seed, n_groups=n_groups)
+    except ValueError as error:
+        console.print(f"[red]{error}[/red]")
+        raise typer.Exit(code=1) from None
+    path = task_dir / GROUPS_FILE
+    content = write_groups(path, manifest, groups, seed)
+    console.print(
+        f"wrote {content.n_groups} groups x {content.group_size} agents x {content.episodes} "
+        f"episodes -> {path} (manifest {content.manifest_digest[:12]})"
     )
 
 

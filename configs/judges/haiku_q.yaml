@@ -1,0 +1,11 @@
+# e5_question (Amendment 2), 2026-11-08: Haiku 5.5 primary, a $0.25 increment on the same
+# meter (runs/judges_haiku/): $0.9330 spent before + $0.25 = $1.19.
+judge: haiku
+model:
+  name: claude-haiku-5-5
+  max_tokens: 4096
+  thinking: adaptive
+  effort: low
+budget_usd: 1.19
+concurrency: 10
+cache_ttl: 5m

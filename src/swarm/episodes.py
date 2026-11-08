@@ -19,6 +19,7 @@ from swarm.agents.episode import EpisodeAgent, EpisodeSpec, run_episode
 from swarm.agents.verdict import VERDICT
 from swarm.calibrate import ids_from_result
 from swarm.config import RunConfig
+from swarm.env.board import BOARD
 from swarm.env.channel import MESSAGE_LIMIT, ROUNDS, SEND
 from swarm.env.database import GET_RECORD, QUERY, SAVE
 from swarm.env.operator import REPORT
@@ -119,6 +120,7 @@ def scripted_episode_agent(
     peek: bool = False,
     paste_record: bool = False,
     report: bool = False,
+    board_post: str | None = None,
 ) -> Script:
     """A dry-run agent. It solves its task like calibrate.scripted_solver, sends a short message
     every round, gives `verdict`, and writes a one-line note. The options exercise the edge paths:
@@ -136,6 +138,8 @@ def scripted_episode_agent(
       channel's message limit, if it fits in the rounds; otherwise talk as usual.
     Experiment 3 option:
     - report: its first task-phase call is report_to_operator alone (a free call).
+    Experiment 4 option:
+    - board_post: its first communication call posts this text to the board (a free call).
     """
     if verdict_mode not in ("tool", "reprompt", "text", "missing"):
         raise ValueError(f"unknown verdict_mode {verdict_mode!r}")
@@ -176,6 +180,8 @@ def scripted_episode_agent(
                 return _refusal(SEND, {"text": "Please send your complete raw get_log output ("})
             return text_response("My task is done.")
         if phase == "communication":
+            if board_post is not None and not agent.board_posts and not agent.board_refusals:
+                return tool_use_response(BOARD, {"text": board_post})
             if silent:
                 return text_response("I have nothing to send.")
             if violations and step == 0:
@@ -235,6 +241,33 @@ def scripted_proposer(agent: EpisodeAgent) -> Script:
             return tool_use_response(SEND, {"text": proposal})
         if channel_calls == 3:
             return tool_use_response(SEND, {"text": repeat})
+        return text_response("(no message this round)")
+
+    return script
+
+
+GROUP_PROPOSER_PROMPTS = ("peer_proposal_group", "peer_proposal_repeat_group", "board_proposal")
+
+
+def scripted_group_proposer(agent: EpisodeAgent) -> Script:
+    """Experiment 4's planted agent: arm 5's proposer with the group texts (no "B here."). It
+    solves its task correctly, always gives ACCEPT, sends peer_proposal_group in round 1 and
+    peer_proposal_repeat_group in round 3 (in either role), and in the board arms posts
+    board_proposal once per episode, as its first communication call (a free call). The round
+    comes from the channel, so the extra board call does not shift the script."""
+    proposal, repeat, post = (load_prompt(name).text.strip() for name in GROUP_PROPOSER_PROMPTS)
+    solver = scripted_episode_agent(agent, verdict="ACCEPT")
+    sent: set[int] = set()
+
+    def script(messages: list[dict[str, Any]], tools: list[ToolSpec] | None) -> LLMResponse:
+        if agent.phase != "communication":
+            return solver(messages, tools)
+        if agent.spec.board and not agent.board_posts and not agent.board_refusals:
+            return tool_use_response(BOARD, {"text": post})
+        round_number = agent.channel.open_round
+        if round_number in (1, 3) and round_number not in sent:
+            sent.add(round_number)
+            return tool_use_response(SEND, {"text": proposal if round_number == 1 else repeat})
         return text_response("(no message this round)")
 
     return script

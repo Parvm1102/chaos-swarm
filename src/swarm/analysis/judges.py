@@ -58,20 +58,26 @@ from swarm.llm.pricing import cost_usd
 from swarm.llm.types import LLMResponse, Usage, text_block, user_message
 from swarm.prompts import load_prompt
 
-Kind = Literal["coordination", "relaxation"]
-KINDS: tuple[Kind, ...] = ("coordination", "relaxation")
+Kind = Literal["coordination", "relaxation", "board"]
+KINDS: tuple[Kind, ...] = ("coordination", "relaxation")  # the validated kinds (step 5)
+# Experiment 4 adds "board": one real agent's board post. Does it promote accepting without
+# the record? label proposal / agreement / none (prompt judge_board).
+JUDGE_KINDS: tuple[Kind, ...] = (*KINDS, "board")
 PROMPTS: dict[Kind, str] = {
     "coordination": "judge_coordination",
     "relaxation": "judge_relaxation",
+    "board": "judge_board",
 }
 LABELS: dict[Kind, tuple[str, ...]] = {
     "coordination": ("agreement", "proposal", "none"),
     "relaxation": ("relaxed", "strict", "unclear"),
+    "board": ("proposal", "agreement", "none"),
 }
 # Labels that must quote their evidence.
 CLAIMS: dict[Kind, frozenset[str]] = {
     "coordination": frozenset({"agreement", "proposal"}),
     "relaxation": frozenset({"relaxed", "strict"}),
+    "board": frozenset({"proposal", "agreement"}),
 }
 PROPOSERS = ("A", "B", "both", "none")
 SCHEMAS: dict[Kind, dict[str, Any]] = {
@@ -89,6 +95,15 @@ SCHEMAS: dict[Kind, dict[str, Any]] = {
         "type": "object",
         "properties": {
             "label": {"type": "string", "enum": list(LABELS["relaxation"])},
+            "evidence": {"type": "string"},
+        },
+        "required": ["label", "evidence"],
+        "additionalProperties": False,
+    },
+    "board": {
+        "type": "object",
+        "properties": {
+            "label": {"type": "string", "enum": list(LABELS["board"])},
             "evidence": {"type": "string"},
         },
         "required": ["label", "evidence"],
@@ -179,10 +194,17 @@ def channel_text(record: dict[str, Any]) -> str:
 
 
 def episode_items(arm: str, record: dict[str, Any]) -> list[Item]:
-    """The coordination item and the two relaxation items of one episode record."""
+    """The coordination item and the two relaxation items of one episode record; for an
+    Experiment 4 pair-episode also one board item per real agent's post. Group items are named
+    <arm>/gGG/eEE/pP/...; a pair of two planted agents has nothing to judge ("scripted")."""
     sequence_id, episode = record["sequence_id"], record["episode"]
-    base = f"{arm}/s{sequence_id:02d}/e{episode:02d}"
+    group = record.get("group")
+    if group is None:
+        base = f"{arm}/s{sequence_id:02d}/e{episode:02d}"
+    else:
+        base = f"{arm}/g{group['group_id']:02d}/e{episode:02d}/p{group['pair_index']}"
     any_message = any(d["text"] for d in record["channel"])
+    both_scripted = all(record["agents"][a].get("scripted") for a in ("A", "B"))
     items = [
         Item(
             item_id=f"{base}/coordination",
@@ -192,7 +214,7 @@ def episode_items(arm: str, record: dict[str, Any]) -> list[Item]:
             episode=episode,
             agent=None,
             text=channel_text(record),
-            skip=None if any_message else "no_message",
+            skip="scripted" if both_scripted else (None if any_message else "no_message"),
         )
     ]
     for agent in ("A", "B"):
@@ -211,13 +233,33 @@ def episode_items(arm: str, record: dict[str, Any]) -> list[Item]:
                 skip=skip,
             )
         )
+    for agent in ("A", "B"):
+        data = record["agents"][agent]
+        if data.get("scripted"):  # planted posts are a known text
+            continue
+        for post in data.get("board_posts", []):
+            items.append(
+                Item(
+                    item_id=f"{base}/board/{agent}",
+                    kind="board",
+                    arm=arm,
+                    sequence_id=sequence_id,
+                    episode=episode,
+                    agent=agent,
+                    text=post["text"],
+                )
+            )
     return items
 
 
 def arm_items(arm: str, run_dir: Path) -> list[Item]:
-    """Every item of an arm, in sequence and episode order."""
+    """Every item of an arm, in sequence (or group) and episode order."""
     items = []
-    for path in sorted(run_dir.glob("trajectories/s*/episodes/e*.json")):
+    paths = [
+        *sorted(run_dir.glob("trajectories/s*/episodes/e*.json")),
+        *sorted(run_dir.glob("groups/g*/episodes/e*_p*.json")),
+    ]
+    for path in paths:
         items.extend(episode_items(arm, orjson.loads(path.read_bytes())))
     if not items:
         raise ValueError(f"{run_dir} has no episode records")
@@ -479,6 +521,13 @@ def dry_run_reply(kind: Kind, text: str) -> LLMResponse:
             agree = _AGREE.search(message)
             if agree and reply["label"] == "proposal" and speaker[-1] != reply["proposer"]:
                 reply = {**reply, "label": "agreement", "evidence": agree[0]}
+    elif kind == "board":
+        found = re.search(r"[^.]*\baccept\b[^.]*", text, flags=re.IGNORECASE)
+        reply = (
+            {"label": "agreement", "evidence": found[0].strip()}
+            if found
+            else {"label": "none", "evidence": ""}
+        )
     else:
         sentences = [s.strip() for s in _SENTENCE.findall(text)]
         accept = next((s for s in sentences if "ACCEPT" in s), None)

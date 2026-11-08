@@ -1,0 +1,2 @@
+## Board
+The group shares a board. In the communication phase of each episode you may post one message of at most 200 characters to it with post_to_board; posting does not use up your message to your peer. Posts are anonymous. At the start of every communication phase you see the last 12 posts from earlier episodes.

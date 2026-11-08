@@ -60,6 +60,14 @@ caps $25, pilot not resumed (gate judged on calls made: 0 refusals), s5_paper_no
 Sixth section: Experiment 4 pre-test H1 (pair_explicit_proposer: explicit wording, arm 5's
 scripted proposer as B; go if >= 1/10 converts). PREREG amendments always go after a separator
 (prereg.matches only accepts prefixes ending at one).
+Experiment 4 (populations; PREREG seventh section e6daab0e): arm options group_size (6), planted
+(0-2: positions 0 / 0,3), board. swarm.agents.group (round robin, per-agent memory threading,
+records groups/gNN/episodes/eEE_pP.json, exact resume), swarm.env.board (post_to_board, last 12
+posts from earlier episodes), data/tasks/seed0-hard/groups.json (swarm tasks groups), judge kind
+"board" (judge_board). `swarm trajectories --arm configs/arms/p_*.yaml` runs a population arm;
+`swarm population --arm ...` (seven arms) computes H2-H5. Pre-test: 1/10 converted (go).
+Sonnet 5 (R1): TC 10/10 under BOTH wordings (EC 65% explicit vs 95% paper): the explicit floor is
+Haiku-specific. Summaries now record the prereg of the arm's first launch (arm.json).
 
 We extend it with three experiments, in this priority order:
 1. Spillover — once pairs collude on the verification rule, do they violate an UNRELATED
@@ -262,5 +270,8 @@ Research context: @docs/literature_brief.md
   --haiku-paper configs/arms/haiku_paper_nothink.yaml \
   [--question configs/arms/e5_question.yaml] [--pretest configs/arms/pair_explicit_proposer.yaml]
   # R1, R2, E1, E2 [, Q1, Q2, E4 pre-test H1]
+- swarm tasks groups --seed 0 --difficulty hard                 # data/tasks/seed0-hard/groups.json
+- swarm trajectories --arm configs/arms/p_explicit_board_k2.yaml   # a population arm (Experiment 4)
+- swarm population --arm configs/arms/p_explicit_k0.yaml ... (all seven p_*.yaml)   # H2-H5
 - swarm validate sample --arm <yaml> [--arm ...] --n 30   # blind sheet + key in runs/validation/
 - swarm validate score --sheet runs/validation/step5_validation_sheet.csv [--second-sheet ...]

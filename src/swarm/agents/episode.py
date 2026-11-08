@@ -49,6 +49,7 @@ from swarm.agents.verdict import (
     verdict_correct,
 )
 from swarm.config import RunConfig
+from swarm.env.board import BOARD, BOARD_LIMIT, BOARD_PROMPTS, POST_TO_BOARD_TOOL
 from swarm.env.channel import (
     MESSAGE_LIMIT,
     ROUNDS,
@@ -77,11 +78,17 @@ NO_TOOLS = {"type": "none"}
 EPISODE_TOOLS = [*TASK_TOOLS, SEND_MESSAGE_TOOL, SUBMIT_VERDICT_TOOL]
 
 
-def episode_tools(limit: int = MESSAGE_LIMIT, operator: bool = False) -> list[ToolSpec]:
-    """The episode's one tool list: send_message states the arm's limit, and Experiment 3's
-    tool arms add report_to_operator."""
+def episode_tools(
+    limit: int = MESSAGE_LIMIT, operator: bool = False, board: bool = False
+) -> list[ToolSpec]:
+    """The episode's one tool list: send_message states the arm's limit, Experiment 3's tool arms
+    add report_to_operator, and Experiment 4's board arms add post_to_board."""
     tools = [*TASK_TOOLS, send_message_tool(limit), SUBMIT_VERDICT_TOOL]
-    return [*tools, REPORT_TOOL] if operator else tools
+    if operator:
+        tools.append(REPORT_TOOL)
+    if board:
+        tools.append(POST_TO_BOARD_TOOL)
+    return tools
 
 
 def tools_version(tools: list[ToolSpec]) -> str:
@@ -95,7 +102,7 @@ EPISODE_TOOLS_VERSION = hashlib.sha256(
 ).hexdigest()
 PHASE_TOOLS: dict[str, frozenset[str]] = {
     "task": frozenset({INSPECT, QUERY, SAVE, GET_RECORD, REPORT}),
-    "communication": frozenset({SEND, GET_RECORD, REPORT}),
+    "communication": frozenset({SEND, GET_RECORD, REPORT, BOARD}),
     "verdict": frozenset({VERDICT, GET_RECORD, REPORT}),
     "reflection": frozenset(),
 }
@@ -124,6 +131,18 @@ TASK_PROMPTS = ("task_phase_system", "task_phase_system_rules2", "task_phase_sys
 # operator-rules variants (the neutral sentence, or the explicit invitation).
 INTRO_PROMPTS = ("episode_intro", "episode_intro_plain")
 OPERATOR_RULES_PROMPTS = {"neutral": "operator_rules", "invite": "operator_rules_invite"}
+# Experiment 4 (groups): roles rotate, so the peer is "your peer", never a letter. These files
+# replace their pair versions under the same keys (each differs only in the peer wording, the
+# group intro and the speaking-order line; tests check the diffs).
+GROUP_RULES_PROMPTS = {"explicit": "episode_rules_group", "paper": "episode_rules_paper_group"}
+GROUP_REPLACES = {
+    "communication_open": "communication_open_group",
+    "feedback": "feedback_group",
+}
+GROUP_INTRO = "episode_intro_group"
+GROUP_PEER = "your peer"
+GROUP_PEER_CAPITAL = "Your peer"  # where the peer starts a sentence (the feedback's outcomes)
+FREE_BOARD_CALLS = 1  # per episode: a board-only model call does not use up the round
 PROMPT_NAMES = (  # every episode prompt file
     *COMMON_PROMPTS,
     *RULES_PROMPTS.values(),
@@ -152,6 +171,10 @@ class EpisodeSpec:
     intro_prompt: str = "episode_intro"  # one of INTRO_PROMPTS
     feedback_reminder: bool = False  # Experiment 5: a rule reminder atop every feedback, both
     feedback_question: bool = False  # Experiment 5b: the check-in question alone, no tool
+    # Experiment 4: a pair inside a group (None: the fixed pair of every earlier experiment).
+    group_size: int | None = None
+    board: bool = False  # the group's shared board (post_to_board and the snapshot)
+    board_text: str | None = None  # the snapshot shown at the start of the communication phase
 
 
 @dataclass(frozen=True)
@@ -173,29 +196,45 @@ class EpisodeAgent:
     ) -> None:
         self.name = name
         self.peer = channel.peer(name)
+        # What the prompts call the peer: its letter in a fixed pair, "your peer" in a group.
+        self.peer_label = GROUP_PEER if spec.group_size else self.peer
         self.env = env
         self.spec = spec
         self.prompts = prompts
         self.channel = channel
         self.client: LLMClient | None = None
         self.phase = "task"
-        self.tools = episode_tools(spec.message_limit, spec.operator)
+        self.tools = episode_tools(spec.message_limit, spec.operator, spec.board)
+        rules_name = (GROUP_RULES_PROMPTS if spec.group_size else RULES_PROMPTS)[spec.rules]
         rules = render(
-            prompts[RULES_PROMPTS[spec.rules]],
-            peer=self.peer,
+            prompts[rules_name],
+            peer=self.peer_label,
             rounds=ROUNDS,
             limit=spec.message_limit,
         )
         if spec.operator:  # the one neutral sentence, as the rules block's last paragraph
             sentence = prompts[OPERATOR_RULES_PROMPTS[spec.operator_rules]].text.strip()
             rules = f"{rules}\n\n{sentence}"
+        if spec.board:  # Experiment 4: the board paragraph, after the reward
+            rules = f"{rules}\n\n{prompts['board_rules'].text.strip()}"
+        intro = GROUP_INTRO if spec.group_size else spec.intro_prompt
         self.system = [
-            text_block(render(prompts[spec.intro_prompt], agent=name, peer=self.peer)),
+            text_block(
+                render(
+                    prompts[intro],
+                    agent=name,
+                    peer=self.peer_label,
+                    group_size=spec.group_size or 2,
+                )
+            ),
             text_block(prompts[spec.task_prompt].text),  # verbatim, as calibrated
             text_block(rules),
         ]
         self.reports: list[dict[str, Any]] = []
         self.free_report_calls: Counter[str] = Counter()  # phase -> report-only calls not counted
+        self.board_posts: list[dict[str, Any]] = []  # Experiment 4: at most one per episode
+        self.board_refusals: list[dict[str, Any]] = []
+        self.free_board_calls = 0
         self.messages: list[dict[str, Any]] = []
         self.calls: list[PhaseCall] = []
         self.violations: list[dict[str, Any]] = []
@@ -207,6 +246,7 @@ class EpisodeAgent:
             SEND: self._send,
             VERDICT: self._submit_verdict,
             REPORT: self._report,
+            BOARD: self._post,
         }
         self.handlers = {
             tool.name: self._gated(tool.name, task_handlers.get(tool.name) or own[tool.name])
@@ -248,6 +288,21 @@ class EpisodeAgent:
         )
         return self.prompts["operator_report_result"].text.strip()
 
+    def _post(self, arguments: dict[str, Any]) -> str:
+        text = arguments.get("text")
+        if not isinstance(text, str) or not text.strip():
+            raise ToolError("error: post_to_board needs one argument, text: a non-empty string")
+        round_number = self.channel.open_round
+        if self.board_posts:
+            reason = "you have already posted to the board in this episode."
+        elif len(text) > BOARD_LIMIT:
+            reason = f"the post has {len(text)} characters; the limit is {BOARD_LIMIT}."
+        else:
+            self.board_posts.append({"round": round_number, "text": text, "chars": len(text)})
+            return self.prompts["board_posted"].text.strip()
+        self.board_refusals.append({"round": round_number, "chars": len(text), "reason": reason})
+        raise ToolError(render(self.prompts["board_refused"], reason=reason))
+
     def _submit_verdict(self, arguments: dict[str, Any]) -> Stop:
         verdict, justification = arguments.get("verdict"), arguments.get("justification")
         if verdict not in VERDICTS or not isinstance(justification, str):
@@ -268,7 +323,12 @@ class EpisodeAgent:
         if self.client is None:
             raise RuntimeError(f"agent {self.name} has no client")
         self.phase = phase
-        free = FREE_REPORT_CALLS - self.free_report_calls[phase] if self.spec.operator else 0
+        if self.spec.operator:
+            free_tool, free = REPORT, FREE_REPORT_CALLS - self.free_report_calls[phase]
+        elif self.spec.board and phase == "communication":
+            free_tool, free = BOARD, FREE_BOARD_CALLS - self.free_board_calls
+        else:
+            free_tool, free = None, 0
         result = await run_tool_loop(
             self.client,
             system=self.system,
@@ -279,10 +339,13 @@ class EpisodeAgent:
             max_tokens=self.spec.run.model.max_tokens,
             tags=Tags(phase=phase, agent=self.name, episode=self.spec.episode),
             tool_choice=tool_choice,
-            free_tool=REPORT if self.spec.operator else None,
+            free_tool=free_tool,
             max_free_turns=max(0, free),
         )
-        self.free_report_calls[phase] += result.free_turns
+        if free_tool == BOARD:
+            self.free_board_calls += result.free_turns
+        else:
+            self.free_report_calls[phase] += result.free_turns
         self.messages = result.messages
         self.calls.append(PhaseCall(phase, result))
         return result
@@ -292,7 +355,7 @@ class EpisodeAgent:
         result = await self.turn(opening, phase="verdict", max_turns=VERDICT_CALLS)
         if self.verdict is None:
             self._verdict_source = "reprompt_tool"
-            reprompt = render(self.prompts["verdict_reprompt"], peer=self.peer)
+            reprompt = render(self.prompts["verdict_reprompt"], peer=self.peer_label)
             result = await self.turn(reprompt, phase="verdict", max_turns=VERDICT_CALLS)
         if self.verdict is None:
             parsed = parse_verdict_text(result.final_text)
@@ -437,6 +500,8 @@ class EpisodeResult:
                 "feedback": self.feedback[name],
                 "reflection": agent.reflection,
                 "reports": agent.reports,  # Experiment 3 (empty without the tool)
+                "board_posts": agent.board_posts,  # Experiment 4 (empty without the board)
+                "board_refusals": agent.board_refusals,
                 "free_report_calls": {k: v for k, v in agent.free_report_calls.items() if v},
                 "operator_reply_shown": (self.spec.operator_replies or {}).get(name),
                 "phase_violations": agent.violations,
@@ -467,6 +532,9 @@ class EpisodeResult:
             "intro_prompt": self.spec.intro_prompt,
             "feedback_reminder": self.spec.feedback_reminder,
             "feedback_question": self.spec.feedback_question,
+            "group_size": self.spec.group_size,
+            "board": self.spec.board,
+            "board_text": self.spec.board_text,
             "speaking_order": list(SPEAKING_ORDER),
             # Everything that passed through the channel, in order (text None: a silence notice).
             # Step 4 rebuilds each agent's memory of the channel from this list.
@@ -476,7 +544,7 @@ class EpisodeResult:
             ],
             "prompt_versions": self.prompt_versions,
             "tools_version": tools_version(
-                episode_tools(self.spec.message_limit, self.spec.operator)
+                episode_tools(self.spec.message_limit, self.spec.operator, self.spec.board)
             ),
             "agents": agents,
             "mutual_accept": self.mutual_accept,
@@ -529,8 +597,16 @@ async def run_episode(
         raise ValueError(f"unknown intro prompt {spec.intro_prompt!r}; choose from {INTRO_PROMPTS}")
     if spec.operator_checkin and not spec.operator:
         raise ValueError("the operator check-in needs the report tool (operator=True)")
+    if spec.board and not spec.group_size:
+        raise ValueError("the board needs a group (group_size)")
+    if spec.group_size and spec.operator:
+        raise ValueError("groups do not take the operator tool")
     names = [n for n in COMMON_PROMPTS if n not in ("task_phase_system", "episode_intro")]
     names = (*names, spec.intro_prompt, spec.task_prompt, RULES_PROMPTS[spec.rules])
+    if spec.group_size:
+        names = (*names, GROUP_INTRO, GROUP_RULES_PROMPTS[spec.rules])
+    if spec.board:
+        names = (*names, *BOARD_PROMPTS)
     if spec.operator:
         operator_names = [n for n in OPERATOR_PROMPTS if n != "operator_rules"]
         names = (*names, *operator_names, OPERATOR_RULES_PROMPTS[spec.operator_rules])
@@ -541,6 +617,8 @@ async def run_episode(
     if spec.feedback_question:
         names = (*names, "feedback_question")
     prompts = {name: load_prompt(name) for name in names}
+    if spec.group_size:  # the group versions serve under the pair keys
+        prompts.update({key: load_prompt(name) for key, name in GROUP_REPLACES.items()})
     channel = Channel(limit=spec.message_limit)
     started = time.perf_counter()
     cap = spec.query_cap
@@ -586,19 +664,23 @@ async def run_episode(
                     parts.append(
                         render(
                             prompts["communication_open"],
-                            peer=agent.peer,
+                            peer=agent.peer_label,
                             rounds=ROUNDS,
                             limit=spec.message_limit,
                             peer_request=agents[agent.peer].env.spec.nl_request,
+                            order="first" if name == SPEAKING_ORDER[0] else "second",
                         )
                     )
-                parts.extend(_delivery_text(prompts, d) for d in channel.take_inbox(name))
+                    if spec.board:  # Experiment 4: the board as it stood after last episode
+                        parts.append(spec.board_text or "")
+                label = GROUP_PEER if spec.group_size else None
+                parts.extend(_delivery_text(prompts, d, label) for d in channel.take_inbox(name))
                 parts.append(
                     render(
                         prompts["communication_round"],
                         round=round_number,
                         rounds=ROUNDS,
-                        peer=agent.peer,
+                        peer=agent.peer_label,
                         limit=spec.message_limit,
                     )
                 )
@@ -609,11 +691,12 @@ async def run_episode(
                 channel.close_turn()
 
         # 4. Verdicts; whatever is still in an inbox (B's last message) arrives with the opening.
+        label = GROUP_PEER if spec.group_size else None
         openings = {
             name: "\n\n".join(
                 [
-                    *(_delivery_text(prompts, d) for d in channel.take_inbox(name)),
-                    render(prompts["verdict_open"], peer=agents[name].peer),
+                    *(_delivery_text(prompts, d, label) for d in channel.take_inbox(name)),
+                    render(prompts["verdict_open"], peer=agents[name].peer_label),
                 ]
             )
             for name in SPEAKING_ORDER
@@ -632,7 +715,7 @@ async def run_episode(
             name: feedback_text(
                 prompts["feedback"],
                 episode=spec.episode,
-                peer=agent.peer,
+                peer=GROUP_PEER_CAPITAL if spec.group_size else agent.peer,
                 own_verdict=verdicts[name],
                 peer_verdict=verdicts[agent.peer],
                 own_outcome=outcomes[name],
@@ -675,21 +758,21 @@ async def run_episode(
         correct=correct,
         reward=reward,
         feedback=feedback,
-        prompt_versions={name: prompt.version for name, prompt in prompts.items()},
+        prompt_versions={prompt.name: prompt.version for prompt in prompts.values()},
         raw_logs=raw_logs,
         env_events=env_events,
         wall_s=time.perf_counter() - started,
     )
 
 
-def _delivery_text(prompts: dict[str, Prompt], delivery: Delivery) -> str:
+def _delivery_text(prompts: dict[str, Prompt], delivery: Delivery, label: str | None = None) -> str:
+    """One delivered slot as its recipient reads it; `label` replaces the sender's letter (the
+    group arms' "your peer")."""
+    sender = label or delivery.sender
     if delivery.text is None:
-        return render(prompts["channel_silence"], round=delivery.round, sender=delivery.sender)
+        return render(prompts["channel_silence"], round=delivery.round, sender=sender)
     return render(
-        prompts["channel_message"],
-        round=delivery.round,
-        sender=delivery.sender,
-        text=delivery.text,
+        prompts["channel_message"], round=delivery.round, sender=sender, text=delivery.text
     )
 
 

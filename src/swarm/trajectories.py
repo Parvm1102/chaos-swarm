@@ -90,6 +90,18 @@ def prereg_provenance(arm: ArmConfig) -> dict[str, str] | None:
     return {"path": str(path), "sha256": hashlib.sha256(path.read_bytes()).hexdigest()}
 
 
+def first_launch_prereg(arm: ArmConfig, run_dir: Path) -> dict[str, str] | None:
+    """The pre-registration a summary records: the one in arm.json from the arm's first launch
+    (what the arm ran under), else the file as it is now. A summary rewritten after PREREG.md
+    grew (an appended section) thus keeps the hash the arm ran under."""
+    path = run_dir / "arm.json"
+    if path.exists():
+        first = orjson.loads(path.read_bytes()).get("prereg_first_launch")
+        if first is not None:
+            return first
+    return prereg_provenance(arm)
+
+
 def check_prereg(arm: ArmConfig, run_dir: Path) -> dict[str, str] | None:
     """The launch guard: the prereg must exist, and must not have changed since the arm's first
     launch (its hash is kept in arm.json). Returns the provenance to store."""
@@ -149,6 +161,10 @@ async def run_arm(
     arm: ArmConfig, *, dry_run: bool, meter: CostMeter, behaviour: Behaviour | None = None
 ) -> dict[str, Any]:
     """Run (or resume) every trajectory of the arm and write the summary; return it."""
+    if arm.group_size is not None:  # Experiment 4: a population arm
+        from swarm.population import run_population_arm  # population imports this module
+
+        return await run_population_arm(arm, dry_run=dry_run, meter=meter)
     run = arm.run_config(dry_run=dry_run)
     if behaviour is None:
         behaviour = (
@@ -257,6 +273,10 @@ def summarize_arm(arm: ArmConfig, *, dry_run: bool = False) -> dict[str, Any]:
     run_dir = arm.run_dir(dry_run=dry_run)
     usage = run_dir / USAGE_FILE
     total = summarize_usage_file(usage)["total_usd"] if usage.exists() else 0.0
+    if arm.group_size is not None:
+        from swarm.population import write_population_summary
+
+        return write_population_summary(arm, run_dir, dry_run=dry_run, meter_total_usd=total)
     return write_summary(arm, run_dir, dry_run=dry_run, meter_total_usd=total)
 
 
@@ -284,7 +304,11 @@ def provenance(arm: ArmConfig, run_dir: Path) -> dict[str, Any]:
     prompt_versions: dict[str, set[str]] = {}
     tools_versions: set[str] = set()
     auto_inspect: set[bool] = set()
-    for path in sorted(run_dir.glob("trajectories/s*/episodes/e*.json")):
+    paths = [
+        *run_dir.glob("trajectories/s*/episodes/e*.json"),
+        *run_dir.glob("groups/g*/episodes/e*.json"),
+    ]
+    for path in sorted(paths):
         record = orjson.loads(path.read_bytes())
         for name, version in record["prompt_versions"].items():
             prompt_versions.setdefault(name, set()).add(version)
@@ -315,7 +339,7 @@ def provenance(arm: ArmConfig, run_dir: Path) -> dict[str, Any]:
             "reasoning_extraction": arm.breaker_reasoning_extraction,
             "any": arm.breaker_any,
         },
-        "prereg": prereg_provenance(arm),
+        "prereg": first_launch_prereg(arm, run_dir),
         "auto_inspect": sorted(auto_inspect)[0] if len(auto_inspect) == 1 else "mixed",
         "sequences": arm.sequences,
         "episodes": arm.episodes,

@@ -1,0 +1,18 @@
+arm: p_explicit_k1
+description: "Experiment 4 (populations): groups of 6 Haiku 5.5 agents in round-robin pairs, EXPLICIT wording, memory on, 10 groups (groups.json 0-9); one planted proposer (position 0), no board. Pre-registered in PREREG.md (Experiment 4)."
+model:
+  name: claude-haiku-5-5
+  max_tokens: 4096
+budget_usd: 5.0
+cache_ttl: 5m
+task_dir: data/tasks/seed0-hard
+sequences: 0-9
+episodes: 10
+memory: true
+rules: explicit
+group_size: 6
+planted: 1
+board: false
+collusion_criterion: delivered
+prereg: PREREG.md
+concurrency: 2

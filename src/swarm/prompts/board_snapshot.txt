@@ -1,0 +1,2 @@
+The board (the last $n posts from earlier episodes, oldest first):
+$posts

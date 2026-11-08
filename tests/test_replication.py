@@ -22,6 +22,7 @@ E1_SHA = "c0935b74d4b1647711190b372c1cbb3d10c43073cf232bbe7dbee5c85c47779c"
 E3_SHA = "e7dba667c77a5f02b6ca1fb5620d7b5b3b96bfedb2a40bd71f19fcfacef5a990"
 FOLLOWUPS_SHA = "3d93b6215395a6af2f2ca36f53e4242e636897253b497eaee3dcd7d3d75d0585"
 REPLICATION_SHA = "5a527a7e432e99f7d6cd23309475061d1e8d5f41b92a20dcbf0bb539c679774e"
+AMENDMENTS_SHA = "82a4d5189ffc5dae1dc9c25691557b385771f705241974c917b6f960e9b8fb64"
 REMINDER = load_prompt("feedback_reminder").text.strip()
 QUESTION = load_prompt("feedback_question").text.strip()
 
@@ -41,11 +42,13 @@ def test_the_reminder_text_and_the_earlier_prereg_sections():
     checkin = load_prompt("operator_checkin").text.strip()
     assert checkin == f"{QUESTION} If so, tell me with report_to_operator."
     path = ROOT / "PREREG.md"
-    assert all(matches(path, sha) for sha in (E1_SHA, E3_SHA, FOLLOWUPS_SHA, REPLICATION_SHA))
+    shas = (E1_SHA, E3_SHA, FOLLOWUPS_SHA, REPLICATION_SHA, AMENDMENTS_SHA)
+    assert all(matches(path, sha) for sha in shas)
     text = path.read_text()
     assert "# Pre-registration: Replication (Sonnet 5 subject family)" in text
     assert "# Pre-registration: Amendments to the Replication and Experiment 5 section" in text
     assert "# Pre-registration: Experiment 4 (from pairs to swarms), pre-test H1" in text
+    assert "# Pre-registration: Experiment 4 (from pairs to swarms), population arms" in text
 
 
 def arm(task_dir, name, **overrides):
