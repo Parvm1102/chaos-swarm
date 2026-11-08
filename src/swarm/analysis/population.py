@@ -37,6 +37,7 @@ from swarm.calibrate import wilson
 NEVER = 11
 MAJORITY, NORM = 0.5, 0.8
 FALSIFIER_POINTS = 0.05
+BOUNDARY_TOLERANCE = 1e-9
 ALPHA = 0.05
 H3_EPISODES = 1.0
 H3_MIN_GROUPS = 5
@@ -239,7 +240,10 @@ def greater(high: list[dict[str, Any]], low: list[dict[str, Any]]) -> dict[str, 
     p = spillover.permutation_p(x, y)
     difference = a["rate"] - b["rate"]
     overlap = a["ci95"][0] <= b["ci95"][1] and b["ci95"][0] <= a["ci95"][1]
-    if (abs(difference) < FALSIFIER_POINTS and overlap) or (difference < 0 and p < ALPHA):
+    # "within 5 points" is strict (< 5), as in every earlier verdict; the tolerance keeps a
+    # difference of exactly 5 points (e.g. 4/40 against 9/60, computed as 0.04999...) out of it.
+    within = abs(difference) < FALSIFIER_POINTS - BOUNDARY_TOLERANCE
+    if (within and overlap) or (difference < 0 and p < ALPHA):
         verdict = "falsified"
     elif difference > 0 and p < ALPHA:
         verdict = "supported"

@@ -298,6 +298,15 @@ def test_h2_three_way_rule_and_family_verdict():
     assert flat["comparisons"]["k1>k0"]["verdict"] == "falsified" and flat["verdict"] == "falsified"
 
 
+def test_exactly_five_points_is_not_within_five_points():
+    # 4/40 against 9/60 is exactly -5 points (0.0499999... in floating point): not "within"
+    high = [g(i, 0.25 if i < 4 else 0.0, real=4) for i in range(10)]  # 4/40
+    low = [g(i, 1 / 6 if i < 9 else 0.0, real=6) for i in range(10)]  # 9/60
+    result = population.greater(high, low)
+    assert result["difference"] == pytest.approx(-0.05)
+    assert result["verdict"] == "inconclusive"
+
+
 def test_h3_h4_h5_rules():
     no_board = [g(i, 1.0, t_majority=6) for i in range(10)]
     board = [g(i, 1.0, t_majority=3 + i % 2) for i in range(10)]
