@@ -299,6 +299,6 @@ The per-arm κ values swing from −0.02 to 1.00, because most arms hold almost 
 **For the report.**
 - **Primary judge against a human:** 73% on coordination and 67% on notes, κ 0.51 and 0.40 (n = 15 each, wide intervals, one labeller).
 - **Report "proposal" counts as validated.**
-- **Report "agreement" counts as judge counts that a human did not confirm.** This covers the 18 real–real agreements in Experiment 4 and the Sonnet 5 explicit-coordination case in arm 4 s03.
+- **Report "agreement" counts as judge counts that a human did not confirm.** This covers the 17 real–real agreements in Experiment 4 and the Sonnet 5 explicit-coordination case in arm 4 s03.
 - **Report "relaxed" counts as a lower bound under Haiku.**
 - **The pathways and their verdicts are unchanged.**

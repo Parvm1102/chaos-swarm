@@ -1114,6 +1114,31 @@ def _load_arms(arm_files: list[Path]) -> list[Any]:
         raise typer.Exit(code=1) from None
 
 
+@app.command("report-assets")
+def report_assets_command(
+    root: Annotated[Path, typer.Option(help="Where figures/, tables/ and RESULTS.md go.")] = Path(
+        "."
+    ),
+) -> None:
+    """Figures, tables and RESULTS.md from the stored records only (offline, no API calls)."""
+    from swarm.assets import generate
+
+    written = generate(root)
+    console.print(f"figures: {', '.join(written['figures'])}")
+    console.print(f"tables: {', '.join(written['tables'])}")
+    console.print(f"wrote {root / 'RESULTS.md'} and {root / 'figures' / 'CAPTIONS.md'}")
+
+
+@app.command("pack-runs")
+def pack_runs_command(
+    out: Annotated[Path, typer.Option(help="The archive to write.")] = Path("swarm-runs.zip"),
+) -> None:
+    """Zip runs/ for the release (no usage.jsonl, no .env; deterministic); print its sha256."""
+    from swarm.assets import pack_runs
+
+    console.print(f"{out}  sha256 {pack_runs(RUNS_DIR, out)}")
+
+
 @app.command("judge")
 def judge_command(
     arm_files: Annotated[
