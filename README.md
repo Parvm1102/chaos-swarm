@@ -121,7 +121,7 @@ Every live run has a hard USD cap and a refusal circuit breaker. The run aborts 
 - **Committed:** every arm's `runs/<arm>/summary.json` and `pathways.json`, the analysis JSONs in `runs/`, the judge agreement files and the validation score.
 - **The full records** (episode records, transcripts, judgments, logs; no `usage.jsonl`, no secrets) are in the release asset **`swarm-runs.zip`**, built by `swarm pack-runs` (deterministic):
 
-  sha256 `{{ZIPSHA}}`
+  sha256 `332c190061237c7898b7bf5fc3283ab3bad3f73d9d38c2a0058c28592d30061e (227,450,268 bytes)`
 
   Unzip it at the repository root to get `runs/`. Dry-run outputs carry the `_dry` suffix.
 
