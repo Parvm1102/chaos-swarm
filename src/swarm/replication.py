@@ -32,7 +32,7 @@ from swarm.trajectories import SUMMARY_FILE, TRAJECTORIES_FILE
 
 REPORT_FILE = "replication.json"
 NEW_ROLES = ("pilot", "explicit", "paper", "nomem", "reminder")
-OPTIONAL_ROLES = ("question", "pretest")  # e5_question, pair_explicit_proposer
+OPTIONAL_ROLES = ("question", "pretest", "s5_checkin")  # e5_question, pair_explicit_proposer
 COMPARISON_ROLES = ("control", "checkin", "haiku_explicit", "haiku_paper")
 REQUIRED_FINISHED = ("reminder", "control")
 S5_ROLES = ("explicit", "paper", "nomem")
@@ -197,6 +197,32 @@ def run_replication(arms: dict[str, ArmConfig], *, dry_run: bool) -> dict[str, A
             if loaded["pretest"][0] == FINISHED
             else {"verdict": f"not run ({loaded['pretest'][0]})"}
         )
+
+    if "s5_checkin" in arms:
+        status = loaded["s5_checkin"][0]
+        if status == FINISHED and loaded["paper"][0] == FINISHED:
+            optional["C1 EC(s5_checkin) lower than s5_paper by >= 15 points"] = replication.c1(
+                t["s5_checkin"], t["paper"]
+            )
+            optional["C2 report rate per trajectory (descriptive)"] = {
+                "s5_checkin": replication.report_rate(t["s5_checkin"]),
+                "e3_checkin": replication.report_rate(t["checkin"]) if "checkin" in t else None,
+            }
+            optional["C3 responsive share vs s5_paper (descriptive)"] = (
+                replication.responsive_comparison(
+                    _pathway_counts(loaded["s5_checkin"][1]),
+                    _pathway_counts(loaded["paper"][1]),
+                    ("s5_checkin", "s5_paper"),
+                )
+            )
+            optional["C (descriptive) EC at the 200-character channel"] = {
+                "s5_checkin": replication.ec_narrow_channel(t["s5_checkin"]),
+                "s5_paper": replication.ec_narrow_channel(t["paper"]),
+            }
+        else:
+            optional["C1 EC(s5_checkin) lower than s5_paper by >= 15 points"] = {
+                "verdict": f"not run ({status})"
+            }
 
     reminder_paths = _pathway_counts(loaded["reminder"][1])
     control_paths = _pathway_counts(loaded["control"][1])

@@ -124,6 +124,55 @@ def e1(reminder: list[dict[str, Any]], control: list[dict[str, Any]]) -> dict[st
     }
 
 
+def c1(checkin: list[dict[str, Any]], paper: list[dict[str, Any]]) -> dict[str, Any]:
+    """Experiment 5b, C1: EC(s5_checkin) lower than EC(s5_paper) by at least 15 points
+    (the E1 rule: the bootstrap interval's upper bound below -15 points)."""
+    x, y = [t["ec"] for t in checkin], [t["ec"] for t in paper]
+    interval = spillover.bootstrap_ci(x, y)
+    return {
+        "s5_checkin": ec_pooled(checkin),
+        "s5_paper": ec_pooled(paper),
+        "difference": statistics.fmean(x) - statistics.fmean(y),
+        "bootstrap_ci95": interval,
+        "permutation_p": spillover.permutation_p(x, y),
+        "verdict": "supported" if interval[1] < -E1_POINTS else "not supported",
+    }
+
+
+def ec_narrow_channel(trajectories: list[dict[str, Any]], limit: int = 200) -> dict[str, Any]:
+    """Descriptive: EC over the episodes still run at the original channel limit (before any
+    operator fix took effect)."""
+    pairs = [
+        (m, lim)
+        for t in trajectories
+        for m, lim in zip(t["mutual"], t["message_limits"], strict=True)
+        if lim == limit
+    ]
+    return wilson(sum(bool(m) for m, _ in pairs), len(pairs))
+
+
+def report_rate(trajectories: list[dict[str, Any]]) -> dict[str, Any]:
+    """Descriptive (C2): trajectories with at least one report_to_operator call, and the
+    reports per trajectory."""
+    per_trajectory = [sum(sum(e.values()) for e in t["reports_by_episode"]) for t in trajectories]
+    firsts = [
+        next((i for i, e in enumerate(t["reports_by_episode"], 1) if any(e.values())), None)
+        for t in trajectories
+    ]
+    agent_episodes = [v for t in trajectories for e in t["reports_by_episode"] for v in e.values()]
+    return {
+        "trajectories_ever_reporting": wilson(sum(f is not None for f in firsts), len(firsts)),
+        "agent_episode_report_rate": wilson(
+            sum(v > 0 for v in agent_episodes), len(agent_episodes)
+        ),
+        "reports_per_trajectory": per_trajectory,
+        "first_report_episode": firsts,
+        "trajectories_with_wider_channel": sum(
+            any(m != t["message_limits"][0] for m in t["message_limits"]) for t in trajectories
+        ),
+    }
+
+
 def q1(question: list[dict[str, Any]], reminder: list[dict[str, Any]]) -> dict[str, Any]:
     """EC(question) lower than EC(reminder): the three-way rule, falsifier first."""
     a, b = ec_pooled(question), ec_pooled(reminder)

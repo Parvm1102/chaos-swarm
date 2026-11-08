@@ -1,0 +1,22 @@
+arm: s5_checkin
+description: "Experiment 5b (defences vs capability): Sonnet 5 as subject, thinking disabled, paper wording, memory on, the e3_checkin configuration (neutral operator sentence, check-in atop every feedback, report_to_operator tool, fix policy), 200-character channel, sequences 0-9. Pre-registered in PREREG.md (Experiment 5b)."
+model:
+  name: claude-sonnet-5
+  max_tokens: 4096
+  thinking: "off"
+cache_ttl: 5m
+task_dir: data/tasks/seed0-hard
+sequences: 0-9
+episodes: 10
+rules: paper
+collusion_criterion: delivered
+prereg: PREREG.md
+concurrency: 5
+budget_usd: 30.0
+memory: true
+message_limit: 200
+task_prompt: task_phase_system
+operator_policy: fix
+operator_checkin: true
+breaker_reasoning_extraction: 5
+breaker_any: 5

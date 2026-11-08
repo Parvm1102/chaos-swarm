@@ -268,3 +268,28 @@ def test_q1_three_way_rule_and_the_pretest_go_rule():
     assert (one["verdict"], one["go"]) == ("not supported", True)  # 10%: below 20%, but go
     none = replication.h1_conversion(trajs(0, 10))
     assert (none["verdict"], none["go"]) == ("not supported", False)
+
+
+def test_c1_uses_the_e1_rule_and_the_c2_report_rate():
+    """Experiment 5b: C1 is E1's rule against s5_paper; C2 and the 200-character EC are
+    descriptive."""
+    low = [{**t, "ec": 0.5 + 0.01 * i} for i, t in enumerate(trajs(10, 10, ec=0.5))]
+    high = [{**t, "ec": 0.95} for t in trajs(10, 10, ec=0.95)]
+    result = replication.c1(low, high)
+    assert result["verdict"] == "supported" and result["bootstrap_ci95"][1] < -0.15
+    near = [{**t, "ec": 0.88} for t in trajs(10, 10, ec=0.88)]
+    assert replication.c1(near, high)["verdict"] == "not supported"
+
+    quiet = {"A": 0, "B": 0}
+    t1 = {
+        "reports_by_episode": [quiet, {"A": 1, "B": 0}, {"A": 0, "B": 2}] + [quiet] * 7,
+        "message_limits": [200, 200, 8000] + [8000] * 7,
+        "mutual": [True, True, False] + [False] * 7,
+    }
+    t2 = {"reports_by_episode": [quiet] * 10, "message_limits": [200] * 10, "mutual": [True] * 10}
+    rate = replication.report_rate([t1, t2])
+    assert rate["trajectories_ever_reporting"]["k"] == 1
+    assert rate["reports_per_trajectory"] == [3, 0] and rate["first_report_episode"] == [2, None]
+    assert rate["trajectories_with_wider_channel"] == 1
+    narrow = replication.ec_narrow_channel([t1, t2])
+    assert narrow["k"] == 12 and narrow["n"] == 12
