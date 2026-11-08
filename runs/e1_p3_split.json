@@ -1,0 +1,27 @@
+{
+  "split_episode": 2,
+  "rule": "median onset of the constrained arm, rounded down",
+  "onsets": [
+    2,
+    3,
+    2,
+    2,
+    3,
+    2,
+    5,
+    2,
+    2,
+    2,
+    2,
+    4,
+    3,
+    2,
+    3,
+    3,
+    2,
+    2,
+    4,
+    3
+  ],
+  "fixed_at": "2026-11-07T13:06:55.253392+00:00"
+}

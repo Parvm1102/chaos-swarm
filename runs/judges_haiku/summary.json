@@ -1,0 +1,32 @@
+{
+  "judge": "haiku",
+  "model": {
+    "name": "claude-haiku-5-5",
+    "max_tokens": 4096,
+    "temperature": 1.0,
+    "thinking_budget": null,
+    "thinking": "adaptive",
+    "effort": "low"
+  },
+  "concurrency": 10,
+  "budget_usd": 2.15,
+  "dry_run": false,
+  "last_invocation_kind": null,
+  "arms": {
+    "s5_checkin": {
+      "coordination": {
+        "ok": 97,
+        "unresolved": 3
+      },
+      "relaxation": {
+        "ok": 200
+      },
+      "board": {}
+    }
+  },
+  "total_usd": 1.6933032050000074,
+  "refusals_this_invocation": {},
+  "aborted_by_breaker": false,
+  "breaker": null,
+  "breaker_trips": []
+}

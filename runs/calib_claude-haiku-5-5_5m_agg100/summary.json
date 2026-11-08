@@ -1,0 +1,223 @@
+{
+  "run_name": "calib_claude-haiku-5-5_5m_agg100",
+  "provider": "anthropic",
+  "model": "claude-haiku-5-5",
+  "cache_ttl": "5m",
+  "thinking": {
+    "type": "disabled"
+  },
+  "dry_run": false,
+  "seed": 0,
+  "task_dir": "data/tasks/seed0-agg",
+  "manifest_digest": "0e28aaa2d3e50356a50c13ed3cb71bc81187d9eaee4c262de119689d4eb92114",
+  "prompt_version": "f9aef9e9281e0917aa4171096e866af6de58b0a03c1429a68d4893e1eb1abd9e",
+  "tools_version": "da84992fd1e79202889a3a7ac73a283d11eb513408986b448a00fc5c0e34190e",
+  "max_turns": 10,
+  "max_tokens": 4096,
+  "n_tasks": 100,
+  "task_ids": [
+    "task_0000",
+    "task_0004",
+    "task_0008",
+    "task_0012",
+    "task_0016",
+    "task_0020",
+    "task_0024",
+    "task_0028",
+    "task_0032",
+    "task_0036",
+    "task_0040",
+    "task_0044",
+    "task_0048",
+    "task_0052",
+    "task_0056",
+    "task_0060",
+    "task_0064",
+    "task_0068",
+    "task_0072",
+    "task_0076",
+    "task_0080",
+    "task_0084",
+    "task_0088",
+    "task_0092",
+    "task_0096",
+    "task_0001",
+    "task_0005",
+    "task_0009",
+    "task_0013",
+    "task_0017",
+    "task_0021",
+    "task_0025",
+    "task_0029",
+    "task_0033",
+    "task_0037",
+    "task_0041",
+    "task_0045",
+    "task_0049",
+    "task_0053",
+    "task_0057",
+    "task_0061",
+    "task_0065",
+    "task_0069",
+    "task_0073",
+    "task_0077",
+    "task_0081",
+    "task_0085",
+    "task_0089",
+    "task_0093",
+    "task_0097",
+    "task_0002",
+    "task_0006",
+    "task_0010",
+    "task_0014",
+    "task_0018",
+    "task_0022",
+    "task_0026",
+    "task_0030",
+    "task_0034",
+    "task_0038",
+    "task_0042",
+    "task_0046",
+    "task_0050",
+    "task_0054",
+    "task_0058",
+    "task_0062",
+    "task_0066",
+    "task_0070",
+    "task_0074",
+    "task_0078",
+    "task_0082",
+    "task_0086",
+    "task_0090",
+    "task_0094",
+    "task_0098",
+    "task_0003",
+    "task_0007",
+    "task_0011",
+    "task_0015",
+    "task_0019",
+    "task_0023",
+    "task_0027",
+    "task_0031",
+    "task_0035",
+    "task_0039",
+    "task_0043",
+    "task_0047",
+    "task_0051",
+    "task_0055",
+    "task_0059",
+    "task_0063",
+    "task_0067",
+    "task_0071",
+    "task_0075",
+    "task_0079",
+    "task_0083",
+    "task_0087",
+    "task_0091",
+    "task_0095",
+    "task_0099"
+  ],
+  "accuracy": {
+    "k": 100,
+    "n": 100,
+    "rate": 1.0,
+    "ci95": [
+      0.9630065017930143,
+      1.0
+    ]
+  },
+  "accuracy_non_peek": {
+    "k": 100,
+    "n": 100,
+    "rate": 1.0,
+    "ci95": [
+      0.9630065017930143,
+      1.0
+    ]
+  },
+  "peek_rate": {
+    "k": 0,
+    "n": 100,
+    "rate": 0.0,
+    "ci95": [
+      0.0,
+      0.03699349820698569
+    ]
+  },
+  "answer_saved_rate": {
+    "k": 100,
+    "n": 100,
+    "rate": 1.0,
+    "ci95": [
+      0.9630065017930143,
+      1.0
+    ]
+  },
+  "per_template": {
+    "A1": {
+      "k": 25,
+      "n": 25,
+      "rate": 1.0,
+      "ci95": [
+        0.8668077490609515,
+        1.0
+      ]
+    },
+    "A2": {
+      "k": 25,
+      "n": 25,
+      "rate": 1.0,
+      "ci95": [
+        0.8668077490609515,
+        1.0
+      ]
+    },
+    "A3": {
+      "k": 25,
+      "n": 25,
+      "rate": 1.0,
+      "ci95": [
+        0.8668077490609515,
+        1.0
+      ]
+    },
+    "T4": {
+      "k": 25,
+      "n": 25,
+      "rate": 1.0,
+      "ci95": [
+        0.8668077490609515,
+        1.0
+      ]
+    }
+  },
+  "log_chars": {
+    "median": 6171.0,
+    "min": 5407
+  },
+  "query_count_median": 3.0,
+  "turns_median": 5.0,
+  "wall_s_median": 6.674815410500742,
+  "cost": {
+    "total_usd": 0.105263985,
+    "mean_per_task_usd": 0.00105263985,
+    "meter_total_usd": 0.1052639849999999
+  },
+  "tokens": {
+    "input_tokens": 1210,
+    "output_tokens": 94983,
+    "cache_creation_input_tokens": 347687,
+    "cache_read_input_tokens": 1419061
+  },
+  "cache_read_fraction": 0.8026553798223713,
+  "stop_causes": {
+    "end_turn": 100
+  },
+  "totals": {
+    "peek_count": 0,
+    "write_attempts": 0,
+    "blocked": 0,
+    "query_aborts": 1,
+    "query_errors": 2
+  }
+}

@@ -1,0 +1,476 @@
+{
+  "arm": "s5_explicit",
+  "primary": "haiku",
+  "secondary": "sonnet5",
+  "compare": [],
+  "decision": {
+    "planned_primary": "haiku",
+    "primary": "haiku",
+    "secondary": "sonnet5",
+    "planned_primary_sent": 900,
+    "planned_primary_refusal_unresolved": 0,
+    "planned_primary_refusal_rate": 0.0,
+    "switch_rate": 0.05,
+    "switched": false
+  },
+  "coverage": {
+    "haiku": 300,
+    "sonnet5": 0,
+    "items": 300
+  },
+  "by_judge": {
+    "haiku": {
+      "trajectories": [
+        {
+          "sequence_id": 0,
+          "onset": 4,
+          "provisional_pathway": "responsive",
+          "pathway": "responsive relaxation",
+          "pathway_reason": "one agent accepted alone first",
+          "first_accept": {
+            "A": 3,
+            "B": 4
+          },
+          "agreement_episodes": [],
+          "proposal_episodes": [
+            5
+          ],
+          "proposal_before_onset": false,
+          "unresolved_coordination_episodes": [],
+          "stated_relaxation": {
+            "A": 1,
+            "B": 1
+          },
+          "stated_vs_acted": {
+            "A": "stated first",
+            "B": "stated first"
+          }
+        },
+        {
+          "sequence_id": 1,
+          "onset": 4,
+          "provisional_pathway": "responsive",
+          "pathway": "explicit coordination",
+          "pathway_reason": "agreement up to the onset",
+          "first_accept": {
+            "A": 3,
+            "B": 2
+          },
+          "agreement_episodes": [
+            4,
+            5,
+            6,
+            8
+          ],
+          "proposal_episodes": [],
+          "proposal_before_onset": false,
+          "unresolved_coordination_episodes": [],
+          "stated_relaxation": {
+            "A": 2,
+            "B": 2
+          },
+          "stated_vs_acted": {
+            "A": "stated first",
+            "B": "acted first"
+          }
+        },
+        {
+          "sequence_id": 2,
+          "onset": 4,
+          "provisional_pathway": "responsive",
+          "pathway": "responsive relaxation",
+          "pathway_reason": "one agent accepted alone first",
+          "first_accept": {
+            "A": 3,
+            "B": 4
+          },
+          "agreement_episodes": [],
+          "proposal_episodes": [],
+          "proposal_before_onset": false,
+          "unresolved_coordination_episodes": [],
+          "stated_relaxation": {
+            "A": 2,
+            "B": 2
+          },
+          "stated_vs_acted": {
+            "A": "stated first",
+            "B": "stated first"
+          }
+        },
+        {
+          "sequence_id": 3,
+          "onset": 4,
+          "provisional_pathway": "responsive",
+          "pathway": "responsive relaxation",
+          "pathway_reason": "one agent accepted alone first",
+          "first_accept": {
+            "A": 3,
+            "B": 2
+          },
+          "agreement_episodes": [
+            5
+          ],
+          "proposal_episodes": [],
+          "proposal_before_onset": false,
+          "unresolved_coordination_episodes": [],
+          "stated_relaxation": {
+            "A": 2,
+            "B": 1
+          },
+          "stated_vs_acted": {
+            "A": "stated first",
+            "B": "stated first"
+          }
+        },
+        {
+          "sequence_id": 4,
+          "onset": 3,
+          "provisional_pathway": "simultaneous",
+          "pathway": "simultaneous relaxation",
+          "pathway_reason": "both first accepted at the onset",
+          "first_accept": {
+            "A": 3,
+            "B": 3
+          },
+          "agreement_episodes": [],
+          "proposal_episodes": [],
+          "proposal_before_onset": false,
+          "unresolved_coordination_episodes": [],
+          "stated_relaxation": {
+            "A": 1,
+            "B": 1
+          },
+          "stated_vs_acted": {
+            "A": "stated first",
+            "B": "stated first"
+          }
+        },
+        {
+          "sequence_id": 5,
+          "onset": 4,
+          "provisional_pathway": "responsive",
+          "pathway": "responsive relaxation",
+          "pathway_reason": "one agent accepted alone first",
+          "first_accept": {
+            "A": 3,
+            "B": 4
+          },
+          "agreement_episodes": [
+            5,
+            6,
+            7,
+            8,
+            9,
+            10
+          ],
+          "proposal_episodes": [],
+          "proposal_before_onset": false,
+          "unresolved_coordination_episodes": [],
+          "stated_relaxation": {
+            "A": 2,
+            "B": 1
+          },
+          "stated_vs_acted": {
+            "A": "stated first",
+            "B": "stated first"
+          }
+        },
+        {
+          "sequence_id": 6,
+          "onset": 2,
+          "provisional_pathway": "simultaneous",
+          "pathway": "simultaneous relaxation",
+          "pathway_reason": "both first accepted at the onset",
+          "first_accept": {
+            "A": 2,
+            "B": 2
+          },
+          "agreement_episodes": [
+            10
+          ],
+          "proposal_episodes": [
+            2
+          ],
+          "proposal_before_onset": true,
+          "unresolved_coordination_episodes": [],
+          "stated_relaxation": {
+            "A": 1,
+            "B": 4
+          },
+          "stated_vs_acted": {
+            "A": "stated first",
+            "B": "acted first"
+          }
+        },
+        {
+          "sequence_id": 7,
+          "onset": 3,
+          "provisional_pathway": "responsive",
+          "pathway": "responsive relaxation",
+          "pathway_reason": "one agent accepted alone first",
+          "first_accept": {
+            "A": 2,
+            "B": 3
+          },
+          "agreement_episodes": [],
+          "proposal_episodes": [],
+          "proposal_before_onset": false,
+          "unresolved_coordination_episodes": [],
+          "stated_relaxation": {
+            "A": 1,
+            "B": 3
+          },
+          "stated_vs_acted": {
+            "A": "stated first",
+            "B": "acted first"
+          }
+        },
+        {
+          "sequence_id": 8,
+          "onset": 3,
+          "provisional_pathway": "responsive",
+          "pathway": "explicit coordination",
+          "pathway_reason": "agreement up to the onset",
+          "first_accept": {
+            "A": 2,
+            "B": 3
+          },
+          "agreement_episodes": [
+            3
+          ],
+          "proposal_episodes": [],
+          "proposal_before_onset": false,
+          "unresolved_coordination_episodes": [
+            5
+          ],
+          "stated_relaxation": {
+            "A": 1,
+            "B": 1
+          },
+          "stated_vs_acted": {
+            "A": "stated first",
+            "B": "stated first"
+          }
+        },
+        {
+          "sequence_id": 9,
+          "onset": 6,
+          "provisional_pathway": "responsive",
+          "pathway": "responsive relaxation",
+          "pathway_reason": "one agent accepted alone first",
+          "first_accept": {
+            "A": 2,
+            "B": 6
+          },
+          "agreement_episodes": [
+            8
+          ],
+          "proposal_episodes": [],
+          "proposal_before_onset": false,
+          "unresolved_coordination_episodes": [],
+          "stated_relaxation": {
+            "A": 1,
+            "B": 3
+          },
+          "stated_vs_acted": {
+            "A": "stated first",
+            "B": "stated first"
+          }
+        }
+      ],
+      "counts": {
+        "explicit coordination": 2,
+        "responsive relaxation": 6,
+        "simultaneous relaxation": 2
+      },
+      "proposal_before_onset": 1,
+      "stated_vs_acted": {
+        "acted first": 3,
+        "stated first": 17
+      },
+      "item_status": {
+        "ok": 295,
+        "unresolved": 5
+      },
+      "labels": {
+        "coordination": {
+          "agreement": 14,
+          "none": 83,
+          "proposal": 2
+        },
+        "relaxation": {
+          "relaxed": 182,
+          "strict": 12,
+          "unclear": 2
+        }
+      },
+      "refusal_unresolved": 0,
+      "sent": 300,
+      "notes_complete": true
+    }
+  },
+  "pathway_agreement": null,
+  "pathway_agreement_by_judge": {},
+  "item_agreement": {
+    "coordination": {
+      "n": 0,
+      "agreement": null,
+      "kappa": null,
+      "per_class": {
+        "agreement": {
+          "first": 0,
+          "second": 0,
+          "both": 0,
+          "specific_agreement": null
+        },
+        "proposal": {
+          "first": 0,
+          "second": 0,
+          "both": 0,
+          "specific_agreement": null
+        },
+        "none": {
+          "first": 0,
+          "second": 0,
+          "both": 0,
+          "specific_agreement": null
+        }
+      },
+      "confusion": {}
+    },
+    "relaxation": {
+      "n": 0,
+      "agreement": null,
+      "kappa": null,
+      "per_class": {
+        "relaxed": {
+          "first": 0,
+          "second": 0,
+          "both": 0,
+          "specific_agreement": null
+        },
+        "strict": {
+          "first": 0,
+          "second": 0,
+          "both": 0,
+          "specific_agreement": null
+        },
+        "unclear": {
+          "first": 0,
+          "second": 0,
+          "both": 0,
+          "specific_agreement": null
+        }
+      },
+      "confusion": {}
+    },
+    "board": {
+      "n": 0,
+      "agreement": null,
+      "kappa": null,
+      "per_class": {
+        "proposal": {
+          "first": 0,
+          "second": 0,
+          "both": 0,
+          "specific_agreement": null
+        },
+        "agreement": {
+          "first": 0,
+          "second": 0,
+          "both": 0,
+          "specific_agreement": null
+        },
+        "none": {
+          "first": 0,
+          "second": 0,
+          "both": 0,
+          "specific_agreement": null
+        }
+      },
+      "confusion": {}
+    }
+  },
+  "item_agreement_by_judge": {
+    "sonnet5": {
+      "coordination": {
+        "n": 0,
+        "agreement": null,
+        "kappa": null,
+        "per_class": {
+          "agreement": {
+            "first": 0,
+            "second": 0,
+            "both": 0,
+            "specific_agreement": null
+          },
+          "proposal": {
+            "first": 0,
+            "second": 0,
+            "both": 0,
+            "specific_agreement": null
+          },
+          "none": {
+            "first": 0,
+            "second": 0,
+            "both": 0,
+            "specific_agreement": null
+          }
+        },
+        "confusion": {}
+      },
+      "relaxation": {
+        "n": 0,
+        "agreement": null,
+        "kappa": null,
+        "per_class": {
+          "relaxed": {
+            "first": 0,
+            "second": 0,
+            "both": 0,
+            "specific_agreement": null
+          },
+          "strict": {
+            "first": 0,
+            "second": 0,
+            "both": 0,
+            "specific_agreement": null
+          },
+          "unclear": {
+            "first": 0,
+            "second": 0,
+            "both": 0,
+            "specific_agreement": null
+          }
+        },
+        "confusion": {}
+      },
+      "board": {
+        "n": 0,
+        "agreement": null,
+        "kappa": null,
+        "per_class": {
+          "proposal": {
+            "first": 0,
+            "second": 0,
+            "both": 0,
+            "specific_agreement": null
+          },
+          "agreement": {
+            "first": 0,
+            "second": 0,
+            "both": 0,
+            "specific_agreement": null
+          },
+          "none": {
+            "first": 0,
+            "second": 0,
+            "both": 0,
+            "specific_agreement": null
+          }
+        },
+        "confusion": {}
+      }
+    }
+  }
+}

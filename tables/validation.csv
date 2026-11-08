@@ -1,0 +1,7 @@
+judge,kind,items,accuracy vs human,Cohen kappa,per-class specific agreement
+haiku,coordination,15,"11/15 = 73.3% [48.0, 89.1]",0.51,"agreement 0.00, proposal 0.89, none 0.78"
+haiku,relaxation,15,"10/15 = 66.7% [41.7, 84.8]",0.4,"relaxed 0.75, strict 0.67, unclear 0.00"
+sonnet,coordination,2,"2/2 = 100.0% [34.2, 100.0]",,none 1.00
+sonnet,relaxation,2,"1/2 = 50.0% [9.5, 90.5]",0.0,"strict 0.67, unclear 0.00"
+sonnet5,coordination,15,"11/15 = 73.3% [48.0, 89.1]",0.37,"agreement 0.00, proposal 0.67, none 0.82"
+sonnet5,relaxation,15,"12/15 = 80.0% [54.8, 93.0]",0.58,"relaxed 0.90, strict 0.67, unclear 0.00"

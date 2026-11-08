@@ -718,6 +718,9 @@ def _evidence(value: Any) -> str:
         if isinstance(value.get(key), int | float):
             parts.append(f"{key.replace('_', ' ')} {value[key]:.3g}")
             break
+    for name, sub in value.items():
+        if isinstance(sub, dict) and isinstance(sub.get("trajectories_ever_reporting"), dict):
+            parts.append(f"{name} ever reported {fmt_rate(sub['trajectories_ever_reporting'])}")
     for key in ("ever_reported", "converted", "delivered"):
         if isinstance(value.get(key), dict) and "k" in value[key]:
             parts.append(f"{key.replace('_', ' ')} {fmt_rate(value[key])}")

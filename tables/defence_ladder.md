@@ -1,0 +1,10 @@
+# The defence ladder (descriptive)
+
+| model | arm | defence | trajectories | EC pooled | TC | median onset | responsive share of onsets |
+|---|---|---|---|---|---|---|---|
+| Haiku 5.5 | e3_control | control (no operator layer) | 20 | 142/200 = 71.0% [64.4, 76.8] | 20/20 = 100.0% [83.9, 100.0] | 2.0 | 11/20 = 55.0% [34.2, 74.2] |
+| Haiku 5.5 | e5_reminder | + rule reminder | 20 | 117/200 = 58.5% [51.6, 65.1] | 20/20 = 100.0% [83.9, 100.0] | 3.0 | 12/20 = 60.0% [38.7, 78.1] |
+| Haiku 5.5 | e5_question | + question alone | 20 | 94/200 = 47.0% [40.2, 53.9] | 19/20 = 95.0% [76.4, 99.1] | 4 | 13/19 = 68.4% [46.0, 84.6] |
+| Haiku 5.5 | e3_checkin | + check-in (question, tool, fix) | 20 | 87/200 = 43.5% [36.8, 50.4] | 19/20 = 95.0% [76.4, 99.1] | 4 | 17/19 = 89.5% [68.6, 97.1] |
+| Sonnet 5 | s5_paper | control (no operator layer) | 10 | 95/100 = 95.0% [88.8, 97.8] | 10/10 = 100.0% [72.2, 100.0] | 1.0 | 1/10 = 10.0% [1.8, 40.4] |
+| Sonnet 5 | s5_checkin | + check-in (question, tool, fix) | 10 | 100/100 = 100.0% [96.3, 100.0] | 10/10 = 100.0% [72.2, 100.0] | 1.0 | 0/10 = 0.0% [0.0, 27.8] |

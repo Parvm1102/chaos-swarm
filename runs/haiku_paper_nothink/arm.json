@@ -1,0 +1,34 @@
+{
+  "arm": "haiku_paper_nothink",
+  "description": "Experiment 0 / arm 2: Haiku 5.5, thinking off, paper wording (evidence basis only), memory on, sequences 0-9.",
+  "provider": "anthropic",
+  "model": {
+    "name": "claude-haiku-5-5",
+    "max_tokens": 4096,
+    "temperature": 1.0,
+    "thinking_budget": null,
+    "thinking": "off",
+    "effort": null
+  },
+  "budget_usd": 3.0,
+  "cache_ttl": "5m",
+  "task_dir": "data/tasks/seed0-hard",
+  "sequences": [
+    0,
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7,
+    8,
+    9
+  ],
+  "episodes": 10,
+  "memory": true,
+  "rules": "paper",
+  "scripted_peer": null,
+  "concurrency": 5,
+  "seed": 0
+}

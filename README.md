@@ -126,12 +126,79 @@ Every live run has a hard USD cap and a refusal circuit breaker. The run aborts 
   Unzip it at the repository root to get `runs/`. Dry-run outputs carry the `_dry` suffix.
 
 ## Cost (live spend, USD, from the usage journals)
-{{COSTS}}
+| item | arms | USD |
+|---|---|---|
+| Experiment 0: rule wording x thinking (Haiku 5.5; arm 5 scripted proposer; arm 6 Sonnet 5.5) | haiku_baseline, haiku_paper_nothink, haiku_explicit_think, haiku_paper_think, haiku_paper_scriptedB, sonnet_paper_think | 13.97 |
+| Experiment 1 (spillover) and its step-8 follow-ups (Haiku 5.5) | e1_unconstrained, e1_constrained, e1_constrained_nomem, e1_cap1, e1_cap1_nomem, e1_unconstrained_plainintro | 9.87 |
+| Experiment 3 (open door) and its step-8 follow-ups (Haiku 5.5) | e3_control, e3_ack, e3_fix, e3_invite, e3_checkin | 8.58 |
+| Experiment 5: reminder and question (Haiku 5.5), with the check-in for reference | e5_reminder, e5_question | 3.5 |
+| Sonnet 5 as subject: Replication (R1) and Experiment 5b (s5_checkin) | s5_pilot, s5_explicit, s5_paper, s5_checkin | 70.88 |
+| Experiment 4 pre-test: explicit wording against a scripted proposer (Haiku 5.5) | pair_explicit_proposer | 0.35 |
+| Experiment 4 population arms | p_explicit_k0, p_explicit_k1, p_explicit_k2, p_explicit_board_k0, p_explicit_board_k1, p_explicit_board_k2, p_paper_board_k0 | 15.01 |
+| calibrations (task difficulty, E1 solo baselines) | runs/*calib* | 1.75 |
+| judges (judges_haiku) | all judged arms | 1.69 |
+| judges (judges_sonnet) | all judged arms | 0.52 |
+| judges (judges_sonnet5) | all judged arms | 21.01 |
+| other live runs (single episodes, spot checks, diagnostics) | every other runs/*/usage.jsonl | 0.77 |
+| total |  | 147.9 |
+
+Per-arm costs are in `tables/arms_*.md`. Judge spend is per judge model across all arms. The Sonnet 5 row includes `s5_pilot` (stopped at its $2 cap).
 
 ## Prompt versions
 Every episode record stores the sha256 of each prompt it used (`prompt_versions`). The table lists each version seen in the first record of each arm, and whether it is the prompt file's current text. The full table, with arm names, is [tables/prompt_versions.md](tables/prompt_versions.md).
 
-{{PROMPTS}}
+| prompt | sha256 | current text | experiments |
+|---|---|---|---|
+| `board_empty` | `61bc6ed8d747` | yes | E4 |
+| `board_post_line` | `c879917afad6` | yes | E4 |
+| `board_posted` | `c91376495952` | yes | E4 |
+| `board_proposal` | `07be4f87848a` | yes | E4 |
+| `board_refused` | `a0af425b43f6` | yes | E4 |
+| `board_rules` | `2a8117b2587c` | yes | E4 |
+| `board_snapshot` | `21a75925d0fa` | yes | E4 |
+| `channel_message` | `4046a0118889` | yes | E0, E1, E3, E5, Sonnet 5, E4 pre-test, E4 |
+| `channel_silence` | `76542a253d80` | yes | E0, E1, E3, E5, Sonnet 5, E4 pre-test, E4 |
+| `communication_open` | `dfd8c4b759e1` | yes | E0, E1, E3, E5, Sonnet 5, E4 pre-test |
+| `communication_open_group` | `41635554b1c5` | yes | E4 |
+| `communication_round` | `fcc7429b92a2` | yes | E0, E1, E3, E5, Sonnet 5, E4 pre-test, E4 |
+| `episode_intro` | `17343a77866a` | yes | E0, E1, E3, E5, Sonnet 5, E4 pre-test, E4 |
+| `episode_intro_group` | `f42302c7bcac` | yes | E4 |
+| `episode_intro_plain` | `067e54e21077` | yes | E1 |
+| `episode_open` | `9c3c6815c4ce` | yes | E0, E1, E3, E5, Sonnet 5, E4 pre-test, E4 |
+| `episode_rules` | `3a6e0fa623dc` | yes | E0, Sonnet 5, E4 pre-test, E4 |
+| `episode_rules_group` | `b605a1ddbd04` | yes | E4 |
+| `episode_rules_paper` | `e3223a56238c` | yes | E0, E1, E3, E5, Sonnet 5, E4 |
+| `episode_rules_paper_group` | `022769586bf0` | yes | E4 |
+| `feedback` | `b23486fca6a5` | yes | E0, E1, E3, E5, Sonnet 5, E4 pre-test |
+| `feedback_group` | `d9881aac4107` | yes | E4 |
+| `feedback_question` | `bdda0e7ab101` | yes | E5 |
+| `feedback_reminder` | `b25bfe8ff10b` | yes | E5 |
+| `memory_board` | `7bb95817d76c` | yes | E4 |
+| `memory_episode` | `54c6cfbcb83a` | yes | E0, E1, E3, E5, Sonnet 5, E4 pre-test, E4 |
+| `memory_message` | `7328f80502ec` | yes | E0, E1, E3, E5, Sonnet 5, E4 pre-test, E4 |
+| `memory_no_note` | `5dfecbf35de3` | yes | E0, E1, E3, E5, Sonnet 5, E4 pre-test, E4 |
+| `memory_none` | `36f3e4f6b557` | yes | E0, E1, E3, E5, Sonnet 5, E4 pre-test, E4 |
+| `memory_off` | `0491523df203` | yes | E0, E1, E3, E5, Sonnet 5, E4 pre-test, E4 |
+| `memory_report` | `c7508bd0b9f2` | yes | E1, E3, E5, Sonnet 5, E4 pre-test, E4 |
+| `memory_silence` | `a616612ecdd1` | yes | E0, E1, E3, E5, Sonnet 5, E4 pre-test, E4 |
+| `memory_truncated` | `00c9c3b72c6a` | yes | E1, E3, E5, Sonnet 5, E4 pre-test, E4 |
+| `operator_checkin` | `566fd296a011` | yes | E3, Sonnet 5 |
+| `operator_reply` | `aa2cca81d4c6` | yes | E3, Sonnet 5 |
+| `operator_report_result` | `4099fbc1a142` | yes | E3, Sonnet 5 |
+| `operator_rules` | `17368e743fd7` | yes | E3, Sonnet 5 |
+| `operator_rules_invite` | `5f262ca2c448` | yes | E3 |
+| `peer_proposal` | `2e62d5973fc8` | yes | E0, E4 pre-test |
+| `peer_proposal_group` | `6dd9b404da02` | yes | E4 |
+| `peer_proposal_repeat` | `0f9a0c7b154b` | yes | E0, E4 pre-test |
+| `peer_proposal_repeat_group` | `7dee0c46c8a5` | yes | E4 |
+| `reflection` | `e04fc965713c` | yes | E0, E1, E3, E5, Sonnet 5, E4 pre-test, E4 |
+| `task_phase_system` | `57bb63a67ebe` | yes | E3, E5, Sonnet 5, E4 pre-test, E4 |
+| `task_phase_system` | `f9aef9e9281e` | earlier version | E0 |
+| `task_phase_system_rules2` | `d987ecd65ae4` | yes | E1 |
+| `task_phase_system_rules2_cap1` | `079b69f38ed2` | yes | E1 |
+| `task_schema` | `eafb5882411e` | yes | E1, E3, E5, Sonnet 5, E4 pre-test, E4 |
+| `verdict_open` | `469f382897a5` | yes | E0, E1, E3, E5, Sonnet 5, E4 pre-test, E4 |
+| `verdict_reprompt` | `3aa17cb8ddd0` | yes | E0, E1, E3, E5, Sonnet 5, E4 pre-test, E4 |
 
 ## Provenance
 - **No code in this repository predates the hackathon sprint.** The first commit is `cf744d1`, 2026-11-06 21:44 IST, and the full history is in git.

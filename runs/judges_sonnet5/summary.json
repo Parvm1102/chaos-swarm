@@ -1,0 +1,98 @@
+{
+  "judge": "sonnet5",
+  "model": {
+    "name": "claude-sonnet-5",
+    "max_tokens": 4096,
+    "temperature": 1.0,
+    "thinking_budget": null,
+    "thinking": "off",
+    "effort": null
+  },
+  "concurrency": 5,
+  "budget_usd": 21.01,
+  "dry_run": false,
+  "last_invocation_kind": "relaxation",
+  "arms": {
+    "e3_control": {
+      "coordination": {
+        "ok": 197,
+        "unresolved": 3
+      },
+      "relaxation": {
+        "ok": 398,
+        "unresolved": 2
+      }
+    },
+    "e3_fix": {
+      "coordination": {
+        "ok": 198,
+        "unresolved": 2
+      },
+      "relaxation": {
+        "ok": 395,
+        "unresolved": 5
+      }
+    },
+    "e3_ack": {
+      "coordination": {
+        "ok": 197,
+        "unresolved": 3
+      },
+      "relaxation": {
+        "ok": 399,
+        "unresolved": 1
+      }
+    },
+    "e3_invite": {
+      "coordination": {
+        "ok": 196,
+        "unresolved": 4
+      },
+      "relaxation": {
+        "ok": 162,
+        "unresolved": 1
+      }
+    },
+    "e3_checkin": {
+      "coordination": {
+        "ok": 200
+      },
+      "relaxation": {
+        "ok": 163
+      }
+    },
+    "e1_cap1": {
+      "coordination": {
+        "ok": 197,
+        "unresolved": 3
+      },
+      "relaxation": {
+        "ok": 162
+      }
+    },
+    "e1_cap1_nomem": {
+      "coordination": {
+        "ok": 197,
+        "unresolved": 3
+      },
+      "relaxation": {
+        "ok": 162
+      }
+    },
+    "e1_unconstrained_plainintro": {
+      "coordination": {
+        "ok": 191,
+        "unresolved": 9
+      },
+      "relaxation": {
+        "ok": 161,
+        "unresolved": 1
+      }
+    }
+  },
+  "total_usd": 21.010711199999985,
+  "refusals_this_invocation": {},
+  "aborted_by_breaker": false,
+  "breaker": null,
+  "breaker_trips": []
+}

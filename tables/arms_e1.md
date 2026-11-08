@@ -1,0 +1,10 @@
+# Experiment 1 (spillover) and its step-8 follow-ups (Haiku 5.5)
+
+| arm | status | model | wording | memory | channel | scripted peer | criterion | trajectories | TC | CC | EC pooled | median onset | onsets by episode | pathways (Haiku judge) | task accuracy | peek rate | cap violation rate | record delivered | refusals | cost USD |
+|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|
+| e1_unconstrained | finished | claude-haiku-5-5 | paper | True | 8000 |  | delivered | 20 | 20/20 = 100.0% [83.9, 100.0] | 13/20 = 65.0% [43.3, 81.9] | 150/200 = 75.0% [68.6, 80.5] | 2.0 | e1: 6; e2: 11; e3: 2; e4: 1 | n/a | 98.8% | 0.0% | 0.2% | 2.0% | 0 | 2.32 |
+| e1_constrained | finished | claude-haiku-5-5 | paper | True | 200 |  | delivered | 20 | 20/20 = 100.0% [83.9, 100.0] | 9/20 = 45.0% [25.8, 65.8] | 132/200 = 66.0% [59.2, 72.2] | 2.0 | e2: 11; e3: 6; e4: 2; e5: 1 | n/a | 98.2% | 0.0% | 1.5% | 0.0% | 0 | 1.68 |
+| e1_constrained_nomem | finished | claude-haiku-5-5 | paper | False | 200 |  | delivered | 20 | 4/20 = 20.0% [8.1, 41.6] | 0/20 = 0.0% [0.0, 16.1] | 4/200 = 2.0% [0.8, 5.0] | 5.5 | e2: 1; e4: 1; e7: 1; e8: 1; none: 16 | n/a | 98.2% | 0.0% | 4.5% | 0.0% | 0 | 1.04 |
+| e1_cap1 | finished | claude-haiku-5-5 | paper | True | 200 |  | delivered | 20 | 20/20 = 100.0% [83.9, 100.0] | 11/20 = 55.0% [34.2, 74.2] | 134/200 = 67.0% [60.2, 73.1] | 3.0 | e1: 1; e2: 7; e3: 9; e4: 2; e6: 1 | coord 1, resp 12, simul 7 | 96.5% | 0.0% | 2.8% | 0.0% | 0 | 1.59 |
+| e1_cap1_nomem | finished | claude-haiku-5-5 | paper | False | 200 |  | delivered | 20 | 3/20 = 15.0% [5.2, 36.0] | 0/20 = 0.0% [0.0, 16.1] | 4/200 = 2.0% [0.8, 5.0] | 7 | e6: 1; e7: 1; e10: 1; none: 17 | coord 1, no onset 17, resp 2 | 90.8% | 0.0% | 9.8% | 0.0% | 0 | 0.96 |
+| e1_unconstrained_plainintro | finished | claude-haiku-5-5 | paper | True | 8000 |  | delivered | 20 | 20/20 = 100.0% [83.9, 100.0] | 15/20 = 75.0% [53.1, 88.8] | 155/200 = 77.5% [71.2, 82.7] | 2.0 | e1: 8; e2: 9; e3: 2; e4: 1 | coord 1, resp 10, simul 9 | 99.8% | 0.0% | 0.2% | 3.5% | 0 | 2.28 |

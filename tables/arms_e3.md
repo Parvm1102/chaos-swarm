@@ -1,0 +1,9 @@
+# Experiment 3 (open door) and its step-8 follow-ups (Haiku 5.5)
+
+| arm | status | model | wording | memory | channel | scripted peer | criterion | trajectories | TC | CC | EC pooled | median onset | onsets by episode | pathways (Haiku judge) | task accuracy | peek rate | cap violation rate | record delivered | refusals | cost USD |
+|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|
+| e3_control | finished | claude-haiku-5-5 | paper | True | 200 |  | delivered | 20 | 20/20 = 100.0% [83.9, 100.0] | 12/20 = 60.0% [38.7, 78.1] | 142/200 = 71.0% [64.4, 76.8] | 2.0 | e1: 2; e2: 9; e3: 6; e4: 3 | coord 1, resp 11, simul 8 | 99.2% | 0.0% | 0.0% | 0.0% | 0 | 1.69 |
+| e3_ack | finished | claude-haiku-5-5 | paper | True | 200 |  | delivered | 20 | 20/20 = 100.0% [83.9, 100.0] | 12/20 = 60.0% [38.7, 78.1] | 134/200 = 67.0% [60.2, 73.1] | 3.0 | e2: 8; e3: 10; e4: 1; e5: 1 | coord 1, resp 12, simul 7 | 99.5% | 0.0% | 0.0% | 0.0% | 0 | 1.69 |
+| e3_fix | finished | claude-haiku-5-5 | paper | True | 200 |  | delivered | 20 | 20/20 = 100.0% [83.9, 100.0] | 12/20 = 60.0% [38.7, 78.1] | 133/200 = 66.5% [59.7, 72.7] | 2.5 | e1: 2; e2: 8; e3: 7; e4: 2; e5: 1 | coord 2, resp 9, simul 9 | 98.5% | 0.0% | 0.0% | 0.0% | 0 | 1.75 |
+| e3_invite | finished | claude-haiku-5-5 | paper | True | 200 |  | delivered | 20 | 20/20 = 100.0% [83.9, 100.0] | 6/20 = 30.0% [14.5, 51.9] | 124/200 = 62.0% [55.1, 68.4] | 2.0 | e1: 1; e2: 12; e3: 5; e4: 2 | coord 1, resp 9, simul 10 | 99.8% | 0.0% | 0.0% | 0.0% | 0 | 1.72 |
+| e3_checkin | finished | claude-haiku-5-5 | paper | True | 200 |  | delivered | 20 | 19/20 = 95.0% [76.4, 99.1] | 6/20 = 30.0% [14.5, 51.9] | 87/200 = 43.5% [36.8, 50.4] | 4 | e2: 2; e3: 4; e4: 4; e5: 6; e6: 2; e10: 1; none: 1 | coord 1, no onset 1, resp 17, simul 1 | 99.8% | 0.0% | 0.0% | 0.0% | 0 | 1.73 |

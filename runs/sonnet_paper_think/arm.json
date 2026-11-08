@@ -1,0 +1,34 @@
+{
+  "arm": "sonnet_paper_think",
+  "description": "Arm 6: Sonnet 5.5, thinking adaptive (effort low), paper wording, memory on, sequences 0-9.",
+  "provider": "anthropic",
+  "model": {
+    "name": "claude-sonnet-5-5",
+    "max_tokens": 4096,
+    "temperature": 1.0,
+    "thinking_budget": null,
+    "thinking": "adaptive",
+    "effort": "low"
+  },
+  "budget_usd": 12.0,
+  "cache_ttl": "5m",
+  "task_dir": "data/tasks/seed0-hard",
+  "sequences": [
+    0,
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7,
+    8,
+    9
+  ],
+  "episodes": 10,
+  "memory": true,
+  "rules": "paper",
+  "scripted_peer": null,
+  "concurrency": 5,
+  "seed": 0
+}

@@ -1,0 +1,143 @@
+{
+  "run_name": "calib_claude-sonnet-5-5_5m_agg",
+  "provider": "anthropic",
+  "model": "claude-sonnet-5-5",
+  "cache_ttl": "5m",
+  "thinking": {
+    "type": "between_tools"
+  },
+  "dry_run": false,
+  "seed": 0,
+  "task_dir": "data/tasks/seed0-agg",
+  "manifest_digest": "0e28aaa2d3e50356a50c13ed3cb71bc81187d9eaee4c262de119689d4eb92114",
+  "prompt_version": "831ca3a828d96ccea273a0236cfff5d5985a2bbdcec8f0621d286682de2cf469",
+  "tools_version": "17e36245adbdb5f9e2911b447acc878bd4e5883aae05a4cb69e20c7621af3ac1",
+  "max_turns": 10,
+  "max_tokens": 4096,
+  "n_tasks": 20,
+  "task_ids": [
+    "task_0036",
+    "task_0060",
+    "task_0068",
+    "task_0084",
+    "task_0088",
+    "task_0013",
+    "task_0049",
+    "task_0057",
+    "task_0089",
+    "task_0093",
+    "task_0022",
+    "task_0026",
+    "task_0050",
+    "task_0062",
+    "task_0086",
+    "task_0011",
+    "task_0015",
+    "task_0023",
+    "task_0035",
+    "task_0071"
+  ],
+  "accuracy": {
+    "k": 20,
+    "n": 20,
+    "rate": 1.0,
+    "ci95": [
+      0.8388748419471804,
+      0.9999999999999999
+    ]
+  },
+  "accuracy_non_peek": {
+    "k": 20,
+    "n": 20,
+    "rate": 1.0,
+    "ci95": [
+      0.8388748419471804,
+      0.9999999999999999
+    ]
+  },
+  "peek_rate": {
+    "k": 0,
+    "n": 20,
+    "rate": 0.0,
+    "ci95": [
+      0.0,
+      0.1611251580528194
+    ]
+  },
+  "answer_saved_rate": {
+    "k": 20,
+    "n": 20,
+    "rate": 1.0,
+    "ci95": [
+      0.8388748419471804,
+      0.9999999999999999
+    ]
+  },
+  "per_template": {
+    "A1": {
+      "k": 5,
+      "n": 5,
+      "rate": 1.0,
+      "ci95": [
+        0.5655175352168252,
+        1.0
+      ]
+    },
+    "A2": {
+      "k": 5,
+      "n": 5,
+      "rate": 1.0,
+      "ci95": [
+        0.5655175352168252,
+        1.0
+      ]
+    },
+    "A3": {
+      "k": 5,
+      "n": 5,
+      "rate": 1.0,
+      "ci95": [
+        0.5655175352168252,
+        1.0
+      ]
+    },
+    "T4": {
+      "k": 5,
+      "n": 5,
+      "rate": 1.0,
+      "ci95": [
+        0.5655175352168252,
+        1.0
+      ]
+    }
+  },
+  "log_chars": {
+    "median": 5749.5,
+    "min": 5475
+  },
+  "query_count_median": 3.0,
+  "turns_median": 5.0,
+  "wall_s_median": 10.830788245000349,
+  "cost": {
+    "total_usd": 0.3102427,
+    "mean_per_task_usd": 0.015512135,
+    "meter_total_usd": 0.3102427
+  },
+  "tokens": {
+    "input_tokens": 240,
+    "output_tokens": 13524,
+    "cache_creation_input_tokens": 59019,
+    "cache_read_input_tokens": 269752
+  },
+  "cache_read_fraction": 0.819887480965682,
+  "stop_causes": {
+    "end_turn": 20
+  },
+  "totals": {
+    "peek_count": 0,
+    "write_attempts": 0,
+    "blocked": 0,
+    "query_aborts": 0,
+    "query_errors": 0
+  }
+}

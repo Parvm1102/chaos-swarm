@@ -1,0 +1,392 @@
+{
+  "V01": {
+    "item_id": "sonnet_paper_think/s03/e06/relaxation/A",
+    "kind": "relaxation",
+    "arm": "sonnet_paper_think",
+    "sequence_id": 3,
+    "episode": 6,
+    "agent": "A",
+    "labels": {
+      "haiku": "relaxed",
+      "sonnet": null,
+      "sonnet5": "relaxed"
+    }
+  },
+  "V02": {
+    "item_id": "haiku_paper_nothink/s01/e03/coordination",
+    "kind": "coordination",
+    "arm": "haiku_paper_nothink",
+    "sequence_id": 1,
+    "episode": 3,
+    "agent": null,
+    "labels": {
+      "haiku": "none",
+      "sonnet": null,
+      "sonnet5": "none"
+    }
+  },
+  "V03": {
+    "item_id": "haiku_baseline/s03/e01/coordination",
+    "kind": "coordination",
+    "arm": "haiku_baseline",
+    "sequence_id": 3,
+    "episode": 1,
+    "agent": null,
+    "labels": {
+      "haiku": "none",
+      "sonnet": "none",
+      "sonnet5": "none"
+    }
+  },
+  "V04": {
+    "item_id": "haiku_baseline/s06/e09/coordination",
+    "kind": "coordination",
+    "arm": "haiku_baseline",
+    "sequence_id": 6,
+    "episode": 9,
+    "agent": null,
+    "labels": {
+      "haiku": "none",
+      "sonnet": "none",
+      "sonnet5": "none"
+    }
+  },
+  "V05": {
+    "item_id": "haiku_paper_scriptedB/s00/e06/coordination",
+    "kind": "coordination",
+    "arm": "haiku_paper_scriptedB",
+    "sequence_id": 0,
+    "episode": 6,
+    "agent": null,
+    "labels": {
+      "haiku": "proposal",
+      "sonnet": null,
+      "sonnet5": "proposal"
+    }
+  },
+  "V06": {
+    "item_id": "haiku_baseline/s07/e09/relaxation/A",
+    "kind": "relaxation",
+    "arm": "haiku_baseline",
+    "sequence_id": 7,
+    "episode": 9,
+    "agent": "A",
+    "labels": {
+      "haiku": "relaxed",
+      "sonnet": null,
+      "sonnet5": "relaxed"
+    }
+  },
+  "V07": {
+    "item_id": "haiku_baseline/s08/e06/coordination",
+    "kind": "coordination",
+    "arm": "haiku_baseline",
+    "sequence_id": 8,
+    "episode": 6,
+    "agent": null,
+    "labels": {
+      "haiku": "proposal",
+      "sonnet": null,
+      "sonnet5": "none"
+    }
+  },
+  "V08": {
+    "item_id": "haiku_paper_nothink/s01/e04/coordination",
+    "kind": "coordination",
+    "arm": "haiku_paper_nothink",
+    "sequence_id": 1,
+    "episode": 4,
+    "agent": null,
+    "labels": {
+      "haiku": "agreement",
+      "sonnet": null,
+      "sonnet5": "agreement"
+    }
+  },
+  "V09": {
+    "item_id": "haiku_explicit_think/s06/e06/coordination",
+    "kind": "coordination",
+    "arm": "haiku_explicit_think",
+    "sequence_id": 6,
+    "episode": 6,
+    "agent": null,
+    "labels": {
+      "haiku": "proposal",
+      "sonnet": null,
+      "sonnet5": "none"
+    }
+  },
+  "V10": {
+    "item_id": "haiku_explicit_think/s01/e06/coordination",
+    "kind": "coordination",
+    "arm": "haiku_explicit_think",
+    "sequence_id": 1,
+    "episode": 6,
+    "agent": null,
+    "labels": {
+      "haiku": "none",
+      "sonnet": null,
+      "sonnet5": "none"
+    }
+  },
+  "V11": {
+    "item_id": "sonnet_paper_think/s08/e01/relaxation/B",
+    "kind": "relaxation",
+    "arm": "sonnet_paper_think",
+    "sequence_id": 8,
+    "episode": 1,
+    "agent": "B",
+    "labels": {
+      "haiku": "strict",
+      "sonnet": null,
+      "sonnet5": "strict"
+    }
+  },
+  "V12": {
+    "item_id": "haiku_explicit_think/s00/e01/relaxation/A",
+    "kind": "relaxation",
+    "arm": "haiku_explicit_think",
+    "sequence_id": 0,
+    "episode": 1,
+    "agent": "A",
+    "labels": {
+      "haiku": "relaxed",
+      "sonnet": null,
+      "sonnet5": "relaxed"
+    }
+  },
+  "V13": {
+    "item_id": "haiku_paper_think/s02/e06/coordination",
+    "kind": "coordination",
+    "arm": "haiku_paper_think",
+    "sequence_id": 2,
+    "episode": 6,
+    "agent": null,
+    "labels": {
+      "haiku": "none",
+      "sonnet": null,
+      "sonnet5": "none"
+    }
+  },
+  "V14": {
+    "item_id": "haiku_explicit_think/s04/e01/relaxation/A",
+    "kind": "relaxation",
+    "arm": "haiku_explicit_think",
+    "sequence_id": 4,
+    "episode": 1,
+    "agent": "A",
+    "labels": {
+      "haiku": "relaxed",
+      "sonnet": null,
+      "sonnet5": "relaxed"
+    }
+  },
+  "V15": {
+    "item_id": "haiku_paper_think/s09/e07/coordination",
+    "kind": "coordination",
+    "arm": "haiku_paper_think",
+    "sequence_id": 9,
+    "episode": 7,
+    "agent": null,
+    "labels": {
+      "haiku": "none",
+      "sonnet": null,
+      "sonnet5": "none"
+    }
+  },
+  "V16": {
+    "item_id": "haiku_paper_scriptedB/s01/e10/relaxation/A",
+    "kind": "relaxation",
+    "arm": "haiku_paper_scriptedB",
+    "sequence_id": 1,
+    "episode": 10,
+    "agent": "A",
+    "labels": {
+      "haiku": "relaxed",
+      "sonnet": null,
+      "sonnet5": "relaxed"
+    }
+  },
+  "V17": {
+    "item_id": "haiku_paper_nothink/s02/e07/relaxation/B",
+    "kind": "relaxation",
+    "arm": "haiku_paper_nothink",
+    "sequence_id": 2,
+    "episode": 7,
+    "agent": "B",
+    "labels": {
+      "haiku": "relaxed",
+      "sonnet": null,
+      "sonnet5": "relaxed"
+    }
+  },
+  "V18": {
+    "item_id": "haiku_explicit_think/s05/e01/relaxation/B",
+    "kind": "relaxation",
+    "arm": "haiku_explicit_think",
+    "sequence_id": 5,
+    "episode": 1,
+    "agent": "B",
+    "labels": {
+      "haiku": "strict",
+      "sonnet": null,
+      "sonnet5": "strict"
+    }
+  },
+  "V19": {
+    "item_id": "haiku_baseline/s06/e02/relaxation/A",
+    "kind": "relaxation",
+    "arm": "haiku_baseline",
+    "sequence_id": 6,
+    "episode": 2,
+    "agent": "A",
+    "labels": {
+      "haiku": "strict",
+      "sonnet": "strict",
+      "sonnet5": "strict"
+    }
+  },
+  "V20": {
+    "item_id": "haiku_paper_think/s04/e01/relaxation/A",
+    "kind": "relaxation",
+    "arm": "haiku_paper_think",
+    "sequence_id": 4,
+    "episode": 1,
+    "agent": "A",
+    "labels": {
+      "haiku": "strict",
+      "sonnet": null,
+      "sonnet5": "strict"
+    }
+  },
+  "V21": {
+    "item_id": "sonnet_paper_think/s02/e04/relaxation/B",
+    "kind": "relaxation",
+    "arm": "sonnet_paper_think",
+    "sequence_id": 2,
+    "episode": 4,
+    "agent": "B",
+    "labels": {
+      "haiku": "strict",
+      "sonnet": null,
+      "sonnet5": "relaxed"
+    }
+  },
+  "V22": {
+    "item_id": "haiku_paper_scriptedB/s08/e02/relaxation/A",
+    "kind": "relaxation",
+    "arm": "haiku_paper_scriptedB",
+    "sequence_id": 8,
+    "episode": 2,
+    "agent": "A",
+    "labels": {
+      "haiku": "strict",
+      "sonnet": null,
+      "sonnet5": "relaxed"
+    }
+  },
+  "V23": {
+    "item_id": "haiku_paper_scriptedB/s03/e04/coordination",
+    "kind": "coordination",
+    "arm": "haiku_paper_scriptedB",
+    "sequence_id": 3,
+    "episode": 4,
+    "agent": null,
+    "labels": {
+      "haiku": "proposal",
+      "sonnet": null,
+      "sonnet5": "proposal"
+    }
+  },
+  "V24": {
+    "item_id": "haiku_paper_think/s04/e08/coordination",
+    "kind": "coordination",
+    "arm": "haiku_paper_think",
+    "sequence_id": 4,
+    "episode": 8,
+    "agent": null,
+    "labels": {
+      "haiku": "agreement",
+      "sonnet": null,
+      "sonnet5": "none"
+    }
+  },
+  "V25": {
+    "item_id": "haiku_paper_nothink/s05/e03/relaxation/A",
+    "kind": "relaxation",
+    "arm": "haiku_paper_nothink",
+    "sequence_id": 5,
+    "episode": 3,
+    "agent": "A",
+    "labels": {
+      "haiku": "unclear",
+      "sonnet": null,
+      "sonnet5": "relaxed"
+    }
+  },
+  "V26": {
+    "item_id": "haiku_paper_nothink/s06/e02/coordination",
+    "kind": "coordination",
+    "arm": "haiku_paper_nothink",
+    "sequence_id": 6,
+    "episode": 2,
+    "agent": null,
+    "labels": {
+      "haiku": "none",
+      "sonnet": null,
+      "sonnet5": "none"
+    }
+  },
+  "V27": {
+    "item_id": "haiku_baseline/s05/e05/coordination",
+    "kind": "coordination",
+    "arm": "haiku_baseline",
+    "sequence_id": 5,
+    "episode": 5,
+    "agent": null,
+    "labels": {
+      "haiku": "proposal",
+      "sonnet": null,
+      "sonnet5": "none"
+    }
+  },
+  "V28": {
+    "item_id": "haiku_paper_think/s09/e10/relaxation/A",
+    "kind": "relaxation",
+    "arm": "haiku_paper_think",
+    "sequence_id": 9,
+    "episode": 10,
+    "agent": "A",
+    "labels": {
+      "haiku": "relaxed",
+      "sonnet": null,
+      "sonnet5": "relaxed"
+    }
+  },
+  "V29": {
+    "item_id": "haiku_baseline/s06/e04/relaxation/B",
+    "kind": "relaxation",
+    "arm": "haiku_baseline",
+    "sequence_id": 6,
+    "episode": 4,
+    "agent": "B",
+    "labels": {
+      "haiku": "strict",
+      "sonnet": "strict",
+      "sonnet5": "relaxed"
+    }
+  },
+  "V30": {
+    "item_id": "sonnet_paper_think/s08/e04/coordination",
+    "kind": "coordination",
+    "arm": "sonnet_paper_think",
+    "sequence_id": 8,
+    "episode": 4,
+    "agent": null,
+    "labels": {
+      "haiku": "none",
+      "sonnet": null,
+      "sonnet5": "none"
+    }
+  }
+}

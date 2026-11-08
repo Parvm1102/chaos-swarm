@@ -1,0 +1,1699 @@
+{
+  "decision": {
+    "planned_primary": "sonnet",
+    "primary": "haiku",
+    "secondary": "sonnet",
+    "planned_primary_sent": 219,
+    "planned_primary_refusal_unresolved": 39,
+    "planned_primary_refusal_rate": 0.1780821917808219,
+    "switch_rate": 0.05,
+    "switched": true
+  },
+  "compare": [
+    "sonnet5"
+  ],
+  "coverage": {
+    "haiku_baseline": {
+      "haiku": 300,
+      "sonnet": 219,
+      "sonnet5": 300,
+      "items": 300
+    },
+    "haiku_paper_nothink": {
+      "haiku": 300,
+      "sonnet": 0,
+      "sonnet5": 300,
+      "items": 300
+    },
+    "haiku_explicit_think": {
+      "haiku": 300,
+      "sonnet": 0,
+      "sonnet5": 300,
+      "items": 300
+    },
+    "haiku_paper_think": {
+      "haiku": 300,
+      "sonnet": 0,
+      "sonnet5": 300,
+      "items": 300
+    },
+    "haiku_paper_scriptedB": {
+      "haiku": 300,
+      "sonnet": 0,
+      "sonnet5": 300,
+      "items": 300
+    },
+    "sonnet_paper_think": {
+      "haiku": 300,
+      "sonnet": 0,
+      "sonnet5": 300,
+      "items": 300
+    }
+  },
+  "arms": {
+    "haiku_baseline": {
+      "pathway_agreement": null,
+      "pathway_agreement_by_judge": {
+        "sonnet5": {
+          "same": 10,
+          "of": 10
+        }
+      },
+      "item_agreement": {
+        "coordination": {
+          "n": 33,
+          "agreement": 0.9696969696969697,
+          "kappa": 0.0,
+          "per_class": {
+            "agreement": {
+              "first": 0,
+              "second": 0,
+              "both": 0,
+              "specific_agreement": null
+            },
+            "proposal": {
+              "first": 1,
+              "second": 0,
+              "both": 0,
+              "specific_agreement": 0.0
+            },
+            "none": {
+              "first": 32,
+              "second": 33,
+              "both": 32,
+              "specific_agreement": 0.9846153846153847
+            }
+          },
+          "confusion": {
+            "none|none": 32,
+            "proposal|none": 1
+          }
+        },
+        "relaxation": {
+          "n": 143,
+          "agreement": 0.9020979020979021,
+          "kappa": 0.8067567567567567,
+          "per_class": {
+            "relaxed": {
+              "first": 47,
+              "second": 51,
+              "both": 44,
+              "specific_agreement": 0.8979591836734694
+            },
+            "strict": {
+              "first": 90,
+              "second": 85,
+              "both": 82,
+              "specific_agreement": 0.9371428571428572
+            },
+            "unclear": {
+              "first": 6,
+              "second": 7,
+              "both": 3,
+              "specific_agreement": 0.46153846153846156
+            }
+          },
+          "confusion": {
+            "relaxed|relaxed": 44,
+            "relaxed|strict": 2,
+            "relaxed|unclear": 1,
+            "strict|relaxed": 5,
+            "strict|strict": 82,
+            "strict|unclear": 3,
+            "unclear|relaxed": 2,
+            "unclear|strict": 1,
+            "unclear|unclear": 3
+          }
+        }
+      },
+      "item_agreement_by_judge": {
+        "sonnet": {
+          "coordination": {
+            "n": 33,
+            "agreement": 0.9696969696969697,
+            "kappa": 0.0,
+            "per_class": {
+              "agreement": {
+                "first": 0,
+                "second": 0,
+                "both": 0,
+                "specific_agreement": null
+              },
+              "proposal": {
+                "first": 1,
+                "second": 0,
+                "both": 0,
+                "specific_agreement": 0.0
+              },
+              "none": {
+                "first": 32,
+                "second": 33,
+                "both": 32,
+                "specific_agreement": 0.9846153846153847
+              }
+            },
+            "confusion": {
+              "none|none": 32,
+              "proposal|none": 1
+            }
+          },
+          "relaxation": {
+            "n": 143,
+            "agreement": 0.9020979020979021,
+            "kappa": 0.8067567567567567,
+            "per_class": {
+              "relaxed": {
+                "first": 47,
+                "second": 51,
+                "both": 44,
+                "specific_agreement": 0.8979591836734694
+              },
+              "strict": {
+                "first": 90,
+                "second": 85,
+                "both": 82,
+                "specific_agreement": 0.9371428571428572
+              },
+              "unclear": {
+                "first": 6,
+                "second": 7,
+                "both": 3,
+                "specific_agreement": 0.46153846153846156
+              }
+            },
+            "confusion": {
+              "relaxed|relaxed": 44,
+              "relaxed|strict": 2,
+              "relaxed|unclear": 1,
+              "strict|relaxed": 5,
+              "strict|strict": 82,
+              "strict|unclear": 3,
+              "unclear|relaxed": 2,
+              "unclear|strict": 1,
+              "unclear|unclear": 3
+            }
+          }
+        },
+        "sonnet5": {
+          "coordination": {
+            "n": 100,
+            "agreement": 0.95,
+            "kappa": -0.018329938900203895,
+            "per_class": {
+              "agreement": {
+                "first": 0,
+                "second": 1,
+                "both": 0,
+                "specific_agreement": 0.0
+              },
+              "proposal": {
+                "first": 3,
+                "second": 1,
+                "both": 0,
+                "specific_agreement": 0.0
+              },
+              "none": {
+                "first": 97,
+                "second": 98,
+                "both": 95,
+                "specific_agreement": 0.9743589743589743
+              }
+            },
+            "confusion": {
+              "none|agreement": 1,
+              "none|none": 95,
+              "none|proposal": 1,
+              "proposal|none": 3
+            }
+          },
+          "relaxation": {
+            "n": 198,
+            "agreement": 0.8585858585858586,
+            "kappa": 0.732225656877898,
+            "per_class": {
+              "relaxed": {
+                "first": 70,
+                "second": 88,
+                "both": 67,
+                "specific_agreement": 0.8481012658227848
+              },
+              "strict": {
+                "first": 117,
+                "second": 105,
+                "both": 101,
+                "specific_agreement": 0.9099099099099099
+              },
+              "unclear": {
+                "first": 11,
+                "second": 5,
+                "both": 2,
+                "specific_agreement": 0.25
+              }
+            },
+            "confusion": {
+              "relaxed|relaxed": 67,
+              "relaxed|strict": 1,
+              "relaxed|unclear": 2,
+              "strict|relaxed": 15,
+              "strict|strict": 101,
+              "strict|unclear": 1,
+              "unclear|relaxed": 6,
+              "unclear|strict": 3,
+              "unclear|unclear": 2
+            }
+          }
+        }
+      },
+      "coverage": {
+        "haiku": 300,
+        "sonnet": 219,
+        "sonnet5": 300,
+        "items": 300
+      },
+      "counts": {
+        "haiku": {
+          "no onset": 10
+        },
+        "sonnet5": {
+          "no onset": 10
+        }
+      },
+      "proposal_before_onset": 0,
+      "stated_vs_acted": {
+        "stated first": 4
+      },
+      "item_status": {
+        "haiku": {
+          "ok": 299,
+          "unresolved": 1
+        },
+        "sonnet": {
+          "ok": 177,
+          "unresolved": 42
+        },
+        "sonnet5": {
+          "ok": 299,
+          "unresolved": 1
+        }
+      },
+      "labels": {
+        "haiku": {
+          "coordination": {
+            "none": 97,
+            "proposal": 3
+          },
+          "relaxation": {
+            "relaxed": 70,
+            "strict": 118,
+            "unclear": 11
+          }
+        },
+        "sonnet5": {
+          "coordination": {
+            "agreement": 1,
+            "none": 98,
+            "proposal": 1
+          },
+          "relaxation": {
+            "relaxed": 89,
+            "strict": 105,
+            "unclear": 5
+          }
+        }
+      }
+    },
+    "haiku_paper_nothink": {
+      "pathway_agreement": null,
+      "pathway_agreement_by_judge": {
+        "sonnet5": {
+          "same": 10,
+          "of": 10
+        }
+      },
+      "item_agreement": {
+        "coordination": {
+          "n": 0,
+          "agreement": null,
+          "kappa": null,
+          "per_class": {
+            "agreement": {
+              "first": 0,
+              "second": 0,
+              "both": 0,
+              "specific_agreement": null
+            },
+            "proposal": {
+              "first": 0,
+              "second": 0,
+              "both": 0,
+              "specific_agreement": null
+            },
+            "none": {
+              "first": 0,
+              "second": 0,
+              "both": 0,
+              "specific_agreement": null
+            }
+          },
+          "confusion": {}
+        },
+        "relaxation": {
+          "n": 0,
+          "agreement": null,
+          "kappa": null,
+          "per_class": {
+            "relaxed": {
+              "first": 0,
+              "second": 0,
+              "both": 0,
+              "specific_agreement": null
+            },
+            "strict": {
+              "first": 0,
+              "second": 0,
+              "both": 0,
+              "specific_agreement": null
+            },
+            "unclear": {
+              "first": 0,
+              "second": 0,
+              "both": 0,
+              "specific_agreement": null
+            }
+          },
+          "confusion": {}
+        }
+      },
+      "item_agreement_by_judge": {
+        "sonnet": {
+          "coordination": {
+            "n": 0,
+            "agreement": null,
+            "kappa": null,
+            "per_class": {
+              "agreement": {
+                "first": 0,
+                "second": 0,
+                "both": 0,
+                "specific_agreement": null
+              },
+              "proposal": {
+                "first": 0,
+                "second": 0,
+                "both": 0,
+                "specific_agreement": null
+              },
+              "none": {
+                "first": 0,
+                "second": 0,
+                "both": 0,
+                "specific_agreement": null
+              }
+            },
+            "confusion": {}
+          },
+          "relaxation": {
+            "n": 0,
+            "agreement": null,
+            "kappa": null,
+            "per_class": {
+              "relaxed": {
+                "first": 0,
+                "second": 0,
+                "both": 0,
+                "specific_agreement": null
+              },
+              "strict": {
+                "first": 0,
+                "second": 0,
+                "both": 0,
+                "specific_agreement": null
+              },
+              "unclear": {
+                "first": 0,
+                "second": 0,
+                "both": 0,
+                "specific_agreement": null
+              }
+            },
+            "confusion": {}
+          }
+        },
+        "sonnet5": {
+          "coordination": {
+            "n": 100,
+            "agreement": 1.0,
+            "kappa": 1.0,
+            "per_class": {
+              "agreement": {
+                "first": 1,
+                "second": 1,
+                "both": 1,
+                "specific_agreement": 1.0
+              },
+              "proposal": {
+                "first": 0,
+                "second": 0,
+                "both": 0,
+                "specific_agreement": null
+              },
+              "none": {
+                "first": 99,
+                "second": 99,
+                "both": 99,
+                "specific_agreement": 1.0
+              }
+            },
+            "confusion": {
+              "agreement|agreement": 1,
+              "none|none": 99
+            }
+          },
+          "relaxation": {
+            "n": 199,
+            "agreement": 0.9748743718592965,
+            "kappa": 0.0,
+            "per_class": {
+              "relaxed": {
+                "first": 194,
+                "second": 199,
+                "both": 194,
+                "specific_agreement": 0.9872773536895675
+              },
+              "strict": {
+                "first": 3,
+                "second": 0,
+                "both": 0,
+                "specific_agreement": 0.0
+              },
+              "unclear": {
+                "first": 2,
+                "second": 0,
+                "both": 0,
+                "specific_agreement": 0.0
+              }
+            },
+            "confusion": {
+              "relaxed|relaxed": 194,
+              "strict|relaxed": 3,
+              "unclear|relaxed": 2
+            }
+          }
+        }
+      },
+      "coverage": {
+        "haiku": 300,
+        "sonnet": 0,
+        "sonnet5": 300,
+        "items": 300
+      },
+      "counts": {
+        "haiku": {
+          "responsive relaxation": 7,
+          "simultaneous relaxation": 3
+        },
+        "sonnet5": {
+          "responsive relaxation": 7,
+          "simultaneous relaxation": 3
+        }
+      },
+      "proposal_before_onset": 0,
+      "stated_vs_acted": {
+        "acted first": 2,
+        "stated first": 18
+      },
+      "item_status": {
+        "haiku": {
+          "ok": 300
+        },
+        "sonnet": {},
+        "sonnet5": {
+          "ok": 299,
+          "unresolved": 1
+        }
+      },
+      "labels": {
+        "haiku": {
+          "coordination": {
+            "agreement": 1,
+            "none": 99
+          },
+          "relaxation": {
+            "relaxed": 195,
+            "strict": 3,
+            "unclear": 2
+          }
+        },
+        "sonnet5": {
+          "coordination": {
+            "agreement": 1,
+            "none": 99
+          },
+          "relaxation": {
+            "relaxed": 199
+          }
+        }
+      }
+    },
+    "haiku_explicit_think": {
+      "pathway_agreement": null,
+      "pathway_agreement_by_judge": {
+        "sonnet5": {
+          "same": 10,
+          "of": 10
+        }
+      },
+      "item_agreement": {
+        "coordination": {
+          "n": 0,
+          "agreement": null,
+          "kappa": null,
+          "per_class": {
+            "agreement": {
+              "first": 0,
+              "second": 0,
+              "both": 0,
+              "specific_agreement": null
+            },
+            "proposal": {
+              "first": 0,
+              "second": 0,
+              "both": 0,
+              "specific_agreement": null
+            },
+            "none": {
+              "first": 0,
+              "second": 0,
+              "both": 0,
+              "specific_agreement": null
+            }
+          },
+          "confusion": {}
+        },
+        "relaxation": {
+          "n": 0,
+          "agreement": null,
+          "kappa": null,
+          "per_class": {
+            "relaxed": {
+              "first": 0,
+              "second": 0,
+              "both": 0,
+              "specific_agreement": null
+            },
+            "strict": {
+              "first": 0,
+              "second": 0,
+              "both": 0,
+              "specific_agreement": null
+            },
+            "unclear": {
+              "first": 0,
+              "second": 0,
+              "both": 0,
+              "specific_agreement": null
+            }
+          },
+          "confusion": {}
+        }
+      },
+      "item_agreement_by_judge": {
+        "sonnet": {
+          "coordination": {
+            "n": 0,
+            "agreement": null,
+            "kappa": null,
+            "per_class": {
+              "agreement": {
+                "first": 0,
+                "second": 0,
+                "both": 0,
+                "specific_agreement": null
+              },
+              "proposal": {
+                "first": 0,
+                "second": 0,
+                "both": 0,
+                "specific_agreement": null
+              },
+              "none": {
+                "first": 0,
+                "second": 0,
+                "both": 0,
+                "specific_agreement": null
+              }
+            },
+            "confusion": {}
+          },
+          "relaxation": {
+            "n": 0,
+            "agreement": null,
+            "kappa": null,
+            "per_class": {
+              "relaxed": {
+                "first": 0,
+                "second": 0,
+                "both": 0,
+                "specific_agreement": null
+              },
+              "strict": {
+                "first": 0,
+                "second": 0,
+                "both": 0,
+                "specific_agreement": null
+              },
+              "unclear": {
+                "first": 0,
+                "second": 0,
+                "both": 0,
+                "specific_agreement": null
+              }
+            },
+            "confusion": {}
+          }
+        },
+        "sonnet5": {
+          "coordination": {
+            "n": 100,
+            "agreement": 0.99,
+            "kappa": 0.0,
+            "per_class": {
+              "agreement": {
+                "first": 0,
+                "second": 0,
+                "both": 0,
+                "specific_agreement": null
+              },
+              "proposal": {
+                "first": 1,
+                "second": 0,
+                "both": 0,
+                "specific_agreement": 0.0
+              },
+              "none": {
+                "first": 99,
+                "second": 100,
+                "both": 99,
+                "specific_agreement": 0.9949748743718593
+              }
+            },
+            "confusion": {
+              "none|none": 99,
+              "proposal|none": 1
+            }
+          },
+          "relaxation": {
+            "n": 200,
+            "agreement": 0.99,
+            "kappa": 0.7455470737913484,
+            "per_class": {
+              "relaxed": {
+                "first": 3,
+                "second": 4,
+                "both": 3,
+                "specific_agreement": 0.8571428571428571
+              },
+              "strict": {
+                "first": 196,
+                "second": 196,
+                "both": 195,
+                "specific_agreement": 0.9948979591836735
+              },
+              "unclear": {
+                "first": 1,
+                "second": 0,
+                "both": 0,
+                "specific_agreement": 0.0
+              }
+            },
+            "confusion": {
+              "relaxed|relaxed": 3,
+              "strict|relaxed": 1,
+              "strict|strict": 195,
+              "unclear|strict": 1
+            }
+          }
+        }
+      },
+      "coverage": {
+        "haiku": 300,
+        "sonnet": 0,
+        "sonnet5": 300,
+        "items": 300
+      },
+      "counts": {
+        "haiku": {
+          "no onset": 10
+        },
+        "sonnet5": {
+          "no onset": 10
+        }
+      },
+      "proposal_before_onset": 0,
+      "stated_vs_acted": {},
+      "item_status": {
+        "haiku": {
+          "ok": 300
+        },
+        "sonnet": {},
+        "sonnet5": {
+          "ok": 300
+        }
+      },
+      "labels": {
+        "haiku": {
+          "coordination": {
+            "none": 99,
+            "proposal": 1
+          },
+          "relaxation": {
+            "relaxed": 3,
+            "strict": 196,
+            "unclear": 1
+          }
+        },
+        "sonnet5": {
+          "coordination": {
+            "none": 100
+          },
+          "relaxation": {
+            "relaxed": 4,
+            "strict": 196
+          }
+        }
+      }
+    },
+    "haiku_paper_think": {
+      "pathway_agreement": null,
+      "pathway_agreement_by_judge": {
+        "sonnet5": {
+          "same": 9,
+          "of": 10
+        }
+      },
+      "item_agreement": {
+        "coordination": {
+          "n": 0,
+          "agreement": null,
+          "kappa": null,
+          "per_class": {
+            "agreement": {
+              "first": 0,
+              "second": 0,
+              "both": 0,
+              "specific_agreement": null
+            },
+            "proposal": {
+              "first": 0,
+              "second": 0,
+              "both": 0,
+              "specific_agreement": null
+            },
+            "none": {
+              "first": 0,
+              "second": 0,
+              "both": 0,
+              "specific_agreement": null
+            }
+          },
+          "confusion": {}
+        },
+        "relaxation": {
+          "n": 0,
+          "agreement": null,
+          "kappa": null,
+          "per_class": {
+            "relaxed": {
+              "first": 0,
+              "second": 0,
+              "both": 0,
+              "specific_agreement": null
+            },
+            "strict": {
+              "first": 0,
+              "second": 0,
+              "both": 0,
+              "specific_agreement": null
+            },
+            "unclear": {
+              "first": 0,
+              "second": 0,
+              "both": 0,
+              "specific_agreement": null
+            }
+          },
+          "confusion": {}
+        }
+      },
+      "item_agreement_by_judge": {
+        "sonnet": {
+          "coordination": {
+            "n": 0,
+            "agreement": null,
+            "kappa": null,
+            "per_class": {
+              "agreement": {
+                "first": 0,
+                "second": 0,
+                "both": 0,
+                "specific_agreement": null
+              },
+              "proposal": {
+                "first": 0,
+                "second": 0,
+                "both": 0,
+                "specific_agreement": null
+              },
+              "none": {
+                "first": 0,
+                "second": 0,
+                "both": 0,
+                "specific_agreement": null
+              }
+            },
+            "confusion": {}
+          },
+          "relaxation": {
+            "n": 0,
+            "agreement": null,
+            "kappa": null,
+            "per_class": {
+              "relaxed": {
+                "first": 0,
+                "second": 0,
+                "both": 0,
+                "specific_agreement": null
+              },
+              "strict": {
+                "first": 0,
+                "second": 0,
+                "both": 0,
+                "specific_agreement": null
+              },
+              "unclear": {
+                "first": 0,
+                "second": 0,
+                "both": 0,
+                "specific_agreement": null
+              }
+            },
+            "confusion": {}
+          }
+        },
+        "sonnet5": {
+          "coordination": {
+            "n": 99,
+            "agreement": 0.9595959595959596,
+            "kappa": -0.015384615384617101,
+            "per_class": {
+              "agreement": {
+                "first": 1,
+                "second": 3,
+                "both": 0,
+                "specific_agreement": 0.0
+              },
+              "proposal": {
+                "first": 0,
+                "second": 0,
+                "both": 0,
+                "specific_agreement": null
+              },
+              "none": {
+                "first": 98,
+                "second": 96,
+                "both": 95,
+                "specific_agreement": 0.979381443298969
+              }
+            },
+            "confusion": {
+              "agreement|none": 1,
+              "none|agreement": 3,
+              "none|none": 95
+            }
+          },
+          "relaxation": {
+            "n": 199,
+            "agreement": 0.9798994974874372,
+            "kappa": 0.6586620926243569,
+            "per_class": {
+              "relaxed": {
+                "first": 191,
+                "second": 195,
+                "both": 191,
+                "specific_agreement": 0.9896373056994818
+              },
+              "strict": {
+                "first": 6,
+                "second": 4,
+                "both": 4,
+                "specific_agreement": 0.8
+              },
+              "unclear": {
+                "first": 2,
+                "second": 0,
+                "both": 0,
+                "specific_agreement": 0.0
+              }
+            },
+            "confusion": {
+              "relaxed|relaxed": 191,
+              "strict|relaxed": 2,
+              "strict|strict": 4,
+              "unclear|relaxed": 2
+            }
+          }
+        }
+      },
+      "coverage": {
+        "haiku": 300,
+        "sonnet": 0,
+        "sonnet5": 300,
+        "items": 300
+      },
+      "counts": {
+        "haiku": {
+          "responsive relaxation": 8,
+          "simultaneous relaxation": 2
+        },
+        "sonnet5": {
+          "explicit coordination": 1,
+          "responsive relaxation": 8,
+          "simultaneous relaxation": 1
+        }
+      },
+      "proposal_before_onset": 0,
+      "stated_vs_acted": {
+        "acted first": 8,
+        "stated first": 12
+      },
+      "item_status": {
+        "haiku": {
+          "ok": 300
+        },
+        "sonnet": {},
+        "sonnet5": {
+          "ok": 298,
+          "unresolved": 2
+        }
+      },
+      "labels": {
+        "haiku": {
+          "coordination": {
+            "agreement": 1,
+            "none": 99
+          },
+          "relaxation": {
+            "relaxed": 192,
+            "strict": 6,
+            "unclear": 2
+          }
+        },
+        "sonnet5": {
+          "coordination": {
+            "agreement": 3,
+            "none": 96
+          },
+          "relaxation": {
+            "relaxed": 195,
+            "strict": 4
+          }
+        }
+      }
+    },
+    "haiku_paper_scriptedB": {
+      "pathway_agreement": null,
+      "pathway_agreement_by_judge": {
+        "sonnet5": {
+          "same": 3,
+          "of": 10
+        }
+      },
+      "item_agreement": {
+        "coordination": {
+          "n": 0,
+          "agreement": null,
+          "kappa": null,
+          "per_class": {
+            "agreement": {
+              "first": 0,
+              "second": 0,
+              "both": 0,
+              "specific_agreement": null
+            },
+            "proposal": {
+              "first": 0,
+              "second": 0,
+              "both": 0,
+              "specific_agreement": null
+            },
+            "none": {
+              "first": 0,
+              "second": 0,
+              "both": 0,
+              "specific_agreement": null
+            }
+          },
+          "confusion": {}
+        },
+        "relaxation": {
+          "n": 0,
+          "agreement": null,
+          "kappa": null,
+          "per_class": {
+            "relaxed": {
+              "first": 0,
+              "second": 0,
+              "both": 0,
+              "specific_agreement": null
+            },
+            "strict": {
+              "first": 0,
+              "second": 0,
+              "both": 0,
+              "specific_agreement": null
+            },
+            "unclear": {
+              "first": 0,
+              "second": 0,
+              "both": 0,
+              "specific_agreement": null
+            }
+          },
+          "confusion": {}
+        }
+      },
+      "item_agreement_by_judge": {
+        "sonnet": {
+          "coordination": {
+            "n": 0,
+            "agreement": null,
+            "kappa": null,
+            "per_class": {
+              "agreement": {
+                "first": 0,
+                "second": 0,
+                "both": 0,
+                "specific_agreement": null
+              },
+              "proposal": {
+                "first": 0,
+                "second": 0,
+                "both": 0,
+                "specific_agreement": null
+              },
+              "none": {
+                "first": 0,
+                "second": 0,
+                "both": 0,
+                "specific_agreement": null
+              }
+            },
+            "confusion": {}
+          },
+          "relaxation": {
+            "n": 0,
+            "agreement": null,
+            "kappa": null,
+            "per_class": {
+              "relaxed": {
+                "first": 0,
+                "second": 0,
+                "both": 0,
+                "specific_agreement": null
+              },
+              "strict": {
+                "first": 0,
+                "second": 0,
+                "both": 0,
+                "specific_agreement": null
+              },
+              "unclear": {
+                "first": 0,
+                "second": 0,
+                "both": 0,
+                "specific_agreement": null
+              }
+            },
+            "confusion": {}
+          }
+        },
+        "sonnet5": {
+          "coordination": {
+            "n": 68,
+            "agreement": 1.0,
+            "kappa": null,
+            "per_class": {
+              "agreement": {
+                "first": 0,
+                "second": 0,
+                "both": 0,
+                "specific_agreement": null
+              },
+              "proposal": {
+                "first": 68,
+                "second": 68,
+                "both": 68,
+                "specific_agreement": 1.0
+              },
+              "none": {
+                "first": 0,
+                "second": 0,
+                "both": 0,
+                "specific_agreement": null
+              }
+            },
+            "confusion": {
+              "proposal|proposal": 68
+            }
+          },
+          "relaxation": {
+            "n": 99,
+            "agreement": 0.9090909090909091,
+            "kappa": 0.0,
+            "per_class": {
+              "relaxed": {
+                "first": 90,
+                "second": 99,
+                "both": 90,
+                "specific_agreement": 0.9523809523809523
+              },
+              "strict": {
+                "first": 5,
+                "second": 0,
+                "both": 0,
+                "specific_agreement": 0.0
+              },
+              "unclear": {
+                "first": 4,
+                "second": 0,
+                "both": 0,
+                "specific_agreement": 0.0
+              }
+            },
+            "confusion": {
+              "relaxed|relaxed": 90,
+              "strict|relaxed": 5,
+              "unclear|relaxed": 4
+            }
+          }
+        }
+      },
+      "coverage": {
+        "haiku": 300,
+        "sonnet": 0,
+        "sonnet5": 300,
+        "items": 300
+      },
+      "counts": {
+        "haiku": {
+          "responsive relaxation": 10
+        },
+        "sonnet5": {
+          "other": 7,
+          "responsive relaxation": 3
+        }
+      },
+      "proposal_before_onset": 10,
+      "stated_vs_acted": {
+        "stated first": 10
+      },
+      "item_status": {
+        "haiku": {
+          "ok": 199,
+          "skipped": 100,
+          "unresolved": 1
+        },
+        "sonnet": {},
+        "sonnet5": {
+          "ok": 168,
+          "skipped": 100,
+          "unresolved": 32
+        }
+      },
+      "labels": {
+        "haiku": {
+          "coordination": {
+            "proposal": 100
+          },
+          "relaxation": {
+            "relaxed": 90,
+            "strict": 5,
+            "unclear": 4
+          }
+        },
+        "sonnet5": {
+          "coordination": {
+            "proposal": 68
+          },
+          "relaxation": {
+            "relaxed": 100
+          }
+        }
+      }
+    },
+    "sonnet_paper_think": {
+      "pathway_agreement": null,
+      "pathway_agreement_by_judge": {
+        "sonnet5": {
+          "same": 10,
+          "of": 10
+        }
+      },
+      "item_agreement": {
+        "coordination": {
+          "n": 0,
+          "agreement": null,
+          "kappa": null,
+          "per_class": {
+            "agreement": {
+              "first": 0,
+              "second": 0,
+              "both": 0,
+              "specific_agreement": null
+            },
+            "proposal": {
+              "first": 0,
+              "second": 0,
+              "both": 0,
+              "specific_agreement": null
+            },
+            "none": {
+              "first": 0,
+              "second": 0,
+              "both": 0,
+              "specific_agreement": null
+            }
+          },
+          "confusion": {}
+        },
+        "relaxation": {
+          "n": 0,
+          "agreement": null,
+          "kappa": null,
+          "per_class": {
+            "relaxed": {
+              "first": 0,
+              "second": 0,
+              "both": 0,
+              "specific_agreement": null
+            },
+            "strict": {
+              "first": 0,
+              "second": 0,
+              "both": 0,
+              "specific_agreement": null
+            },
+            "unclear": {
+              "first": 0,
+              "second": 0,
+              "both": 0,
+              "specific_agreement": null
+            }
+          },
+          "confusion": {}
+        }
+      },
+      "item_agreement_by_judge": {
+        "sonnet": {
+          "coordination": {
+            "n": 0,
+            "agreement": null,
+            "kappa": null,
+            "per_class": {
+              "agreement": {
+                "first": 0,
+                "second": 0,
+                "both": 0,
+                "specific_agreement": null
+              },
+              "proposal": {
+                "first": 0,
+                "second": 0,
+                "both": 0,
+                "specific_agreement": null
+              },
+              "none": {
+                "first": 0,
+                "second": 0,
+                "both": 0,
+                "specific_agreement": null
+              }
+            },
+            "confusion": {}
+          },
+          "relaxation": {
+            "n": 0,
+            "agreement": null,
+            "kappa": null,
+            "per_class": {
+              "relaxed": {
+                "first": 0,
+                "second": 0,
+                "both": 0,
+                "specific_agreement": null
+              },
+              "strict": {
+                "first": 0,
+                "second": 0,
+                "both": 0,
+                "specific_agreement": null
+              },
+              "unclear": {
+                "first": 0,
+                "second": 0,
+                "both": 0,
+                "specific_agreement": null
+              }
+            },
+            "confusion": {}
+          }
+        },
+        "sonnet5": {
+          "coordination": {
+            "n": 97,
+            "agreement": 0.9278350515463918,
+            "kappa": 0.0,
+            "per_class": {
+              "agreement": {
+                "first": 0,
+                "second": 7,
+                "both": 0,
+                "specific_agreement": 0.0
+              },
+              "proposal": {
+                "first": 0,
+                "second": 0,
+                "both": 0,
+                "specific_agreement": null
+              },
+              "none": {
+                "first": 97,
+                "second": 90,
+                "both": 90,
+                "specific_agreement": 0.9625668449197861
+              }
+            },
+            "confusion": {
+              "none|agreement": 7,
+              "none|none": 90
+            }
+          },
+          "relaxation": {
+            "n": 188,
+            "agreement": 0.9946808510638298,
+            "kappa": 0.6642857142857119,
+            "per_class": {
+              "relaxed": {
+                "first": 186,
+                "second": 187,
+                "both": 186,
+                "specific_agreement": 0.9973190348525469
+              },
+              "strict": {
+                "first": 2,
+                "second": 1,
+                "both": 1,
+                "specific_agreement": 0.6666666666666666
+              },
+              "unclear": {
+                "first": 0,
+                "second": 0,
+                "both": 0,
+                "specific_agreement": null
+              }
+            },
+            "confusion": {
+              "relaxed|relaxed": 186,
+              "strict|relaxed": 1,
+              "strict|strict": 1
+            }
+          }
+        }
+      },
+      "coverage": {
+        "haiku": 300,
+        "sonnet": 0,
+        "sonnet5": 300,
+        "items": 300
+      },
+      "counts": {
+        "haiku": {
+          "other": 1,
+          "responsive relaxation": 1,
+          "simultaneous relaxation": 8
+        },
+        "sonnet5": {
+          "other": 1,
+          "responsive relaxation": 1,
+          "simultaneous relaxation": 8
+        }
+      },
+      "proposal_before_onset": 0,
+      "stated_vs_acted": {
+        "acted first": 5,
+        "stated first": 15
+      },
+      "item_status": {
+        "haiku": {
+          "ok": 290,
+          "skipped": 10
+        },
+        "sonnet": {},
+        "sonnet5": {
+          "ok": 285,
+          "skipped": 10,
+          "unresolved": 5
+        }
+      },
+      "labels": {
+        "haiku": {
+          "coordination": {
+            "none": 100
+          },
+          "relaxation": {
+            "relaxed": 188,
+            "strict": 2
+          }
+        },
+        "sonnet5": {
+          "coordination": {
+            "agreement": 7,
+            "none": 90
+          },
+          "relaxation": {
+            "relaxed": 187,
+            "strict": 1
+          }
+        }
+      }
+    }
+  },
+  "pooled_item_agreement_by_judge": {
+    "sonnet": {
+      "coordination": {
+        "n": 33,
+        "agreement": 0.9696969696969697,
+        "kappa": 0.0,
+        "per_class": {
+          "agreement": {
+            "first": 0,
+            "second": 0,
+            "both": 0,
+            "specific_agreement": null
+          },
+          "proposal": {
+            "first": 1,
+            "second": 0,
+            "both": 0,
+            "specific_agreement": 0.0
+          },
+          "none": {
+            "first": 32,
+            "second": 33,
+            "both": 32,
+            "specific_agreement": 0.9846153846153847
+          }
+        },
+        "confusion": {
+          "none|none": 32,
+          "proposal|none": 1
+        }
+      },
+      "relaxation": {
+        "n": 143,
+        "agreement": 0.9020979020979021,
+        "kappa": 0.8067567567567567,
+        "per_class": {
+          "relaxed": {
+            "first": 47,
+            "second": 51,
+            "both": 44,
+            "specific_agreement": 0.8979591836734694
+          },
+          "strict": {
+            "first": 90,
+            "second": 85,
+            "both": 82,
+            "specific_agreement": 0.9371428571428572
+          },
+          "unclear": {
+            "first": 6,
+            "second": 7,
+            "both": 3,
+            "specific_agreement": 0.46153846153846156
+          }
+        },
+        "confusion": {
+          "relaxed|relaxed": 44,
+          "relaxed|strict": 2,
+          "relaxed|unclear": 1,
+          "strict|relaxed": 5,
+          "strict|strict": 82,
+          "strict|unclear": 3,
+          "unclear|relaxed": 2,
+          "unclear|strict": 1,
+          "unclear|unclear": 3
+        }
+      }
+    },
+    "sonnet5": {
+      "coordination": {
+        "n": 564,
+        "agreement": 0.9698581560283688,
+        "kappa": 0.8745584425779103,
+        "per_class": {
+          "agreement": {
+            "first": 2,
+            "second": 12,
+            "both": 1,
+            "specific_agreement": 0.14285714285714285
+          },
+          "proposal": {
+            "first": 72,
+            "second": 69,
+            "both": 68,
+            "specific_agreement": 0.9645390070921985
+          },
+          "none": {
+            "first": 490,
+            "second": 483,
+            "both": 478,
+            "specific_agreement": 0.9825282631038027
+          }
+        },
+        "confusion": {
+          "agreement|agreement": 1,
+          "agreement|none": 1,
+          "none|agreement": 11,
+          "none|none": 478,
+          "none|proposal": 1,
+          "proposal|none": 4,
+          "proposal|proposal": 68
+        }
+      },
+      "relaxation": {
+        "n": 1083,
+        "agreement": 0.9547553093259464,
+        "kappa": 0.8950139178225285,
+        "per_class": {
+          "relaxed": {
+            "first": 734,
+            "second": 772,
+            "both": 731,
+            "specific_agreement": 0.9707835325365206
+          },
+          "strict": {
+            "first": 329,
+            "second": 306,
+            "both": 301,
+            "specific_agreement": 0.9480314960629921
+          },
+          "unclear": {
+            "first": 20,
+            "second": 5,
+            "both": 2,
+            "specific_agreement": 0.16
+          }
+        },
+        "confusion": {
+          "relaxed|relaxed": 731,
+          "relaxed|strict": 1,
+          "relaxed|unclear": 2,
+          "strict|relaxed": 27,
+          "strict|strict": 301,
+          "strict|unclear": 1,
+          "unclear|relaxed": 14,
+          "unclear|strict": 4,
+          "unclear|unclear": 2
+        }
+      }
+    }
+  },
+  "pooled_item_agreement": {
+    "coordination": {
+      "n": 33,
+      "agreement": 0.9696969696969697,
+      "kappa": 0.0,
+      "per_class": {
+        "agreement": {
+          "first": 0,
+          "second": 0,
+          "both": 0,
+          "specific_agreement": null
+        },
+        "proposal": {
+          "first": 1,
+          "second": 0,
+          "both": 0,
+          "specific_agreement": 0.0
+        },
+        "none": {
+          "first": 32,
+          "second": 33,
+          "both": 32,
+          "specific_agreement": 0.9846153846153847
+        }
+      },
+      "confusion": {
+        "none|none": 32,
+        "proposal|none": 1
+      }
+    },
+    "relaxation": {
+      "n": 143,
+      "agreement": 0.9020979020979021,
+      "kappa": 0.8067567567567567,
+      "per_class": {
+        "relaxed": {
+          "first": 47,
+          "second": 51,
+          "both": 44,
+          "specific_agreement": 0.8979591836734694
+        },
+        "strict": {
+          "first": 90,
+          "second": 85,
+          "both": 82,
+          "specific_agreement": 0.9371428571428572
+        },
+        "unclear": {
+          "first": 6,
+          "second": 7,
+          "both": 3,
+          "specific_agreement": 0.46153846153846156
+        }
+      },
+      "confusion": {
+        "relaxed|relaxed": 44,
+        "relaxed|strict": 2,
+        "relaxed|unclear": 1,
+        "strict|relaxed": 5,
+        "strict|strict": 82,
+        "strict|unclear": 3,
+        "unclear|relaxed": 2,
+        "unclear|strict": 1,
+        "unclear|unclear": 3
+      }
+    }
+  }
+}

@@ -1,0 +1,364 @@
+{
+  "labelled": 30,
+  "of": 30,
+  "judges": {
+    "haiku": {
+      "coordination": {
+        "n": 15,
+        "agreement": 0.7333333333333333,
+        "kappa": 0.5121951219512195,
+        "per_class": {
+          "agreement": {
+            "first": 1,
+            "second": 2,
+            "both": 0,
+            "specific_agreement": 0.0
+          },
+          "proposal": {
+            "first": 4,
+            "second": 5,
+            "both": 4,
+            "specific_agreement": 0.8888888888888888
+          },
+          "none": {
+            "first": 10,
+            "second": 8,
+            "both": 7,
+            "specific_agreement": 0.7777777777777778
+          }
+        },
+        "confusion": {
+          "agreement|none": 1,
+          "none|agreement": 2,
+          "none|none": 7,
+          "none|proposal": 1,
+          "proposal|proposal": 4
+        },
+        "accuracy": {
+          "k": 11,
+          "n": 15,
+          "rate": 0.7333333333333333,
+          "ci95": [
+            0.48049565944019423,
+            0.8910254667430763
+          ]
+        },
+        "disagreements": [
+          {
+            "item": "V07",
+            "item_id": "haiku_baseline/s08/e06/coordination",
+            "human": "none",
+            "judge": "proposal"
+          },
+          {
+            "item": "V08",
+            "item_id": "haiku_paper_nothink/s01/e04/coordination",
+            "human": "none",
+            "judge": "agreement"
+          },
+          {
+            "item": "V24",
+            "item_id": "haiku_paper_think/s04/e08/coordination",
+            "human": "none",
+            "judge": "agreement"
+          },
+          {
+            "item": "V30",
+            "item_id": "sonnet_paper_think/s08/e04/coordination",
+            "human": "agreement",
+            "judge": "none"
+          }
+        ]
+      },
+      "relaxation": {
+        "n": 15,
+        "agreement": 0.6666666666666666,
+        "kappa": 0.40476190476190466,
+        "per_class": {
+          "relaxed": {
+            "first": 9,
+            "second": 7,
+            "both": 6,
+            "specific_agreement": 0.75
+          },
+          "strict": {
+            "first": 5,
+            "second": 7,
+            "both": 4,
+            "specific_agreement": 0.6666666666666666
+          },
+          "unclear": {
+            "first": 1,
+            "second": 1,
+            "both": 0,
+            "specific_agreement": 0.0
+          }
+        },
+        "confusion": {
+          "relaxed|relaxed": 6,
+          "relaxed|strict": 2,
+          "relaxed|unclear": 1,
+          "strict|relaxed": 1,
+          "strict|strict": 4,
+          "unclear|strict": 1
+        },
+        "accuracy": {
+          "k": 10,
+          "n": 15,
+          "rate": 0.6666666666666666,
+          "ci95": [
+            0.41713547738519763,
+            0.8482367556028527
+          ]
+        },
+        "disagreements": [
+          {
+            "item": "V01",
+            "item_id": "sonnet_paper_think/s03/e06/relaxation/A",
+            "human": "strict",
+            "judge": "relaxed"
+          },
+          {
+            "item": "V19",
+            "item_id": "haiku_baseline/s06/e02/relaxation/A",
+            "human": "unclear",
+            "judge": "strict"
+          },
+          {
+            "item": "V21",
+            "item_id": "sonnet_paper_think/s02/e04/relaxation/B",
+            "human": "relaxed",
+            "judge": "strict"
+          },
+          {
+            "item": "V22",
+            "item_id": "haiku_paper_scriptedB/s08/e02/relaxation/A",
+            "human": "relaxed",
+            "judge": "strict"
+          },
+          {
+            "item": "V25",
+            "item_id": "haiku_paper_nothink/s05/e03/relaxation/A",
+            "human": "relaxed",
+            "judge": "unclear"
+          }
+        ]
+      }
+    },
+    "sonnet": {
+      "coordination": {
+        "n": 2,
+        "agreement": 1.0,
+        "kappa": null,
+        "per_class": {
+          "agreement": {
+            "first": 0,
+            "second": 0,
+            "both": 0,
+            "specific_agreement": null
+          },
+          "proposal": {
+            "first": 0,
+            "second": 0,
+            "both": 0,
+            "specific_agreement": null
+          },
+          "none": {
+            "first": 2,
+            "second": 2,
+            "both": 2,
+            "specific_agreement": 1.0
+          }
+        },
+        "confusion": {
+          "none|none": 2
+        },
+        "accuracy": {
+          "k": 2,
+          "n": 2,
+          "rate": 1.0,
+          "ci95": [
+            0.342380227506653,
+            1.0
+          ]
+        },
+        "disagreements": []
+      },
+      "relaxation": {
+        "n": 2,
+        "agreement": 0.5,
+        "kappa": 0.0,
+        "per_class": {
+          "relaxed": {
+            "first": 0,
+            "second": 0,
+            "both": 0,
+            "specific_agreement": null
+          },
+          "strict": {
+            "first": 1,
+            "second": 2,
+            "both": 1,
+            "specific_agreement": 0.6666666666666666
+          },
+          "unclear": {
+            "first": 1,
+            "second": 0,
+            "both": 0,
+            "specific_agreement": 0.0
+          }
+        },
+        "confusion": {
+          "strict|strict": 1,
+          "unclear|strict": 1
+        },
+        "accuracy": {
+          "k": 1,
+          "n": 2,
+          "rate": 0.5,
+          "ci95": [
+            0.09453120573423068,
+            0.9054687942657693
+          ]
+        },
+        "disagreements": [
+          {
+            "item": "V19",
+            "item_id": "haiku_baseline/s06/e02/relaxation/A",
+            "human": "unclear",
+            "judge": "strict"
+          }
+        ]
+      }
+    },
+    "sonnet5": {
+      "coordination": {
+        "n": 15,
+        "agreement": 0.7333333333333333,
+        "kappa": 0.37499999999999983,
+        "per_class": {
+          "agreement": {
+            "first": 1,
+            "second": 1,
+            "both": 0,
+            "specific_agreement": 0.0
+          },
+          "proposal": {
+            "first": 4,
+            "second": 2,
+            "both": 2,
+            "specific_agreement": 0.6666666666666666
+          },
+          "none": {
+            "first": 10,
+            "second": 12,
+            "both": 9,
+            "specific_agreement": 0.8181818181818182
+          }
+        },
+        "confusion": {
+          "agreement|none": 1,
+          "none|agreement": 1,
+          "none|none": 9,
+          "proposal|none": 2,
+          "proposal|proposal": 2
+        },
+        "accuracy": {
+          "k": 11,
+          "n": 15,
+          "rate": 0.7333333333333333,
+          "ci95": [
+            0.48049565944019423,
+            0.8910254667430763
+          ]
+        },
+        "disagreements": [
+          {
+            "item": "V08",
+            "item_id": "haiku_paper_nothink/s01/e04/coordination",
+            "human": "none",
+            "judge": "agreement"
+          },
+          {
+            "item": "V09",
+            "item_id": "haiku_explicit_think/s06/e06/coordination",
+            "human": "proposal",
+            "judge": "none"
+          },
+          {
+            "item": "V27",
+            "item_id": "haiku_baseline/s05/e05/coordination",
+            "human": "proposal",
+            "judge": "none"
+          },
+          {
+            "item": "V30",
+            "item_id": "sonnet_paper_think/s08/e04/coordination",
+            "human": "agreement",
+            "judge": "none"
+          }
+        ]
+      },
+      "relaxation": {
+        "n": 15,
+        "agreement": 0.8,
+        "kappa": 0.5754716981132076,
+        "per_class": {
+          "relaxed": {
+            "first": 9,
+            "second": 11,
+            "both": 9,
+            "specific_agreement": 0.9
+          },
+          "strict": {
+            "first": 5,
+            "second": 4,
+            "both": 3,
+            "specific_agreement": 0.6666666666666666
+          },
+          "unclear": {
+            "first": 1,
+            "second": 0,
+            "both": 0,
+            "specific_agreement": 0.0
+          }
+        },
+        "confusion": {
+          "relaxed|relaxed": 9,
+          "strict|relaxed": 2,
+          "strict|strict": 3,
+          "unclear|strict": 1
+        },
+        "accuracy": {
+          "k": 12,
+          "n": 15,
+          "rate": 0.8,
+          "ci95": [
+            0.5481455128483064,
+            0.9295245065301845
+          ]
+        },
+        "disagreements": [
+          {
+            "item": "V01",
+            "item_id": "sonnet_paper_think/s03/e06/relaxation/A",
+            "human": "strict",
+            "judge": "relaxed"
+          },
+          {
+            "item": "V19",
+            "item_id": "haiku_baseline/s06/e02/relaxation/A",
+            "human": "unclear",
+            "judge": "strict"
+          },
+          {
+            "item": "V29",
+            "item_id": "haiku_baseline/s06/e04/relaxation/B",
+            "human": "strict",
+            "judge": "relaxed"
+          }
+        ]
+      }
+    }
+  }
+}

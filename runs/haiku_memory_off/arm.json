@@ -1,0 +1,27 @@
+{
+  "arm": "haiku_memory_off",
+  "description": "Subject model (Haiku 5.5), memory off, sequences 10-14. Environment-validation control against the paper's main ablation (restricted history).",
+  "provider": "anthropic",
+  "model": {
+    "name": "claude-haiku-5-5",
+    "max_tokens": 4096,
+    "temperature": 1.0,
+    "thinking_budget": null,
+    "thinking": "off",
+    "effort": null
+  },
+  "budget_usd": 1.5,
+  "cache_ttl": "5m",
+  "task_dir": "data/tasks/seed0-hard",
+  "sequences": [
+    10,
+    11,
+    12,
+    13,
+    14
+  ],
+  "episodes": 10,
+  "memory": false,
+  "concurrency": 5,
+  "seed": 0
+}

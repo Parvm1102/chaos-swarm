@@ -17,3 +17,6 @@ dist/
 
 # Task databases are rebuilt deterministically by `swarm tasks generate`
 data/**/db.sqlite
+
+# The runs archive is a release asset, not committed
+swarm-runs.zip

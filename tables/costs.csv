@@ -1,0 +1,14 @@
+item,arms,USD
+Experiment 0: rule wording x thinking (Haiku 5.5; arm 5 scripted proposer; arm 6 Sonnet 5.5),"haiku_baseline, haiku_paper_nothink, haiku_explicit_think, haiku_paper_think, haiku_paper_scriptedB, sonnet_paper_think",13.97
+Experiment 1 (spillover) and its step-8 follow-ups (Haiku 5.5),"e1_unconstrained, e1_constrained, e1_constrained_nomem, e1_cap1, e1_cap1_nomem, e1_unconstrained_plainintro",9.87
+Experiment 3 (open door) and its step-8 follow-ups (Haiku 5.5),"e3_control, e3_ack, e3_fix, e3_invite, e3_checkin",8.58
+"Experiment 5: reminder and question (Haiku 5.5), with the check-in for reference","e5_reminder, e5_question",3.5
+Sonnet 5 as subject: Replication (R1) and Experiment 5b (s5_checkin),"s5_pilot, s5_explicit, s5_paper, s5_checkin",70.88
+Experiment 4 pre-test: explicit wording against a scripted proposer (Haiku 5.5),pair_explicit_proposer,0.35
+Experiment 4 population arms,"p_explicit_k0, p_explicit_k1, p_explicit_k2, p_explicit_board_k0, p_explicit_board_k1, p_explicit_board_k2, p_paper_board_k0",15.01
+"calibrations (task difficulty, E1 solo baselines)",runs/*calib*,1.75
+judges (judges_haiku),all judged arms,1.69
+judges (judges_sonnet),all judged arms,0.52
+judges (judges_sonnet5),all judged arms,21.01
+"other live runs (single episodes, spot checks, diagnostics)",every other runs/*/usage.jsonl,0.77
+total,,147.9

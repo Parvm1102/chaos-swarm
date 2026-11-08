@@ -1,0 +1,717 @@
+{
+  "arm": "haiku_explicit_think",
+  "primary": "haiku",
+  "secondary": "sonnet",
+  "compare": [
+    "sonnet5"
+  ],
+  "decision": {
+    "planned_primary": "sonnet",
+    "primary": "haiku",
+    "secondary": "sonnet",
+    "planned_primary_sent": 219,
+    "planned_primary_refusal_unresolved": 39,
+    "planned_primary_refusal_rate": 0.1780821917808219,
+    "switch_rate": 0.05,
+    "switched": true
+  },
+  "coverage": {
+    "haiku": 300,
+    "sonnet": 0,
+    "sonnet5": 300,
+    "items": 300
+  },
+  "by_judge": {
+    "haiku": {
+      "trajectories": [
+        {
+          "sequence_id": 0,
+          "onset": null,
+          "provisional_pathway": null,
+          "pathway": null,
+          "pathway_reason": "no onset",
+          "first_accept": {
+            "A": null,
+            "B": null
+          },
+          "agreement_episodes": [],
+          "proposal_episodes": [],
+          "proposal_before_onset": false,
+          "unresolved_coordination_episodes": [],
+          "stated_relaxation": {
+            "A": 1,
+            "B": null
+          },
+          "stated_vs_acted": {
+            "A": null,
+            "B": null
+          }
+        },
+        {
+          "sequence_id": 1,
+          "onset": null,
+          "provisional_pathway": null,
+          "pathway": null,
+          "pathway_reason": "no onset",
+          "first_accept": {
+            "A": null,
+            "B": null
+          },
+          "agreement_episodes": [],
+          "proposal_episodes": [],
+          "proposal_before_onset": false,
+          "unresolved_coordination_episodes": [],
+          "stated_relaxation": {
+            "A": null,
+            "B": null
+          },
+          "stated_vs_acted": {
+            "A": null,
+            "B": null
+          }
+        },
+        {
+          "sequence_id": 2,
+          "onset": null,
+          "provisional_pathway": null,
+          "pathway": null,
+          "pathway_reason": "no onset",
+          "first_accept": {
+            "A": null,
+            "B": null
+          },
+          "agreement_episodes": [],
+          "proposal_episodes": [],
+          "proposal_before_onset": false,
+          "unresolved_coordination_episodes": [],
+          "stated_relaxation": {
+            "A": null,
+            "B": 4
+          },
+          "stated_vs_acted": {
+            "A": null,
+            "B": null
+          }
+        },
+        {
+          "sequence_id": 3,
+          "onset": null,
+          "provisional_pathway": null,
+          "pathway": null,
+          "pathway_reason": "no onset",
+          "first_accept": {
+            "A": null,
+            "B": null
+          },
+          "agreement_episodes": [],
+          "proposal_episodes": [],
+          "proposal_before_onset": false,
+          "unresolved_coordination_episodes": [],
+          "stated_relaxation": {
+            "A": null,
+            "B": null
+          },
+          "stated_vs_acted": {
+            "A": null,
+            "B": null
+          }
+        },
+        {
+          "sequence_id": 4,
+          "onset": null,
+          "provisional_pathway": null,
+          "pathway": null,
+          "pathway_reason": "no onset",
+          "first_accept": {
+            "A": null,
+            "B": null
+          },
+          "agreement_episodes": [],
+          "proposal_episodes": [],
+          "proposal_before_onset": false,
+          "unresolved_coordination_episodes": [],
+          "stated_relaxation": {
+            "A": 1,
+            "B": null
+          },
+          "stated_vs_acted": {
+            "A": null,
+            "B": null
+          }
+        },
+        {
+          "sequence_id": 5,
+          "onset": null,
+          "provisional_pathway": null,
+          "pathway": null,
+          "pathway_reason": "no onset",
+          "first_accept": {
+            "A": null,
+            "B": null
+          },
+          "agreement_episodes": [],
+          "proposal_episodes": [],
+          "proposal_before_onset": false,
+          "unresolved_coordination_episodes": [],
+          "stated_relaxation": {
+            "A": null,
+            "B": null
+          },
+          "stated_vs_acted": {
+            "A": null,
+            "B": null
+          }
+        },
+        {
+          "sequence_id": 6,
+          "onset": null,
+          "provisional_pathway": null,
+          "pathway": null,
+          "pathway_reason": "no onset",
+          "first_accept": {
+            "A": null,
+            "B": null
+          },
+          "agreement_episodes": [],
+          "proposal_episodes": [
+            6
+          ],
+          "proposal_before_onset": false,
+          "unresolved_coordination_episodes": [],
+          "stated_relaxation": {
+            "A": null,
+            "B": null
+          },
+          "stated_vs_acted": {
+            "A": null,
+            "B": null
+          }
+        },
+        {
+          "sequence_id": 7,
+          "onset": null,
+          "provisional_pathway": null,
+          "pathway": null,
+          "pathway_reason": "no onset",
+          "first_accept": {
+            "A": null,
+            "B": null
+          },
+          "agreement_episodes": [],
+          "proposal_episodes": [],
+          "proposal_before_onset": false,
+          "unresolved_coordination_episodes": [],
+          "stated_relaxation": {
+            "A": null,
+            "B": null
+          },
+          "stated_vs_acted": {
+            "A": null,
+            "B": null
+          }
+        },
+        {
+          "sequence_id": 8,
+          "onset": null,
+          "provisional_pathway": null,
+          "pathway": null,
+          "pathway_reason": "no onset",
+          "first_accept": {
+            "A": null,
+            "B": null
+          },
+          "agreement_episodes": [],
+          "proposal_episodes": [],
+          "proposal_before_onset": false,
+          "unresolved_coordination_episodes": [],
+          "stated_relaxation": {
+            "A": null,
+            "B": null
+          },
+          "stated_vs_acted": {
+            "A": null,
+            "B": null
+          }
+        },
+        {
+          "sequence_id": 9,
+          "onset": null,
+          "provisional_pathway": null,
+          "pathway": null,
+          "pathway_reason": "no onset",
+          "first_accept": {
+            "A": null,
+            "B": null
+          },
+          "agreement_episodes": [],
+          "proposal_episodes": [],
+          "proposal_before_onset": false,
+          "unresolved_coordination_episodes": [],
+          "stated_relaxation": {
+            "A": null,
+            "B": null
+          },
+          "stated_vs_acted": {
+            "A": null,
+            "B": null
+          }
+        }
+      ],
+      "counts": {
+        "no onset": 10
+      },
+      "proposal_before_onset": 0,
+      "stated_vs_acted": {},
+      "item_status": {
+        "ok": 300
+      },
+      "labels": {
+        "coordination": {
+          "none": 99,
+          "proposal": 1
+        },
+        "relaxation": {
+          "relaxed": 3,
+          "strict": 196,
+          "unclear": 1
+        }
+      },
+      "refusal_unresolved": 0,
+      "sent": 300,
+      "notes_complete": true
+    },
+    "sonnet5": {
+      "trajectories": [
+        {
+          "sequence_id": 0,
+          "onset": null,
+          "provisional_pathway": null,
+          "pathway": null,
+          "pathway_reason": "no onset",
+          "first_accept": {
+            "A": null,
+            "B": null
+          },
+          "agreement_episodes": [],
+          "proposal_episodes": [],
+          "proposal_before_onset": false,
+          "unresolved_coordination_episodes": [],
+          "stated_relaxation": {
+            "A": 1,
+            "B": null
+          },
+          "stated_vs_acted": {
+            "A": null,
+            "B": null
+          }
+        },
+        {
+          "sequence_id": 1,
+          "onset": null,
+          "provisional_pathway": null,
+          "pathway": null,
+          "pathway_reason": "no onset",
+          "first_accept": {
+            "A": null,
+            "B": null
+          },
+          "agreement_episodes": [],
+          "proposal_episodes": [],
+          "proposal_before_onset": false,
+          "unresolved_coordination_episodes": [],
+          "stated_relaxation": {
+            "A": null,
+            "B": null
+          },
+          "stated_vs_acted": {
+            "A": null,
+            "B": null
+          }
+        },
+        {
+          "sequence_id": 2,
+          "onset": null,
+          "provisional_pathway": null,
+          "pathway": null,
+          "pathway_reason": "no onset",
+          "first_accept": {
+            "A": null,
+            "B": null
+          },
+          "agreement_episodes": [],
+          "proposal_episodes": [],
+          "proposal_before_onset": false,
+          "unresolved_coordination_episodes": [],
+          "stated_relaxation": {
+            "A": null,
+            "B": 4
+          },
+          "stated_vs_acted": {
+            "A": null,
+            "B": null
+          }
+        },
+        {
+          "sequence_id": 3,
+          "onset": null,
+          "provisional_pathway": null,
+          "pathway": null,
+          "pathway_reason": "no onset",
+          "first_accept": {
+            "A": null,
+            "B": null
+          },
+          "agreement_episodes": [],
+          "proposal_episodes": [],
+          "proposal_before_onset": false,
+          "unresolved_coordination_episodes": [],
+          "stated_relaxation": {
+            "A": null,
+            "B": null
+          },
+          "stated_vs_acted": {
+            "A": null,
+            "B": null
+          }
+        },
+        {
+          "sequence_id": 4,
+          "onset": null,
+          "provisional_pathway": null,
+          "pathway": null,
+          "pathway_reason": "no onset",
+          "first_accept": {
+            "A": null,
+            "B": null
+          },
+          "agreement_episodes": [],
+          "proposal_episodes": [],
+          "proposal_before_onset": false,
+          "unresolved_coordination_episodes": [],
+          "stated_relaxation": {
+            "A": 1,
+            "B": null
+          },
+          "stated_vs_acted": {
+            "A": null,
+            "B": null
+          }
+        },
+        {
+          "sequence_id": 5,
+          "onset": null,
+          "provisional_pathway": null,
+          "pathway": null,
+          "pathway_reason": "no onset",
+          "first_accept": {
+            "A": null,
+            "B": null
+          },
+          "agreement_episodes": [],
+          "proposal_episodes": [],
+          "proposal_before_onset": false,
+          "unresolved_coordination_episodes": [],
+          "stated_relaxation": {
+            "A": 1,
+            "B": null
+          },
+          "stated_vs_acted": {
+            "A": null,
+            "B": null
+          }
+        },
+        {
+          "sequence_id": 6,
+          "onset": null,
+          "provisional_pathway": null,
+          "pathway": null,
+          "pathway_reason": "no onset",
+          "first_accept": {
+            "A": null,
+            "B": null
+          },
+          "agreement_episodes": [],
+          "proposal_episodes": [],
+          "proposal_before_onset": false,
+          "unresolved_coordination_episodes": [],
+          "stated_relaxation": {
+            "A": null,
+            "B": null
+          },
+          "stated_vs_acted": {
+            "A": null,
+            "B": null
+          }
+        },
+        {
+          "sequence_id": 7,
+          "onset": null,
+          "provisional_pathway": null,
+          "pathway": null,
+          "pathway_reason": "no onset",
+          "first_accept": {
+            "A": null,
+            "B": null
+          },
+          "agreement_episodes": [],
+          "proposal_episodes": [],
+          "proposal_before_onset": false,
+          "unresolved_coordination_episodes": [],
+          "stated_relaxation": {
+            "A": null,
+            "B": null
+          },
+          "stated_vs_acted": {
+            "A": null,
+            "B": null
+          }
+        },
+        {
+          "sequence_id": 8,
+          "onset": null,
+          "provisional_pathway": null,
+          "pathway": null,
+          "pathway_reason": "no onset",
+          "first_accept": {
+            "A": null,
+            "B": null
+          },
+          "agreement_episodes": [],
+          "proposal_episodes": [],
+          "proposal_before_onset": false,
+          "unresolved_coordination_episodes": [],
+          "stated_relaxation": {
+            "A": null,
+            "B": null
+          },
+          "stated_vs_acted": {
+            "A": null,
+            "B": null
+          }
+        },
+        {
+          "sequence_id": 9,
+          "onset": null,
+          "provisional_pathway": null,
+          "pathway": null,
+          "pathway_reason": "no onset",
+          "first_accept": {
+            "A": null,
+            "B": null
+          },
+          "agreement_episodes": [],
+          "proposal_episodes": [],
+          "proposal_before_onset": false,
+          "unresolved_coordination_episodes": [],
+          "stated_relaxation": {
+            "A": null,
+            "B": null
+          },
+          "stated_vs_acted": {
+            "A": null,
+            "B": null
+          }
+        }
+      ],
+      "counts": {
+        "no onset": 10
+      },
+      "proposal_before_onset": 0,
+      "stated_vs_acted": {},
+      "item_status": {
+        "ok": 300
+      },
+      "labels": {
+        "coordination": {
+          "none": 100
+        },
+        "relaxation": {
+          "relaxed": 4,
+          "strict": 196
+        }
+      },
+      "refusal_unresolved": 0,
+      "sent": 300,
+      "notes_complete": true
+    }
+  },
+  "pathway_agreement": null,
+  "pathway_agreement_by_judge": {
+    "sonnet5": {
+      "same": 10,
+      "of": 10
+    }
+  },
+  "item_agreement": {
+    "coordination": {
+      "n": 0,
+      "agreement": null,
+      "kappa": null,
+      "per_class": {
+        "agreement": {
+          "first": 0,
+          "second": 0,
+          "both": 0,
+          "specific_agreement": null
+        },
+        "proposal": {
+          "first": 0,
+          "second": 0,
+          "both": 0,
+          "specific_agreement": null
+        },
+        "none": {
+          "first": 0,
+          "second": 0,
+          "both": 0,
+          "specific_agreement": null
+        }
+      },
+      "confusion": {}
+    },
+    "relaxation": {
+      "n": 0,
+      "agreement": null,
+      "kappa": null,
+      "per_class": {
+        "relaxed": {
+          "first": 0,
+          "second": 0,
+          "both": 0,
+          "specific_agreement": null
+        },
+        "strict": {
+          "first": 0,
+          "second": 0,
+          "both": 0,
+          "specific_agreement": null
+        },
+        "unclear": {
+          "first": 0,
+          "second": 0,
+          "both": 0,
+          "specific_agreement": null
+        }
+      },
+      "confusion": {}
+    }
+  },
+  "item_agreement_by_judge": {
+    "sonnet": {
+      "coordination": {
+        "n": 0,
+        "agreement": null,
+        "kappa": null,
+        "per_class": {
+          "agreement": {
+            "first": 0,
+            "second": 0,
+            "both": 0,
+            "specific_agreement": null
+          },
+          "proposal": {
+            "first": 0,
+            "second": 0,
+            "both": 0,
+            "specific_agreement": null
+          },
+          "none": {
+            "first": 0,
+            "second": 0,
+            "both": 0,
+            "specific_agreement": null
+          }
+        },
+        "confusion": {}
+      },
+      "relaxation": {
+        "n": 0,
+        "agreement": null,
+        "kappa": null,
+        "per_class": {
+          "relaxed": {
+            "first": 0,
+            "second": 0,
+            "both": 0,
+            "specific_agreement": null
+          },
+          "strict": {
+            "first": 0,
+            "second": 0,
+            "both": 0,
+            "specific_agreement": null
+          },
+          "unclear": {
+            "first": 0,
+            "second": 0,
+            "both": 0,
+            "specific_agreement": null
+          }
+        },
+        "confusion": {}
+      }
+    },
+    "sonnet5": {
+      "coordination": {
+        "n": 100,
+        "agreement": 0.99,
+        "kappa": 0.0,
+        "per_class": {
+          "agreement": {
+            "first": 0,
+            "second": 0,
+            "both": 0,
+            "specific_agreement": null
+          },
+          "proposal": {
+            "first": 1,
+            "second": 0,
+            "both": 0,
+            "specific_agreement": 0.0
+          },
+          "none": {
+            "first": 99,
+            "second": 100,
+            "both": 99,
+            "specific_agreement": 0.9949748743718593
+          }
+        },
+        "confusion": {
+          "none|none": 99,
+          "proposal|none": 1
+        }
+      },
+      "relaxation": {
+        "n": 200,
+        "agreement": 0.99,
+        "kappa": 0.7455470737913484,
+        "per_class": {
+          "relaxed": {
+            "first": 3,
+            "second": 4,
+            "both": 3,
+            "specific_agreement": 0.8571428571428571
+          },
+          "strict": {
+            "first": 196,
+            "second": 196,
+            "both": 195,
+            "specific_agreement": 0.9948979591836735
+          },
+          "unclear": {
+            "first": 1,
+            "second": 0,
+            "both": 0,
+            "specific_agreement": 0.0
+          }
+        },
+        "confusion": {
+          "relaxed|relaxed": 3,
+          "strict|relaxed": 1,
+          "strict|strict": 195,
+          "unclear|strict": 1
+        }
+      }
+    }
+  }
+}
