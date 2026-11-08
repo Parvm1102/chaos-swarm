@@ -12,6 +12,7 @@ still contain it (swarm.prereg.matches); the comparison arms are checked against
 The hypotheses are in swarm.analysis.replication; the report goes to runs/replication.json.
 """
 
+from collections import Counter
 from pathlib import Path
 from typing import Any
 
@@ -20,6 +21,7 @@ import orjson
 from swarm.analysis import replication
 from swarm.arms import ArmConfig
 from swarm.config import RUNS_DIR
+from swarm.llm.meter import USAGE_FILE, read_usage_lines
 from swarm.prereg import matches
 from swarm.trajectories import SUMMARY_FILE, TRAJECTORIES_FILE
 
@@ -36,7 +38,8 @@ def load_status(arm: ArmConfig, dry_run: bool) -> tuple[str, dict[str, Any] | No
     """(status, {"summary", "trajectories"} or None) of one arm."""
     run_dir = arm.run_dir(dry_run=dry_run)
     if not (run_dir / SUMMARY_FILE).exists():
-        return "not run", None
+        started = (run_dir / USAGE_FILE).exists()
+        return ("stopped before a summary" if started else "not run"), None
     summary = orjson.loads((run_dir / SUMMARY_FILE).read_bytes())
     lines = (run_dir / TRAJECTORIES_FILE).read_bytes().splitlines()
     data = {"summary": summary, "trajectories": [orjson.loads(x) for x in lines if x.strip()]}
@@ -48,10 +51,32 @@ def load_status(arm: ArmConfig, dry_run: bool) -> tuple[str, dict[str, Any] | No
     return FINISHED, data
 
 
-def pilot_gate(status: str, data: dict[str, Any] | None) -> dict[str, Any]:
+def partial_run(run_dir: Path) -> dict[str, Any]:
+    """What a run stopped before its summary (budget cap, connection) did: completed episodes
+    per sequence with their mutual ACCEPTs, calls, refusals by category and spend."""
+    usage = list(read_usage_lines(run_dir / USAGE_FILE))
+    sequences = {}
+    for folder in sorted((run_dir / "trajectories").glob("s*")):
+        records = [orjson.loads(f.read_bytes()) for f in sorted(folder.glob("episodes/e*.json"))]
+        sequences[folder.name] = {
+            "episodes_completed": len(records),
+            "mutual_accept": [bool(r["mutual_accept"]) for r in records],
+        }
+    return {
+        "sequences": sequences,
+        "calls": len(usage),
+        "refusals": dict(Counter(u["refusal"] for u in usage if u.get("refusal"))),
+        "spent_usd": usage[-1]["total_usd"] if usage else 0.0,
+    }
+
+
+def pilot_gate(
+    status: str, data: dict[str, Any] | None, run_dir: Path | None = None
+) -> dict[str, Any]:
     """The guarded pilot: passed only if it finished with zero refusals and no breaker trip."""
     if data is None:
-        return {"status": status, "refusals": None, "passed": False}
+        partial = partial_run(run_dir) if run_dir and (run_dir / USAGE_FILE).exists() else None
+        return {"status": status, "refusals": None, "partial": partial, "passed": False}
     summary = data["summary"]
     refusals = summary["refusals"]["total"]
     passed = status == FINISHED and refusals == 0 and not summary.get("aborted_by_breaker")
@@ -65,7 +90,7 @@ def pilot_gate(status: str, data: dict[str, Any] | None) -> dict[str, Any]:
 
 def _arm_report(arm: ArmConfig, status: str, data: dict[str, Any] | None) -> dict[str, Any]:
     if data is None:
-        return {"arm": arm.arm, "status": status, "model": arm.model.name}
+        return {"arm": arm.arm, "status": status, "model": arm.model.name}  # see pilot_gate
     s = data["summary"]
     keys = ("criterion", "tc", "cc", "ec_pooled", "onset", "provisional_pathway")
     return {
@@ -120,9 +145,9 @@ def run_replication(arms: dict[str, ArmConfig], *, dry_run: bool) -> dict[str, A
     new_preregs = _check_preregs(arms, loaded)
     t = {role: d["trajectories"] for role, (_, d) in loaded.items() if d}
 
-    gate = pilot_gate(*loaded["pilot"])
+    gate = pilot_gate(*loaded["pilot"], arms["pilot"].run_dir(dry_run=dry_run))
     if not gate["passed"]:
-        reason = "the pilot did not pass (Sonnet 5 retired as a subject, or not yet run)"
+        reason = f"the pilot did not pass ({gate['status']})"
         r1 = r2 = {"verdict": "not run", "reason": reason}
     else:
         unfinished = {r: loaded[r][0] for r in S5_ROLES if loaded[r][0] != FINISHED}

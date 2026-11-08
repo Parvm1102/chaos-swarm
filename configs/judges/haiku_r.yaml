@@ -1,0 +1,12 @@
+# Replication + Experiment 5 judges (2026-11-08): Haiku 5.5 primary on e5_reminder and, if they
+# ran, the Sonnet 5 subject arms; a $0.50 increment. Same judge name, so the same meter
+# (runs/judges_haiku/): $0.7844 spent before + $0.50 = $1.29.
+judge: haiku
+model:
+  name: claude-haiku-5-5
+  max_tokens: 4096
+  thinking: adaptive
+  effort: low
+budget_usd: 1.29
+concurrency: 10
+cache_ttl: 5m

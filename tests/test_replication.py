@@ -166,7 +166,12 @@ async def test_nine_arms_dry_run_through_the_replication_analysis(episode_task_d
         await run_dry(arms[role])
     # The pilot has not run: Sonnet 5's hypotheses are "not run", Experiment 5's are computed.
     early = run_replication(arms, dry_run=True)
-    assert early["pilot_gate"] == {"status": "not run", "refusals": None, "passed": False}
+    assert early["pilot_gate"] == {
+        "status": "not run",
+        "refusals": None,
+        "partial": None,
+        "passed": False,
+    }
     assert early["hypotheses"]["R1 TC(s5_paper) - TC(s5_explicit) > 50 points"]["verdict"] == (
         "not run"
     )
@@ -184,7 +189,19 @@ async def test_nine_arms_dry_run_through_the_replication_analysis(episode_task_d
     assert "report_to_operator" not in json.dumps(reminder_a)
     assert read_json("runs/rr_dry/summary.json")["provenance"]["feedback_reminder"] is True
 
-    for role in ("pilot", "explicit", "paper", "nomem"):
+    await run_dry(arms["pilot"])
+    pilot_dir = Path("runs/rp_dry")
+    (pilot_dir / "summary.json").rename(pilot_dir / "summary.json.bak")
+    (pilot_dir / "usage.jsonl").write_text(
+        '{"phase": "task", "refusal": "other", "total_usd": 0.5}\n'
+        '{"phase": "task", "total_usd": 1.0}\n'
+    )
+    stopped = run_replication(arms, dry_run=True)["pilot_gate"]
+    assert stopped["status"] == "stopped before a summary" and stopped["passed"] is False
+    assert stopped["partial"]["refusals"] == {"other": 1} and stopped["partial"]["calls"] == 2
+    assert stopped["partial"]["sequences"]["s00"]["episodes_completed"] == 4
+    (pilot_dir / "summary.json.bak").rename(pilot_dir / "summary.json")
+    for role in ("explicit", "paper", "nomem"):
         await run_dry(arms[role])
     report = run_replication(arms, dry_run=True)
     assert report["pilot_gate"]["passed"] is True
