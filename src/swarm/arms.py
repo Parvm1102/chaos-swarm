@@ -58,6 +58,8 @@ class ArmConfig(BaseModel):
     intro_prompt: Literal["episode_intro", "episode_intro_plain"] = "episode_intro"
     # Experiment 5: a verification-rule reminder atop every feedback (no tool needed).
     feedback_reminder: bool = False
+    # Experiment 5b: the operator check-in question alone atop every feedback (no tool).
+    feedback_question: bool = False
     # Refusal breaker limits for this arm's runs; only stricter than the project rule
     # (the Sonnet 5 subject pilot stops at the first refusal).
     breaker_reasoning_extraction: int = Field(default=5, ge=1)

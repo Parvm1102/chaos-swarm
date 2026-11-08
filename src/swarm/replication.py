@@ -1,14 +1,19 @@
 """Replication (Sonnet 5 subject family) and Experiment 5 orchestration: `swarm replication`.
 
 run_replication reads the new arms (s5_pilot, s5_explicit, s5_paper, s5_paper_nomem and
-e5_reminder) and the reused comparison arms (e3_control, e3_checkin, and Experiment 0's Haiku
-arms haiku_baseline and haiku_paper_nothink). Each arm gets a status: "not run", "aborted by
-breaker", "incomplete" or "finished". The Sonnet 5 arms may legitimately be missing: if the
-guarded pilot saw any refusal, they are never launched, and R1/R2 are "not run". e5_reminder
-and e3_control must have finished.
+e5_reminder; optionally e5_question and the Experiment 4 pre-test pair_explicit_proposer) and
+the reused comparison arms (e3_control, e3_checkin, and Experiment 0's Haiku arms
+haiku_baseline and haiku_paper_nothink). Each arm gets a status: "not run", "stopped before a
+summary", "aborted by breaker", "incomplete" or "finished". e5_reminder and e3_control must have
+finished; the others may legitimately be missing.
 
-Every new arm that ran must have run under the same pre-registration, and PREREG.md on disk must
-still contain it (swarm.prereg.matches); the comparison arms are checked against their own.
+The pilot gate (PREREG Amendment 1): passed if the pilot made calls with zero refusals and no
+breaker trip, whether it finished or stopped at its budget cap. s5_paper_nomem was deferred on
+cost (Amendment 1): if it never ran, R2 is "not run (deferred on cost)".
+
+Every new arm that ran must have a pre-registration that PREREG.md on disk still contains
+(swarm.prereg.matches). Arms launched after an amendment record a later whole-file hash, so the
+hashes may differ; each is reported. The comparison arms are checked against their own.
 The hypotheses are in swarm.analysis.replication; the report goes to runs/replication.json.
 """
 
@@ -21,12 +26,13 @@ import orjson
 from swarm.analysis import replication
 from swarm.arms import ArmConfig
 from swarm.config import RUNS_DIR
-from swarm.llm.meter import USAGE_FILE, read_usage_lines
+from swarm.llm.meter import USAGE_FILE, breaker_history, read_usage_lines
 from swarm.prereg import matches
 from swarm.trajectories import SUMMARY_FILE, TRAJECTORIES_FILE
 
 REPORT_FILE = "replication.json"
 NEW_ROLES = ("pilot", "explicit", "paper", "nomem", "reminder")
+OPTIONAL_ROLES = ("question", "pretest")  # e5_question, pair_explicit_proposer
 COMPARISON_ROLES = ("control", "checkin", "haiku_explicit", "haiku_paper")
 REQUIRED_FINISHED = ("reminder", "control")
 S5_ROLES = ("explicit", "paper", "nomem")
@@ -73,10 +79,17 @@ def partial_run(run_dir: Path) -> dict[str, Any]:
 def pilot_gate(
     status: str, data: dict[str, Any] | None, run_dir: Path | None = None
 ) -> dict[str, Any]:
-    """The guarded pilot: passed only if it finished with zero refusals and no breaker trip."""
+    """The guarded pilot: zero refusals and no breaker trip in the calls it made, whether it
+    finished or stopped at its budget cap before a summary (PREREG Amendment 1)."""
     if data is None:
         partial = partial_run(run_dir) if run_dir and (run_dir / USAGE_FILE).exists() else None
-        return {"status": status, "refusals": None, "partial": partial, "passed": False}
+        passed = bool(
+            partial
+            and partial["calls"] > 0
+            and not partial["refusals"]
+            and not breaker_history(run_dir)
+        )
+        return {"status": status, "refusals": None, "partial": partial, "passed": passed}
     summary = data["summary"]
     refusals = summary["refusals"]["total"]
     passed = status == FINISHED and refusals == 0 and not summary.get("aborted_by_breaker")
@@ -114,13 +127,10 @@ def _arm_report(arm: ArmConfig, status: str, data: dict[str, Any] | None) -> dic
 
 def _check_preregs(arms: dict[str, ArmConfig], loaded: dict[str, tuple[str, Any]]) -> dict:
     ran = {role: d["summary"]["provenance"].get("prereg") for role, (_, d) in loaded.items() if d}
-    new = {role: ran[role] for role in NEW_ROLES if role in ran}
-    hashes = {p["sha256"] if p else None for p in new.values()}
-    if len(hashes) > 1 or None in hashes:
-        raise ValueError(f"the new arms ran under different (or no) pre-registrations: {new}")
+    new = {role: ran[role] for role in (*NEW_ROLES, *OPTIONAL_ROLES) if role in ran}
     for role, prereg in ran.items():
         if prereg is None:
-            if role in NEW_ROLES or role in ("control", "checkin"):
+            if role in new or role in ("control", "checkin"):
                 raise ValueError(f"{arms[role].arm} ran without a pre-registration")
             continue  # Experiment 0 was not pre-registered
         path = arms[role].prereg
@@ -157,16 +167,41 @@ def run_replication(arms: dict[str, ArmConfig], *, dry_run: bool) -> dict[str, A
             if {"paper", "explicit"} & set(unfinished)
             else replication.r1(t["paper"], t["explicit"])
         )
-        r2 = (
-            blocked
-            if {"paper", "nomem"} & set(unfinished)
-            else replication.r2(t["paper"], t["nomem"])
+        if loaded["nomem"][0] == "not run":
+            r2 = {"verdict": "not run", "reason": "deferred on cost (PREREG Amendment 1)"}
+        elif {"paper", "nomem"} & set(unfinished):
+            r2 = blocked
+        else:
+            r2 = replication.r2(t["paper"], t["nomem"])
+
+    optional = {}
+    if "question" in arms:
+        if loaded["question"][0] == FINISHED:
+            optional["Q1 EC(e5_question) lower than e5_reminder"] = replication.q1(
+                t["question"], t["reminder"]
+            )
+            optional["Q2 responsive share higher than e5_reminder (descriptive)"] = (
+                replication.responsive_comparison(
+                    _pathway_counts(loaded["question"][1]),
+                    _pathway_counts(loaded["reminder"][1]),
+                    ("e5_question", "e5_reminder"),
+                )
+            )
+        else:
+            optional["Q1 EC(e5_question) lower than e5_reminder"] = {
+                "verdict": f"not run ({loaded['question'][0]})"
+            }
+    if "pretest" in arms:
+        optional["E4 pre-test H1 proposer converts >= 20%"] = (
+            replication.h1_conversion(t["pretest"])
+            if loaded["pretest"][0] == FINISHED
+            else {"verdict": f"not run ({loaded['pretest'][0]})"}
         )
 
     reminder_paths = _pathway_counts(loaded["reminder"][1])
     control_paths = _pathway_counts(loaded["control"][1])
     report = {
-        "prereg": next(iter(new_preregs.values()), None),
+        "preregs": new_preregs,
         "pilot_gate": gate,
         "arms": {role: _arm_report(arms[role], *loaded[role]) for role in arms},
         "hypotheses": {
@@ -178,6 +213,7 @@ def run_replication(arms: dict[str, ArmConfig], *, dry_run: bool) -> dict[str, A
             "E2 responsive share of onsets higher than e3_control (descriptive)": replication.e2(
                 reminder_paths, control_paths
             ),
+            **optional,
         },
         "descriptive": {
             "e5_reminder vs e3_checkin": {

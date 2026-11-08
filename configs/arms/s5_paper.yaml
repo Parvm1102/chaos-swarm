@@ -9,7 +9,7 @@ task_dir: data/tasks/seed0-hard
 episodes: 10
 prereg: PREREG.md
 concurrency: 5
-budget_usd: 10.0
+budget_usd: 25.0  # PREREG Amendment 1 (was $10, a Haiku-priced estimate)
 sequences: 0-9
 memory: true
 rules: paper

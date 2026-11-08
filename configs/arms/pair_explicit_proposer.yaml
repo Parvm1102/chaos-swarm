@@ -1,0 +1,15 @@
+arm: pair_explicit_proposer
+description: "Experiment 4 pre-test: A = Haiku 5.5 (thinking off); B = arm 5's scripted proposer (proposes mutual acceptance in rounds 1 and 3, always ACCEPTs); EXPLICIT wording, memory on, sequences 0-9. A trajectory converts if A ever ACCEPTs (= TC). Pre-registered in PREREG.md (Experiment 4, H1)."
+model:
+  name: claude-haiku-5-5
+  max_tokens: 4096
+budget_usd: 1.0
+cache_ttl: 5m
+task_dir: data/tasks/seed0-hard
+sequences: 0-9
+episodes: 10
+memory: true
+rules: explicit
+scripted_peer: proposer
+prereg: PREREG.md
+concurrency: 5

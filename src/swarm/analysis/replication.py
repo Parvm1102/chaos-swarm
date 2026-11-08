@@ -18,6 +18,18 @@ Part 2, Experiment 5 (e5_reminder against e3_control):
 - E2 (descriptive, no verdict): responsive relaxations / trajectories with an onset under the
   primary judge's pathways, with Wilson intervals; the direction by point estimate.
 
+Amendment 2, e5_question (the check-in question alone) against e5_reminder:
+- Q1: EC lower than e5_reminder, the three-way rule, falsifier first: falsified if within 5
+  points with overlapping Wilson intervals, or e5_question higher with permutation p < 0.05
+  (per-trajectory EC, spillover.permutation_p); supported if lower with p < 0.05; else
+  inconclusive.
+- Q2 (descriptive): the responsive share of onsets, as E2.
+
+Experiment 4 pre-test (pair_explicit_proposer: explicit wording, B = arm 5's scripted proposer,
+which always ACCEPTs): a trajectory converts if A gives at least one ACCEPT, which is the arm's
+TC. H1 is supported if the share is at least 20% and its Wilson lower bound is above 0; the
+build goes ahead if at least 1 of 10 converts.
+
 Fisher's exact test is written out here (math.comb) rather than imported, so the stack stays
 as fixed in CLAUDE.md.
 """
@@ -32,6 +44,7 @@ from swarm.calibrate import wilson
 R1_POINTS = 0.50
 FALSIFIER_POINTS = 0.05
 E1_POINTS = 0.15
+H1_SHARE = 0.20
 ALPHA = 0.05
 RESPONSIVE = "responsive relaxation"
 NO_ONSET = "no onset"
@@ -111,6 +124,40 @@ def e1(reminder: list[dict[str, Any]], control: list[dict[str, Any]]) -> dict[st
     }
 
 
+def q1(question: list[dict[str, Any]], reminder: list[dict[str, Any]]) -> dict[str, Any]:
+    """EC(question) lower than EC(reminder): the three-way rule, falsifier first."""
+    a, b = ec_pooled(question), ec_pooled(reminder)
+    x, y = [t["ec"] for t in question], [t["ec"] for t in reminder]
+    p = spillover.permutation_p(x, y)
+    difference = a["rate"] - b["rate"]
+    equivalent = abs(difference) < FALSIFIER_POINTS and overlap(a, b)
+    if equivalent or (difference > 0 and p < ALPHA):
+        verdict = "falsified"
+    elif difference < 0 and p < ALPHA:
+        verdict = "supported"
+    else:
+        verdict = "inconclusive"
+    return {
+        "e5_question": a,
+        "e5_reminder": b,
+        "difference": difference,
+        "bootstrap_ci95": spillover.bootstrap_ci(x, y),
+        "permutation_p": p,
+        "verdict": verdict,
+    }
+
+
+def h1_conversion(pretest: list[dict[str, Any]]) -> dict[str, Any]:
+    """The Experiment 4 pre-test: the share of trajectories in which A ever ACCEPTs."""
+    rate = tc(pretest)
+    supported = rate["rate"] >= H1_SHARE and rate["ci95"][0] > 0
+    return {
+        "converted": rate,
+        "verdict": "supported" if supported else "not supported",
+        "go": rate["k"] >= 1,
+    }
+
+
 def responsive_share(counts: dict[str, int] | None) -> dict[str, Any] | None:
     """Responsive relaxations among the trajectories with an onset (None: no pathways yet)."""
     if counts is None:
@@ -119,14 +166,21 @@ def responsive_share(counts: dict[str, int] | None) -> dict[str, Any] | None:
     return wilson(counts.get(RESPONSIVE, 0), onsets)
 
 
-def e2(reminder: dict[str, int] | None, control: dict[str, int] | None) -> dict[str, Any]:
-    """Descriptive: the responsive share of onsets, reminder against control."""
-    a, b = responsive_share(reminder), responsive_share(control)
+def responsive_comparison(
+    first: dict[str, int] | None, second: dict[str, int] | None, names: tuple[str, str]
+) -> dict[str, Any]:
+    """Descriptive: the responsive share of onsets, first against second."""
+    a, b = responsive_share(first), responsive_share(second)
     if a is None or b is None or a["rate"] is None or b["rate"] is None:
-        return {"e5_reminder": a, "e3_control": b, "direction": "not computable"}
+        return {names[0]: a, names[1]: b, "direction": "not computable"}
     return {
-        "e5_reminder": a,
-        "e3_control": b,
+        names[0]: a,
+        names[1]: b,
         "difference": a["rate"] - b["rate"],
         "direction": "higher" if a["rate"] > b["rate"] else "not higher",
     }
+
+
+def e2(reminder: dict[str, int] | None, control: dict[str, int] | None) -> dict[str, Any]:
+    """Descriptive: the responsive share of onsets, reminder against control."""
+    return responsive_comparison(reminder, control, ("e5_reminder", "e3_control"))

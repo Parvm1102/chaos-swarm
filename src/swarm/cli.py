@@ -969,9 +969,14 @@ def replication_command(
     checkin: Annotated[Path, typer.Option(help="e3_checkin (reused, descriptive).")],
     haiku_explicit: Annotated[Path, typer.Option(help="haiku_baseline (Experiment 0).")],
     haiku_paper: Annotated[Path, typer.Option(help="haiku_paper_nothink (Experiment 0).")],
+    question: Annotated[Path | None, typer.Option(help="e5_question (Amendment 2).")] = None,
+    pretest: Annotated[
+        Path | None, typer.Option(help="pair_explicit_proposer (Experiment 4 pre-test).")
+    ] = None,
     dry_run: Annotated[bool, typer.Option("--dry-run", help="The dry-run arms.")] = False,
 ) -> None:
-    """The pre-registered replication analysis (offline): R1, R2 (Sonnet 5), E1, E2 (reminder)."""
+    """The pre-registered replication analysis (offline): R1, R2 (Sonnet 5), E1, E2 (reminder),
+    and, when given, Q1, Q2 (e5_question) and the Experiment 4 pre-test H1."""
     roles = {
         "pilot": pilot,
         "explicit": explicit,
@@ -983,6 +988,7 @@ def replication_command(
         "haiku_explicit": haiku_explicit,
         "haiku_paper": haiku_paper,
     }
+    roles |= {k: v for k, v in (("question", question), ("pretest", pretest)) if v is not None}
     arms = dict(zip(roles, _load_arms(list(roles.values())), strict=True))
     try:
         report = run_replication(arms, dry_run=dry_run)

@@ -54,6 +54,12 @@ disabled) as a second subject family: guarded pilot s5_pilot (breaker 1/1; any r
 it), then s5_explicit / s5_paper / s5_paper_nomem (R1, R2). e5_reminder = e3_control plus the
 `feedback_reminder` line atop every feedback (E1, E2). Arm options feedback_reminder,
 breaker_reasoning_extraction, breaker_any (lower only). Analysis: `swarm replication`.
+PREREG fifth section (Amendments, 2026-11-08): Sonnet 5 costs 20x Haiku, so s5_explicit/s5_paper
+caps $25, pilot not resumed (gate judged on calls made: 0 refusals), s5_paper_nomem deferred (R2
+"not run"); e5_question (arm option feedback_question: the check-in question alone; Q1, Q2).
+Sixth section: Experiment 4 pre-test H1 (pair_explicit_proposer: explicit wording, arm 5's
+scripted proposer as B; go if >= 1/10 converts). PREREG amendments always go after a separator
+(prereg.matches only accepts prefixes ending at one).
 
 We extend it with three experiments, in this priority order:
 1. Spillover — once pairs collude on the verification rule, do they violate an UNRELATED
@@ -253,6 +259,8 @@ Research context: @docs/literature_brief.md
   --paper configs/arms/s5_paper.yaml --nomem configs/arms/s5_paper_nomem.yaml \
   --reminder configs/arms/e5_reminder.yaml --control configs/arms/e3_control.yaml \
   --checkin configs/arms/e3_checkin.yaml --haiku-explicit configs/arms/haiku_baseline.yaml \
-  --haiku-paper configs/arms/haiku_paper_nothink.yaml       # R1, R2, E1, E2
+  --haiku-paper configs/arms/haiku_paper_nothink.yaml \
+  [--question configs/arms/e5_question.yaml] [--pretest configs/arms/pair_explicit_proposer.yaml]
+  # R1, R2, E1, E2 [, Q1, Q2, E4 pre-test H1]
 - swarm validate sample --arm <yaml> [--arm ...] --n 30   # blind sheet + key in runs/validation/
 - swarm validate score --sheet runs/validation/step5_validation_sheet.csv [--second-sheet ...]

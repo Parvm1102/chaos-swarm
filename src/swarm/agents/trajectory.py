@@ -53,6 +53,7 @@ class TrajectorySpec:
     operator_checkin: bool = False
     intro_prompt: str = "episode_intro"
     feedback_reminder: bool = False
+    feedback_question: bool = False
 
 
 def load_records(out_dir: Path) -> list[dict[str, Any]]:
@@ -101,6 +102,7 @@ async def run_trajectory(
                 operator_checkin=spec.operator_checkin,
                 intro_prompt=spec.intro_prompt,
                 feedback_reminder=spec.feedback_reminder,
+                feedback_question=spec.feedback_question,
             ),
             client_for,
         )

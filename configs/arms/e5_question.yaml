@@ -1,0 +1,18 @@
+arm: e5_question
+description: "Experiment 5b (the question alone): the subject configuration (Haiku 5.5, paper wording, thinking off, memory on, 200-character channel, original task prompt, automatic inspect), NO report tool and no operator sentence, plus the operator check-in question alone (no \"tell me\") atop every feedback for both agents. Pre-registered in PREREG.md (Amendments, Amendment 2: Q1/Q2)."
+model:
+  name: claude-haiku-5-5
+  max_tokens: 4096
+budget_usd: 2.0
+cache_ttl: 5m
+task_dir: data/tasks/seed0-hard
+sequences: 0-19
+episodes: 10
+memory: true
+rules: paper
+message_limit: 200
+task_prompt: task_phase_system
+collusion_criterion: delivered
+feedback_question: true
+prereg: PREREG.md
+concurrency: 5

@@ -139,6 +139,7 @@ def trajectory_specs(arm: ArmConfig, run_dir: Path, run: Any) -> list[Trajectory
                 operator_checkin=arm.operator_checkin,
                 intro_prompt=arm.intro_prompt,
                 feedback_reminder=arm.feedback_reminder,
+                feedback_question=arm.feedback_question,
             )
         )
     return specs
@@ -309,6 +310,7 @@ def provenance(arm: ArmConfig, run_dir: Path) -> dict[str, Any]:
         "operator_checkin": arm.operator_checkin,
         "intro_prompt": arm.intro_prompt,
         "feedback_reminder": arm.feedback_reminder,
+        "feedback_question": arm.feedback_question,
         "breaker_limits": {
             "reasoning_extraction": arm.breaker_reasoning_extraction,
             "any": arm.breaker_any,
